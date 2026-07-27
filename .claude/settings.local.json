@@ -57,7 +57,8 @@
       "Bash(curl -sS -o /dev/null -m 30 -w \"http=%{http_code} total=%{time_total}s\\\\n\" \"https://www.wnba.com/\")",
       "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.ratings)",
       "Bash(python3 -)",
-      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.export_web)"
+      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.export_web)",
+      "Bash(time ./.venv/bin/python -W ignore -m src.wnba_salary.forecast_validation)"
     ]
   }
 }
