@@ -86,6 +86,9 @@ regression until proven otherwise.
   per-player possessions 0.9984 (`espn_lineups.validate_against_stats`)
 - stats-API possessions retain **99.7%** of season points at ~101.4 per 100
 - web UI vs Python: worst value gap **$117** across 164 players × 3 seasons
+- leak-free λ sweep (`rapm_validation`, 2017–2022): optimum **λ=1,000**,
+  clean-prior game RMSE **9.2274** vs prior-only **9.8398** (+0.61); interior
+  optimum, 500 and 2,000 both worse
 
 ## 5. Traps
 
@@ -106,8 +109,10 @@ produce believable wrong answers rather than errors.
    duplicated ten times (once per player on court).
 4. **λ boundary artifacts — this happened twice.** Always extend the grid until
    the optimum is strictly interior. A first sweep picked 32,000 (grid ceiling)
-   and a later one picked 1,000 (grid floor); both were artifacts, and the true
-   optima were elsewhere.
+   and the ESPN sweep initially picked 1,000 (its grid floor at the time; the
+   true ESPN optimum was 1,500). Both were artifacts. Note the stats-side
+   leak-free optimum *is* legitimately 1,000 — but with 500 and 2,000 both tested
+   and worse.
 5. **Do not select λ on possession-level RMSE.** Response sd is ~111 and the
    entire range across λ is under 0.4%. Score at **game level** (aggregate
    predicted vs actual points per game per offensive team).
@@ -185,6 +190,9 @@ Ordered by value.
 5. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
    years would need Spotrac or HHS team pages (Spotrac is client-rendered and
    returns no table to a plain fetch).
+6. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+   ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
+   substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 
 ---
 

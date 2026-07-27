@@ -182,8 +182,8 @@ layer.
 
 ### The finding
 
-Pooling 2017–2022 gives 167,579 possessions across 537 parameters (312
-obs/param, versus 101 single-season). `rapm_validation.py` splits each season at
+Pooling 2017–2022 gives 169,439 possessions across 539 parameters (314
+obs/param, versus ~100 single-season). `rapm_validation.py` splits each season at
 its 75th-percentile game date, rebuilds the prior from training-window box
 scores only, fits RAPM on training possessions only, and scores both on the same
 held-out games. Scoring is at game level — possession-level RMSE has sd ~111 and
@@ -191,43 +191,50 @@ its entire range across λ is under 0.4%, far too noisy to choose on.
 
 | λ | game RMSE (clean prior) | sd of ratings |
 |---|---|---|
-| 250 | 9.5287 | 4.77 |
-| 2,000 | 9.3641 | 2.78 |
-| **4,000** | **9.3557** | **2.44** |
-| 16,000 | 9.4019 | 2.11 |
-| 128,000 | 9.5044 | 2.00 |
-| prior only | 9.7130 | 2.16 |
+| 250 | 9.2860 | 5.20 |
+| 500 | 9.2464 | 4.28 |
+| **1,000** | **9.2274** | **3.53** |
+| 2,000 | 9.2377 | 2.96 |
+| 16,000 | 9.4172 | 2.16 |
+| 128,000 | 9.6012 | 2.01 |
+| prior only | 9.8398 | 2.16 |
 
-**RAPM shrunk to the prior beats the prior alone by 0.357 game RMSE (3.7%)**, at
-λ=4,000, with a clean interior optimum — error rises on both sides. Refitting on
-all possessions at that λ gives ratings correlating 0.911 with the prior (not
-0.998) and sd 2.63 versus the prior's 2.16, so the compression problem partly
+**RAPM shrunk to the prior beats the prior alone by 0.612 game RMSE (6.2%)**, at
+λ=1,000, with a clean interior optimum — error rises on both sides. That optimum
+also sits consistently next to the λ=1,500 tuned independently on the ESPN side.
+Refitting on all possessions at λ=1,000 gives ratings correlating 0.759 with the
+prior and sd 3.78 versus the prior's 2.16, so the compression problem largely
 resolves too.
 
-Defence is where the gain concentrates: `corr(d_rapm, d_prior)` is 0.687. The
-players RAPM most upgrades defensively are Natasha Howard (2019 DPOY), Alyssa
-Thomas, Candace Parker and Jonquel Jones; the ones it downgrades include Kelsey
-Plum and Aerial Powers. That is the pattern you would want, and it is exactly
-what the box score cannot see.
+Defence is where the gain concentrates: `corr(d_rapm, d_prior)` is 0.48. The
+players RAPM most upgrades defensively (>4,000 possessions) are Jonquel Jones,
+Jewell Loyd, Candace Parker and Alyssa Thomas; the ones it most downgrades are
+late-career Sue Bird and Diana Taurasi. That is the pattern you would want, and
+it is exactly what the box score cannot see.
 
-### What the first attempt got wrong
+### What earlier attempts got wrong
 
-An earlier sweep concluded possession data added essentially nothing (optimal
-λ=64,000, ratings correlating 0.998 with the prior). Two things were wrong, and
-the larger one was **not** the leakage:
+The numbers above are the third version of this experiment. Each earlier version
+contained a defect that changed the conclusion, worth recording because all three
+failed silently:
 
-1. **Split design (dominant).** The first attempt split chronologically across
-   the pooled six seasons, training on 2017–2020 and testing on 2021–22. That
-   makes possession-based ratings stale relative to the test period — roster
-   turnover and aging intervene — so shrinking to a contemporaneous prior won.
-   Splitting *within* each season keeps ratings contemporaneous with the games
-   they are scored on, which is the right design for a descriptive rating.
-   Holding the leaky prior fixed and changing only the split moves optimal λ from
-   64,000 to 4,000.
+1. **Split design (dominant).** The first sweep split chronologically across the
+   pooled six seasons — train 2017–2020, test 2021–22 — which makes
+   possession-based ratings stale relative to the test window, so shrinking
+   almost entirely to a contemporaneous prior won (optimal λ=64,000, ratings
+   correlating 0.998 with the prior, "RAPM adds nothing"). Splitting *within*
+   each season keeps ratings contemporaneous with the games they are scored on,
+   which is the right design for a descriptive rating, and moved the optimum by
+   more than an order of magnitude on its own.
 2. **Prior leakage (secondary).** Building the prior from full-season box scores
-   let it see the held-out games. Fixing it moves prior-only RMSE from 9.5737 to
-   9.7130 — the leakage was worth 0.139 — which widens RAPM's margin from +0.247
-   to +0.357 but does not move optimal λ.
+   let it see the held-out games, flattering the prior-only baseline. Fixing it
+   is worth 0.164 game RMSE on that baseline (9.6753 → 9.8398) and widens RAPM's
+   margin, but does not move the optimal λ.
+3. **Possession response variable (found last).** The original possession builder
+   grouped on the stats feed's `possession` flag and attributed points per-event,
+   silently losing ~13% of points (AGENTS.md trap 2). The sweep was re-run after
+   the fix; the finding survived and strengthened — RAPM's margin roughly doubled
+   (+0.36 → +0.61) and the optimum moved from 4,000 to 1,000.
 
 ### Extending to 2023-2026 from ESPN play-by-play
 
