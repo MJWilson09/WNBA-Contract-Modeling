@@ -1,0 +1,133 @@
+{
+  "cba": {
+    "season": 2026,
+    "n_teams": 15,
+    "games_per_team": 44,
+    "salary_cap": 7000000,
+    "max_salary": 1400000,
+    "min_salary": 270000,
+    "roster_min": 12,
+    "developmental_spots": 2,
+    "minutes_per_game": 40
+  },
+  "excluded_seasons": {
+    "2020": "COVID bubble, 22-game season",
+    "2026": "season in progress as of this build"
+  },
+  "points_per_win": {
+    "points_per_win": 31.766555525781147,
+    "ci_low": 28.632362589288352,
+    "ci_high": 34.67512849351547,
+    "slope_winpct_per_mov": 0.03147964843681017,
+    "intercept": 0.4999584294904253,
+    "r_squared": 0.7781061561816163,
+    "n_team_seasons": 311,
+    "seasons": [
+      2003,
+      2004,
+      2005,
+      2006,
+      2007,
+      2008,
+      2009,
+      2010,
+      2011,
+      2012,
+      2013,
+      2014,
+      2015,
+      2016,
+      2017,
+      2018,
+      2019,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ]
+  },
+  "pace": {
+    "poss_per_game": 79.50049335049334,
+    "poss_per_40": 79.92113293129866,
+    "poss_per_min": 1.9980283232824665,
+    "mean_game_minutes": 39.790797940797944,
+    "by_season": {
+      "2003": 75.25982746207346,
+      "2004": 74.45605543959996,
+      "2005": 74.5876542993774,
+      "2006": 82.00870037533362,
+      "2007": 83.41963936389548,
+      "2008": 83.01296353842378,
+      "2009": 79.15996553596621,
+      "2010": 79.66582161702549,
+      "2011": 78.16198228586852,
+      "2012": 78.76506412279385,
+      "2013": 78.72302588652676,
+      "2014": 78.35569535473033,
+      "2015": 77.93299642803936,
+      "2016": 80.24743525202237,
+      "2017": 80.9799565797436,
+      "2018": 81.31681526900051,
+      "2019": 81.34641238232281,
+      "2020": 82.36185145530239,
+      "2021": 81.11898119492817,
+      "2022": 81.97448931534944,
+      "2023": 82.32704751711006,
+      "2024": 81.85533645768082,
+      "2025": 80.73707735014689,
+      "2026": 82.67157260147228
+    }
+  },
+  "minutes_baseline": {
+    "value": 1589.8951559201807,
+    "method": "derived: 100 * points_per_win / poss_per_min",
+    "nba_reference": 1475,
+    "note": "Exceeds the busiest player's season minutes. That is expected, not a bug: B converts minutes to wins-per-unit-rating, it is not a share-of-season. The WNBA's 44-game season simply means nobody accumulates a full unit."
+  },
+  "minutes_profile": {
+    "season": 2025,
+    "n_players": 182,
+    "max": 1525.0,
+    "p90": 1232.2,
+    "median": 624.5,
+    "mean_top_75": 1075.6533333333334,
+    "mean_top_180": 641.9722222222222
+  },
+  "replacement_win_pct": {
+    "value": 0.25,
+    "method": "ASSUMPTION, not estimated - no replacement team exists",
+    "sensitivity_range": [
+      0.2,
+      0.3
+    ]
+  },
+  "replacement_level": {
+    "value": 2.981053417350339,
+    "units": "points per 100 possessions below average",
+    "method": "derived from league WAR accounting identity; needs no ratings",
+    "nba_reference": 3.0
+  },
+  "dollars_per_win": {
+    "committed_per_team": 3240000,
+    "discretionary_per_team": 3760000,
+    "league_discretionary": 56400000,
+    "league_war": 247.5,
+    "dollars_per_win": 227878.78787878787,
+    "naive_full_cap_dollars_per_win": 424242.42424242425
+  },
+  "sensitivity": {
+    "0.20": {
+      "replacement_level": 3.1797903118403616,
+      "dollars_per_win": 213636.36363636365
+    },
+    "0.25": {
+      "replacement_level": 2.981053417350339,
+      "dollars_per_win": 227878.78787878787
+    },
+    "0.30": {
+      "replacement_level": 2.782316522860316,
+      "dollars_per_win": 244155.84415584418
+    }
+  }
+}

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WNBA Contract Model</title>
+<style>
+:root {
+  --bg: #fbfbfa; --panel: #fff; --line: #e4e2dd; --line-soft: #efeee9;
+  --ink: #1d1c1a; --ink-2: #57544e; --ink-3: #8a8781;
+  --pos: #1b7f5e; --neg: #b03636; --accent: #2f5fa8; --cap: #c9962f;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171a; --panel: #1e2024; --line: #33363c; --line-soft: #272a2f;
+    --ink: #eceae6; --ink-2: #a8a5a0; --ink-3: #75726d;
+    --pos: #4cc79b; --neg: #e8736f; --accent: #7aa7e8; --cap: #e0b350;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #fbfbfa; --panel: #fff; --line: #e4e2dd; --line-soft: #efeee9;
+  --ink: #1d1c1a; --ink-2: #57544e; --ink-3: #8a8781;
+  --pos: #1b7f5e; --neg: #b03636; --accent: #2f5fa8; --cap: #c9962f;
+}
+:root[data-theme="dark"] {
+  --bg: #16171a; --panel: #1e2024; --line: #33363c; --line-soft: #272a2f;
+  --ink: #eceae6; --ink-2: #a8a5a0; --ink-3: #75726d;
+  --pos: #4cc79b; --neg: #e8736f; --accent: #7aa7e8; --cap: #e0b350;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+header { border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 28px; }
+h1 { font-size: 25px; margin: 0 0 6px; letter-spacing: -0.01em; }
+.sub { color: var(--ink-2); font-size: 14px; margin: 0; }
+.sub code { font-family: var(--mono); font-size: 12.5px; background: var(--line-soft);
+  padding: 1px 5px; border-radius: 3px; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--ink-3); margin: 34px 0 12px; font-weight: 600; }
+
+/* search */
+.search { position: relative; margin-bottom: 8px; }
+.search input {
+  width: 100%; padding: 11px 13px; font-size: 15px; color: var(--ink);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+}
+.search input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.ac { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 4px);
+  background: var(--panel); border: 1px solid var(--line); border-radius: 7px;
+  max-height: 300px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,.12); }
+.ac:empty { display: none; }
+.ac div { padding: 9px 13px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; }
+.ac div:hover, .ac div.on { background: var(--line-soft); }
+.ac .nm { flex: 1; }
+.ac .meta { color: var(--ink-3); font-size: 12.5px; font-family: var(--mono); }
+
+/* player card */
+.card { background: var(--panel); border: 1px solid var(--line);
+  border-radius: 9px; padding: 18px; margin-bottom: 14px; }
+.card-top { display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 12px; flex-wrap: wrap; }
+.who { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.tags { color: var(--ink-3); font-size: 13px; font-family: var(--mono); margin-top: 3px; }
+.rm { background: none; border: 1px solid var(--line); color: var(--ink-3);
+  border-radius: 6px; cursor: pointer; padding: 4px 9px; font-size: 12px; }
+.rm:hover { color: var(--neg); border-color: var(--neg); }
+
+.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px; margin: 18px 0 6px; }
+.ctl label { display: flex; justify-content: space-between; font-size: 12.5px;
+  color: var(--ink-2); margin-bottom: 5px; }
+.ctl label b { font-family: var(--mono); color: var(--ink); font-weight: 600; }
+.ctl input[type=range] { width: 100%; accent-color: var(--accent); }
+.reset { background: none; border: none; color: var(--accent); font-size: 12px;
+  cursor: pointer; padding: 0; margin-top: 2px; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1px; background: var(--line); border: 1px solid var(--line);
+  border-radius: 7px; overflow: hidden; margin-top: 16px; }
+.cell { background: var(--panel); padding: 11px 13px; }
+.cell .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink-3); }
+.cell .v { font-family: var(--mono); font-size: 17px; margin-top: 3px; }
+.cell .n { font-size: 11.5px; color: var(--ink-3); margin-top: 2px; }
+.pos { color: var(--pos); } .neg { color: var(--neg); } .capped { color: var(--cap); }
+
+/* max bar */
+.bar { margin-top: 16px; }
+.bar-track { position: relative; height: 26px; background: var(--line-soft);
+  border-radius: 5px; overflow: hidden; }
+.bar-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: .8; }
+.bar-over { position: absolute; top: 0; bottom: 0; background: var(--cap); opacity: .75; }
+.bar-max { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+.bar-legend { display: flex; justify-content: space-between; font-size: 11.5px;
+  color: var(--ink-3); margin-top: 5px; font-family: var(--mono); }
+
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 7px;
+  background: var(--panel); }
+th, td { padding: 8px 11px; text-align: right; white-space: nowrap;
+  border-bottom: 1px solid var(--line-soft); }
+th:first-child, td:first-child { text-align: left; }
+thead th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--ink-3); font-weight: 600; background: var(--panel);
+  position: sticky; top: 0; cursor: pointer; user-select: none; }
+thead th:hover { color: var(--ink); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr.click:hover { background: var(--line-soft); cursor: pointer; }
+td.num, th.num { font-family: var(--mono); }
+.proj th, .proj td { border-bottom: 1px solid var(--line-soft); }
+
+.note { font-size: 12.5px; color: var(--ink-3); margin-top: 10px; line-height: 1.5; }
+.empty { color: var(--ink-3); font-size: 14px; padding: 22px 0; }
+.toggle { position: fixed; top: 14px; right: 14px; background: var(--panel);
+  border: 1px solid var(--line); color: var(--ink-2); border-radius: 6px;
+  padding: 5px 10px; font-size: 12px; cursor: pointer; z-index: 50; }
+</style>
+</head>
+<body>
+<button class="toggle" id="theme">theme</button>
+<div class="wrap">
+
+<header>
+  <h1>WNBA Contract Model</h1>
+  <p class="sub">
+    <code>WAR = (minutes / B) × (rating + R)</code> &nbsp;·&nbsp;
+    <code>value = min + WAR × $/win</code><br>
+    Ratings are RAPM shrunk toward a transfer-learned box prior. Dollars are priced
+    out of discretionary cap space, not the full cap.
+  </p>
+</header>
+
+<h2>Add players</h2>
+<div class="search">
+  <input id="q" type="text" placeholder="Search a player…" autocomplete="off">
+  <div class="ac" id="ac"></div>
+</div>
+<div id="cards"></div>
+<div class="empty" id="empty">Search above, or click any row in the league table.</div>
+
+<h2>League table</h2>
+<div class="scroll">
+  <table id="league">
+    <thead><tr>
+      <th data-k="name">Player</th>
+      <th data-k="team">Tm</th>
+      <th data-k="age" class="num">Age</th>
+      <th data-k="mpg" class="num">MPG</th>
+      <th data-k="rating" class="num">Rating</th>
+      <th data-k="oRapm" class="num">Off</th>
+      <th data-k="dRapm" class="num">Def</th>
+      <th data-k="war" class="num">WAR</th>
+      <th data-k="value" class="num">Value</th>
+      <th data-k="marketValue" class="num">Capped</th>
+      <th data-k="salary" class="num">Salary</th>
+      <th data-k="surplus" class="num">Surplus</th>
+      <th data-k="signing">Type</th>
+    </tr></thead>
+    <tbody></tbody>
+  </table>
+</div>
+<p class="note" id="foot"></p>
+
+</div>
+
+<script src="players.js"></script>
+<script>
+const C = MODEL.constants;
+const SEASONS = MODEL.seasons;
+const CUR = MODEL.season;
+
+/* ---- model math: mirrors valuation.py ---- */
+function computeWar(minutes, rating) {
+  return (minutes / C.minutes_baseline) * (rating + C.replacement_level);
+}
+function computeValue(war, season) {
+  const s = MODEL.schedule[String(season)];
+  return s.min_salary + war * s.dollars_per_win;
+}
+function clampToBand(value, season) {
+  const s = MODEL.schedule[String(season)];
+  return Math.min(Math.max(value, s.min_salary), s.max_salary);
+}
+function ageMultiplier(age) {
+  const xs = MODEL.agingCurve.age, ys = MODEL.agingCurve.relValue;
+  if (age <= xs[0]) return ys[0];
+  if (age >= xs[xs.length - 1]) return ys[ys.length - 1];
+  for (let i = 1; i < xs.length; i++) {
+    if (age <= xs[i]) {
+      const t = (age - xs[i - 1]) / (xs[i] - xs[i - 1]);
+      return ys[i - 1] + t * (ys[i] - ys[i - 1]);
+    }
+  }
+  return ys[ys.length - 1];
+}
+// Multiplicative on value ABOVE REPLACEMENT, never on the raw rating:
+// scaling a -1.0 rating by 0.9 would make a below-average player better.
+function projectRating(rating, age, yearsAhead) {
+  if (age == null) return null;
+  const now = ageMultiplier(age), later = ageMultiplier(age + yearsAhead);
+  if (!now) return null;
+  return (rating + C.replacement_level) * (later / now) - C.replacement_level;
+}
+
+/* ---- formatting ---- */
+const money = v => v == null ? "—" :
+  "$" + Math.round(v).toLocaleString("en-US");
+const moneyK = v => v == null ? "—" :
+  (v < 0 ? "−" : "") + "$" + Math.abs(Math.round(v / 1000)) + "k";
+const sgn = v => v == null ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
+const cls = v => v == null ? "" : v >= 0 ? "pos" : "neg";
+
+/* ---- per-player derived row ---- */
+function derive(p, ov) {
+  const o = ov || {};
+  const games = o.games ?? Math.round(C.games_per_team * p.availability);
+  const mpg = o.mpg ?? p.mpg;
+  const adj = o.adj ?? 0;
+  const rating = p.rating + adj;
+  // Until a minutes slider is touched, use the pipeline's own prorated minutes.
+  // The sliders force `games` to an integer, so round(44*availability)*mpg drifts
+  // ~0.6% from valuation.py's continuous 44*availability*mpg — enough to make the
+  // page disagree with the parquet it was generated from.
+  const touched = o.games !== undefined || o.mpg !== undefined;
+  const minutes = touched ? games * mpg : p.projMinutes;
+
+  const war = computeWar(minutes, rating);
+  const value = computeValue(war, CUR);
+  const marketValue = clampToBand(value, CUR);
+  const proj = SEASONS.map((s, k) => {
+    const r = k === 0 ? rating : projectRating(rating, p.age, k);
+    if (r == null) return null;
+    const w = computeWar(minutes, r);
+    const v = computeValue(w, s);
+    return { season: s, rating: r, war: w, value: v, marketValue: clampToBand(v, s) };
+  });
+  return { games, mpg, adj, rating, minutes, war, value, marketValue, touched,
+           surplus: p.salary == null ? null : marketValue - p.salary,
+           cappedBy: value - marketValue, proj };
+}
+
+/* ---- state ---- */
+const selected = [];              // {p, ov}
+const byId = new Map(MODEL.players.map(p => [p.id, p]));
+
+/* ---- cards ---- */
+function slider(label, val, min, max, step, fmt, onIn) {
+  const d = document.createElement("div");
+  d.className = "ctl";
+  d.innerHTML = `<label><span>${label}</span><b>${fmt(val)}</b></label>
+    <input type="range" min="${min}" max="${max}" step="${step}" value="${val}">`;
+  const inp = d.querySelector("input"), out = d.querySelector("b");
+  inp.addEventListener("input", () => {
+    out.textContent = fmt(parseFloat(inp.value));
+    onIn(parseFloat(inp.value));
+  });
+  return d;
+}
+
+function renderCards() {
+  const host = document.getElementById("cards");
+  host.innerHTML = "";
+  document.getElementById("empty").style.display = selected.length ? "none" : "";
+
+  selected.forEach((entry, i) => {
+    const { p } = entry;
+    const d = derive(p, entry.ov);
+    const card = document.createElement("div");
+    card.className = "card";
+
+    const top = document.createElement("div");
+    top.className = "card-top";
+    top.innerHTML = `<div>
+        <div class="who">${p.name}</div>
+        <div class="tags">${p.team} · ${p.pos} · age ${p.age ?? "—"} · ${p.signing}
+          · ${p.g} gp · ${p.source}</div>
+      </div>`;
+    const rm = document.createElement("button");
+    rm.className = "rm"; rm.textContent = "remove";
+    rm.onclick = () => { selected.splice(i, 1); renderCards(); };
+    top.appendChild(rm);
+    card.appendChild(top);
+
+    const ctl = document.createElement("div");
+    ctl.className = "controls";
+    const set = (k, v) => {
+      entry.ov = Object.assign({}, entry.ov, { [k]: v });
+      const nd = derive(p, entry.ov);
+      paint(card, p, nd);
+    };
+    ctl.appendChild(slider("Games", d.games, 1, C.games_per_team, 1,
+      v => v.toFixed(0), v => set("games", v)));
+    ctl.appendChild(slider("Minutes per game", d.mpg, 0, C.game_minutes, 0.5,
+      v => v.toFixed(1), v => set("mpg", v)));
+    ctl.appendChild(slider("Rating adjustment", d.adj, -5, 5, 0.1,
+      v => sgn(v), v => set("adj", v)));
+    card.appendChild(ctl);
+
+    const reset = document.createElement("button");
+    reset.className = "reset"; reset.textContent = "reset to model defaults";
+    reset.onclick = () => { entry.ov = {}; renderCards(); };
+    card.appendChild(reset);
+
+    const body = document.createElement("div");
+    body.dataset.body = "1";
+    card.appendChild(body);
+    host.appendChild(card);
+    paint(card, p, d);
+  });
+}
+
+function paint(card, p, d) {
+  const body = card.querySelector("[data-body]");
+  const maxS = MODEL.schedule[String(CUR)].max_salary;
+  const scaleTop = Math.max(d.value, maxS) * 1.05;
+  const pctMax = (maxS / scaleTop) * 100;
+  const pctVal = (Math.min(d.value, maxS) / scaleTop) * 100;
+  const pctOver = (Math.max(d.value - maxS, 0) / scaleTop) * 100;
+
+  const projRows = d.proj.filter(Boolean).map(r => `
+    <tr><td>${r.season}</td>
+      <td class="num">${sgn(r.rating)}</td>
+      <td class="num">${r.war.toFixed(2)}</td>
+      <td class="num">${money(r.value)}</td>
+      <td class="num ${r.value > MODEL.schedule[String(r.season)].max_salary ? "capped" : ""}">${money(r.marketValue)}</td>
+    </tr>`).join("");
+
+  body.innerHTML = `
+    <div class="grid">
+      <div class="cell"><div class="k">Rating</div>
+        <div class="v">${sgn(d.rating)}</div>
+        <div class="n">off ${sgn(p.oRapm)} · def ${sgn(p.dRapm)}</div></div>
+      <div class="cell"><div class="k">Minutes</div>
+        <div class="v">${Math.round(d.minutes)}</div>
+        <div class="n">${d.touched
+            ? `${d.games} × ${d.mpg.toFixed(1)}`
+            : `prorated to ${C.games_per_team} g`}</div></div>
+      <div class="cell"><div class="k">WAR</div>
+        <div class="v">${d.war.toFixed(2)}</div>
+        <div class="n">wins above repl.</div></div>
+      <div class="cell"><div class="k">Value</div>
+        <div class="v">${money(d.value)}</div>
+        <div class="n">unconstrained</div></div>
+      <div class="cell"><div class="k">Market value</div>
+        <div class="v ${d.cappedBy > 1 ? "capped" : ""}">${money(d.marketValue)}</div>
+        <div class="n">${d.cappedBy > 1 ? "clipped at max" : "within CBA band"}</div></div>
+      <div class="cell"><div class="k">Surplus</div>
+        <div class="v ${cls(d.surplus)}">${d.surplus == null ? "—" : money(d.surplus)}</div>
+        <div class="n">vs ${money(p.salary)}</div></div>
+    </div>
+
+    <div class="bar">
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${pctVal}%"></div>
+        <div class="bar-over" style="left:${pctMax}%;width:${pctOver}%"></div>
+        <div class="bar-max" style="left:${pctMax}%"></div>
+      </div>
+      <div class="bar-legend">
+        <span>value ${money(d.value)}</span>
+        <span>${d.cappedBy > 1
+          ? `${money(d.cappedBy)} above the max — surplus the CBA hands the team`
+          : `max ${money(maxS)}`}</span>
+      </div>
+    </div>
+
+    <table class="proj" style="margin-top:16px">
+      <thead><tr><th>Season</th><th class="num">Rating</th><th class="num">WAR</th>
+        <th class="num">Value</th><th class="num">Capped</th></tr></thead>
+      <tbody>${projRows}</tbody>
+    </table>
+    <p class="note">Future seasons age the rating on the WNBA curve (peak 29) and
+      inflate dollars on the CBA's 2026→2032 endpoints. Minutes are held at the
+      slider value.</p>`;
+}
+
+/* ---- search ---- */
+const q = document.getElementById("q"), ac = document.getElementById("ac");
+let acIdx = -1, acList = [];
+function closeAc() { ac.innerHTML = ""; acIdx = -1; acList = []; }
+q.addEventListener("input", () => {
+  const s = q.value.trim().toLowerCase();
+  if (!s) return closeAc();
+  acList = MODEL.players.filter(p => p.name.toLowerCase().includes(s)).slice(0, 8);
+  ac.innerHTML = acList.map((p, i) =>
+    `<div data-i="${i}"><span class="nm">${p.name}</span>
+      <span class="meta">${p.team} · ${sgn(p.rating)}</span></div>`).join("");
+  acIdx = -1;
+  ac.querySelectorAll("div").forEach(el =>
+    el.onclick = () => add(acList[+el.dataset.i].id));
+});
+q.addEventListener("keydown", e => {
+  if (!acList.length) return;
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    acIdx = (acIdx + (e.key === "ArrowDown" ? 1 : -1) + acList.length) % acList.length;
+    ac.querySelectorAll("div").forEach((el, i) => el.classList.toggle("on", i === acIdx));
+  } else if (e.key === "Enter") {
+    add(acList[acIdx >= 0 ? acIdx : 0].id);
+  } else if (e.key === "Escape") closeAc();
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search")) closeAc();
+});
+function add(id) {
+  if (!selected.some(s => s.p.id === id)) selected.push({ p: byId.get(id), ov: {} });
+  q.value = ""; closeAc(); renderCards();
+  document.getElementById("cards").lastElementChild
+    ?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+/* ---- league table ---- */
+const rows = MODEL.players.map(p => {
+  const d = derive(p, null);
+  return { ...p, war: d.war, value: d.value, marketValue: d.marketValue,
+           surplus: d.surplus };
+});
+let sortK = "value", sortDesc = true;
+function renderTable() {
+  const tb = document.querySelector("#league tbody");
+  const sorted = rows.slice().sort((a, b) => {
+    const x = a[sortK], y = b[sortK];
+    if (x == null) return 1;
+    if (y == null) return -1;
+    if (typeof x === "string") return sortDesc ? y.localeCompare(x) : x.localeCompare(y);
+    return sortDesc ? y - x : x - y;
+  });
+  tb.innerHTML = sorted.map(r => `
+    <tr class="click" data-id="${r.id}">
+      <td>${r.name}</td><td>${r.team}</td>
+      <td class="num">${r.age ?? "—"}</td>
+      <td class="num">${r.mpg.toFixed(1)}</td>
+      <td class="num ${cls(r.rating)}">${sgn(r.rating)}</td>
+      <td class="num">${sgn(r.oRapm)}</td>
+      <td class="num">${sgn(r.dRapm)}</td>
+      <td class="num">${r.war.toFixed(2)}</td>
+      <td class="num">${moneyK(r.value)}</td>
+      <td class="num ${r.value > r.marketValue + 1 ? "capped" : ""}">${moneyK(r.marketValue)}</td>
+      <td class="num">${moneyK(r.salary)}</td>
+      <td class="num ${cls(r.surplus)}">${r.surplus == null ? "—" : moneyK(r.surplus)}</td>
+      <td>${r.signing}</td>
+    </tr>`).join("");
+  tb.querySelectorAll("tr").forEach(tr =>
+    tr.onclick = () => add(+tr.dataset.id));
+}
+document.querySelectorAll("#league thead th").forEach(th => {
+  th.onclick = () => {
+    const k = th.dataset.k;
+    if (k === sortK) sortDesc = !sortDesc; else { sortK = k; sortDesc = true; }
+    renderTable();
+  };
+});
+
+/* ---- footer ---- */
+const nCapped = rows.filter(r => r.value > r.marketValue + 1).length;
+const s26 = MODEL.schedule[String(CUR)];
+document.getElementById("foot").textContent =
+  `${rows.length} players with ≥100 minutes in ${CUR}. ` +
+  `${nCapped} price above the ${money(s26.max_salary)} maximum — ` +
+  `their surplus is capped by the CBA, not by the model. ` +
+  `B = ${Math.round(C.minutes_baseline)}, R = ${C.replacement_level.toFixed(2)} pts/100, ` +
+  `$/win = ${money(s26.dollars_per_win)}. Generated ${MODEL.generated}.`;
+
+/* ---- theme ---- */
+document.getElementById("theme").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+};
+
+renderTable();
+renderCards();
+</script>
+</body>
+</html>
