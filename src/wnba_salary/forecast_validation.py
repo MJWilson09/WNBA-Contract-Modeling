@@ -49,7 +49,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 
-from . import box_prior, data, espn_lineups, rapm, valuation
+from . import box_prior, data, draft_prior, espn_lineups, rapm, valuation
 
 TEST_SEASONS = list(range(2018, 2027))
 FIRST_SEASON = 2017
@@ -235,12 +235,19 @@ def evaluate_season(T: int) -> tuple[dict, dict]:
         aged[p] = (o + delta, d + delta)
     cands["pooled_age"] = aged
 
+    # Draft-slot priors for unseen rookies. Fitted strictly on seasons < T so the
+    # curve never sees the ratings it is being scored against.
+    dcoefs = draft_prior.fit(max_season=T)
+    cands["pooled_draft"] = draft_prior.apply_to(cands["pooled"], T, dcoefs)
+
     row = {"T": T}
     for name, vec in cands.items():
         rmse, n, unseen = margin_rmse(test, vec, c0)
         row[name] = rmse
         if name == "pooled":
             row["n_games"], row["unseen"] = n, unseen
+        if name == "pooled_draft":
+            row["unseen_after"] = unseen
 
     sweep_row = {}
     for lam in LAMBDA_SWEEP:

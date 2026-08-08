@@ -62,7 +62,11 @@
       "Bash(time ./.venv/bin/python -W ignore -m src.wnba_salary.forecast_validation --sweep)",
       "Bash(./.venv/bin/python -W ignore -c ' *)",
       "Bash(git add *)",
-      "Bash(git commit -q -m ' *)"
+      "Bash(git commit -q -m ' *)",
+      "Bash(curl -s \"https://api.github.com/repos/sportsdataverse/wehoop-wnba-data/git/trees/main?recursive=1\" -o t.json)",
+      "Bash(curl -sfL __TRACKED_VAR__/wnba/draft/parquet/wnba_draft.parquet -o draft.parquet)",
+      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.draft_prior)",
+      "Bash(rm -f t.json)"
     ]
   }
 }

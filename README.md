@@ -73,6 +73,10 @@ silent failures that produce believable wrong numbers.
   play-by-play for seasons the archive doesn't cover.
 - `src/wnba_salary/ratings.py` — production ratings: RAPM on ESPN possessions,
   level pinned to the accounting identity.
+- `src/wnba_salary/draft_prior.py` — draft-slot priors for players with no
+  possession history (forward/preseason use; not in the production path).
+- `src/wnba_salary/forecast_validation.py` — forward validation harness; the
+  measuring stick for any predictive claim. `--sweep` runs the (λ, HL) grid.
 - `src/wnba_salary/salaries.py` — contracts from Her Hoop Stats.
 - `src/wnba_salary/valuation.py` — ratings + constants → dollars, aging, projections.
 - `src/wnba_salary/export_web.py` — emits `web/players.js` and `web/standalone.html`.
@@ -384,8 +388,54 @@ three years forward over-trusts one season of possessions.
 Current-season outputs are unchanged by this split (summed WAR 248.3, $100.7M,
 15 above the max), because the descriptive path was not touched.
 
-`PLAN.md` specifies the remaining tranche (rookie draft priors, uncertainty
-bands).
+### Rookie draft priors
+
+Acting on finding 3. Imputing league-average for a player with no history is
+badly wrong for rookies: minutes-weighted they run about −1.2 points/100, and the
+spread by draft slot is wide. `draft_prior.py` fits `obpm ~ a·log(pick) + b`
+(and the same for defence) on rookie seasons since 2010, **weighted by minutes**
+— the prior is consumed per on-court slot, so the relevant expectation is over
+slots, not players. Unweighted it is dragged down by fringe rookies and is too
+pessimistic exactly where it matters (weighted wR² 0.412 on offence vs 0.335).
+
+| pick | 1 | 3 | 8 | 20 | 36 |
+|---|---|---|---|---|---|
+| prior | +1.49 | −0.14 | −1.59 | −2.95 | −3.82 |
+
+Effect on the forward harness — the two upgrades are complementary and stack:
+
+| | production λ=1500/HL=1.5 | forecast λ=6000/HL=0.75 |
+|---|---|---|
+| no draft prior | 12.6040 | 12.5085 |
+| **with draft prior** | 12.4951 | **12.3686** |
+
+Total **+0.2353** over the original production recipe, improving in all nine
+test seasons. Unseen player-slot share falls from 14.4% to 4.7%. The draft gain
+is *larger* on the forecast config (+0.140 vs +0.109), so the two are not
+substitutes.
+
+**Scope limit, stated plainly.** This does not change the shipped 2026
+valuation. In production the RAPM design includes the current season, so every
+rated 2026 player already has possessions and none is "unseen" — all 164 carry
+`rating_source = rapm`. The draft prior is validated infrastructure for the
+*preseason* case (rating a season before it is played), which is precisely what
+forward validation simulates. It is deliberately not wired into `ratings.py`.
+
+Two things were tried and rejected on the evidence:
+
+- **Rookie draft slots as the box prior's shrinkage target** (instead of generic
+  replacement). Intuitively appealing — Sabrina Ionescu's injured 80-minute
+  rookie year moves from +1.03 to +3.55, which is obviously more sensible — but
+  it made the harness *worse* (12.3686 → 12.3803). The harness scores game
+  margins, which low-minute players barely affect, so it is insensitive to the
+  thing this fixes; absent evidence, it was reverted rather than shipped on
+  intuition.
+- **The expansion-year hypothesis.** Gains were predicted to concentrate in 2018
+  and 2026 (highest unseen share). They did not: the largest gains are 2020
+  (+0.29) and 2022 (+0.20), and 2018 is the one season that got marginally
+  worse.
+
+`PLAN.md` has the remaining item (uncertainty bands).
 
 ## Known limitations
 

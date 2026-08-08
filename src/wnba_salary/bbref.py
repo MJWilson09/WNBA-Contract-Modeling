@@ -81,6 +81,9 @@ COLUMN_MAP = {
     "stl": "stl",
     "blk": "blk",
     "pts": "pts",
+    # draft table
+    "pick_overall": "pick",
+    "seasons": "career_seasons",
 }
 
 NUMERIC = {
@@ -88,15 +91,19 @@ NUMERIC = {
     "trb_pct", "ast_pct", "stl_pct", "blk_pct", "tov_pct", "usg_pct", "obpm",
     "dbpm", "bpm", "vorp", "ws", "ws_per_48", "ws_per_40", "off_rtg", "def_rtg",
     "pf", "orb", "drb", "trb", "fga", "fta", "fg3a", "tov", "ast", "stl",
-    "blk", "pts",
+    "blk", "pts", "pick", "career_seasons",
 }
 
 _last_request = 0.0
 
 
 def _url(league: str, season: int, kind: str = "advanced") -> str:
+    if kind == "draft":
+        if league != "wnba":
+            raise ValueError("draft scraping is implemented for the WNBA only")
+        return f"https://www.basketball-reference.com/wnba/draft/{season}.html"
     if kind not in ("advanced", "totals"):
-        raise ValueError(f"kind must be 'advanced' or 'totals', got {kind!r}")
+        raise ValueError(f"kind must be 'advanced', 'totals' or 'draft', got {kind!r}")
     if league == "nba":
         return f"https://www.basketball-reference.com/leagues/NBA_{season}_{kind}.html"
     if league == "wnba":
@@ -147,8 +154,9 @@ def _parse(html: str) -> pd.DataFrame:
             stat = c.get("data-stat")
             if stat in COLUMN_MAP:
                 rec.setdefault(COLUMN_MAP[stat], _cell_text(c))
-        # a real player row always has a name and minutes
-        if rec.get("player") and rec.get("mp"):
+        # a real player row has a name plus either minutes (season tables) or a
+        # draft pick (draft tables)
+        if rec.get("player") and (rec.get("mp") or rec.get("pick")):
             rows.append(rec)
 
     df = pd.DataFrame(rows)

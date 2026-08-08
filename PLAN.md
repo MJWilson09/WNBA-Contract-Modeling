@@ -61,7 +61,7 @@ untouched. Re-verify after each task.
 Acceptance: sweep optimum is interior on both axes; forecast config beats
 12.6040 on the harness; descriptive invariants unchanged; README table updated.
 
-## Task 2 — rookie priors from draft slot
+## Task 2 — rookie priors from draft slot  ✅ DONE
 
 Attacks the 14.4% unseen share directly; biggest headroom in expansion years.
 
@@ -131,6 +131,8 @@ against 1/√possessions); UI shows bands; JS-Python agreement check still passe
 - Runtime: harness ~75s; possession cache warm. `stats.wnba.com` is
   unreachable — do not retry it (trap 1).
 - Order: Task 4 → 1 → 2 → 3. Tasks 2 and 3 are independent of each other.
-- **Status: Tasks 4 and 1 complete** (λ=6000 / HL=0.75 shipped as the
-  forecast config, +0.0954 forward RMSE). Tasks 2 and 3 remain.
+- **Status: Tasks 4, 1 and 2 complete.** Forecast config λ=6000/HL=0.75
+  (+0.0954) and draft priors (+0.1399 on that config) stack to 12.3686 vs the
+  original 12.6040. Draft priors are validated but deliberately NOT in the
+  production path — see README "Scope limit". Task 3 remains.
 - Commit per task when the user asks; they handle pushes.

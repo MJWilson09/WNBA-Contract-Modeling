@@ -115,7 +115,10 @@ These are the numbers any predictive claim must beat:
 - `--sweep` grid optimum **λ=6,000 / HL=0.75 → 12.5085** (+0.0954 over the
   production pair), interior on both axes. λ dominates; the half-life surface is
   shallow (0.5/0.75/1.5 within 0.011)
-- mean unseen player-slot share **14.4%** (≈21% in expansion years 2018/2026)
+- mean unseen player-slot share **14.4%** (≈21% in expansion years 2018/2026),
+  falling to **4.7%** once draft priors are applied
+- with `draft_prior`: production config **12.4951**, forecast config
+  **12.3686** (+0.2353 over the original recipe). The two upgrades stack
 
 ## 5. Traps
 
@@ -224,7 +227,16 @@ Ordered by value.
 5. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
    years would need Spotrac or HHS team pages (Spotrac is client-rendered and
    returns no table to a plain fetch).
-6. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+6. **WNBA draft data must come from Basketball-Reference, not wehoop.** The
+   `wehoop-wnba-data` repo has only `draft_2026.parquet` — one season — despite
+   the directory implying a series. `bbref.fetch_advanced(..., kind="draft")`
+   covers 2010+ and is what `draft_prior.py` uses.
+7. **`draft_prior` is not in the production path, deliberately.** It improves the
+   *forward* harness substantially but cannot change current-season output: the
+   RAPM design includes the current season, so no rated player is unseen. Wiring
+   it into `ratings.py` would be a no-op at best. Using rookie draft slots as the
+   box prior's shrinkage target was tried and made the harness worse — see README.
+8. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
    ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
    substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 
