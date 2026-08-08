@@ -69,7 +69,8 @@
       "Bash(rm -f t.json)",
       "Bash(rm -rf .scratch)",
       "Bash(sed -n '/^## 7. Open work/,$p' AGENTS.md)",
-      "Bash(sed -n '/^## Known limitations/,/^## /p' README.md)"
+      "Bash(sed -n '/^## Known limitations/,/^## /p' README.md)",
+      "Bash(gh auth *)"
     ]
   }
 }
