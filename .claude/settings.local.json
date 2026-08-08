@@ -67,7 +67,9 @@
       "Bash(curl -sfL __TRACKED_VAR__/wnba/draft/parquet/wnba_draft.parquet -o draft.parquet)",
       "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.draft_prior)",
       "Bash(rm -f t.json)",
-      "Bash(rm -rf .scratch)"
+      "Bash(rm -rf .scratch)",
+      "Bash(sed -n '/^## 7. Open work/,$p' AGENTS.md)",
+      "Bash(sed -n '/^## Known limitations/,/^## /p' README.md)"
     ]
   }
 }

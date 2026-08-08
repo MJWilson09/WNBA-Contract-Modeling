@@ -189,6 +189,18 @@ produce believable wrong answers rather than errors.
     (`box_prior.normalize_name`). The stats feed uses WNBA person IDs, wehoop
     uses ESPN athlete IDs — they do not interoperate. Report match rates whenever
     you add a join.
+17. **WNBA draft data must come from Basketball-Reference, not wehoop.** The
+    `wehoop-wnba-data` repo has only `draft_2026.parquet` — one season — despite
+    the directory implying a series. `bbref.fetch_advanced(..., kind="draft")`
+    covers 2010+ and is what `draft_prior.py` uses.
+18. **Do not validate posterior SEs with a naive "2x SE" split-half rule.** Both
+    halves shrink toward the *same* prior, so the shared component cancels in the
+    difference and the correct prediction is
+    `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made
+    the SEs look 4x too wide; the correct one showed ~40% conservative.
+19. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+    ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
+    substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 
 ## 6. Looks wrong, is correct
 
@@ -206,14 +218,21 @@ Do not "fix" these:
   prior adds little beyond BPM; the edge is in the RAPM stage.
 - **2026 is a partial season** (~62% complete as of the last run). Minutes are
   prorated to 44 games via `availability`.
+- **`draft_prior` is validated but deliberately not in the production path.** It
+  improves the *forward* harness substantially, yet cannot change current-season
+  output: the RAPM design includes the current season, so no rated player is
+  unseen. Wiring it into `ratings.py` would be a no-op at best. Using rookie
+  draft slots as the box prior's shrinkage target was tried and made the harness
+  worse — see README.
 
 ## 7. Open work
 
-**The next implementation tranche is specified in `PLAN.md`** (forecast-tuned
-config, rookie draft priors, uncertainty bands, docs) — start there. The items
-below are the longer-term backlog.
+The `PLAN.md` tranche (forecast-tuned config, rookie draft priors, uncertainty
+bands, docs) is **complete** — kept in the repo as a record of what was measured.
 
-Ordered by value.
+Everything below is genuinely unstarted, ordered by value. Nothing here blocks
+the pipeline, which runs end to end with all invariants holding. Settled
+decisions and things-not-to-redo live in §5 and §6, not here.
 
 1. **Align the ESPN garbage-time rule.** It flags 2.4% against the archive's
    5.9%. Demonstrably harmless to ratings (r=0.994) but the cleanest remaining
@@ -230,23 +249,6 @@ Ordered by value.
 5. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
    years would need Spotrac or HHS team pages (Spotrac is client-rendered and
    returns no table to a plain fetch).
-6. **WNBA draft data must come from Basketball-Reference, not wehoop.** The
-   `wehoop-wnba-data` repo has only `draft_2026.parquet` — one season — despite
-   the directory implying a series. `bbref.fetch_advanced(..., kind="draft")`
-   covers 2010+ and is what `draft_prior.py` uses.
-7. **`draft_prior` is not in the production path, deliberately.** It improves the
-   *forward* harness substantially but cannot change current-season output: the
-   RAPM design includes the current season, so no rated player is unseen. Wiring
-   it into `ratings.py` would be a no-op at best. Using rookie draft slots as the
-   box prior's shrinkage target was tried and made the harness worse — see README.
-8. **Do not validate posterior SEs with a naive "2x SE" split-half rule.** Both
-   halves shrink toward the *same* prior, so the shared component cancels in the
-   difference and the correct prediction is
-   `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made
-   the SEs look 4x too wide; the correct one showed ~40% conservative.
-9. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
-   ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
-   substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 
 ---
 
