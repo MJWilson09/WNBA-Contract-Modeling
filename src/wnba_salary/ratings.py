@@ -37,16 +37,31 @@ from . import box_prior, data, espn_lineups, rapm, rapm_validation
 CURRENT_SEASONS = [2023, 2024, 2025, 2026]
 TARGET_SEASON = 2026
 
-HALF_LIFE = 1.5     # seasons; recency decay on both possessions and the prior
-LAMBDA = 1500.0     # interior optimum from the within-season chronological holdout
+# Descriptive config — "what is she worth right now". λ is the interior optimum
+# from the within-season chronological holdout (rapm_validation).
+HALF_LIFE = 1.5
+LAMBDA = 1500.0
+
+# Forecast config — used only for the multi-year projection columns. Tuned on the
+# FORWARD metric (forecast_validation --sweep): fit on seasons < T, predict season
+# T's game margins. Optimal shrinkage is ~4x heavier than the descriptive optimum,
+# because a model tuned to describe the current season over-trusts noisy
+# possession data when asked to forecast. Interior on both axes; λ does most of
+# the work (1500->6000 is +0.086 RMSE) while the half-life surface is shallow
+# (0.5/0.75/1.5 all within 0.011).
+FORECAST_HALF_LIFE = 0.75
+FORECAST_LAMBDA = 6000.0
+
 MIN_POSS = 200
 
 
-def recency_weight(season: np.ndarray | pd.Series, target: int = TARGET_SEASON) -> np.ndarray:
-    return 0.5 ** ((target - np.asarray(season, dtype=float)) / HALF_LIFE)
+def recency_weight(season: np.ndarray | pd.Series, target: int = TARGET_SEASON,
+                   half_life: float = HALF_LIFE) -> np.ndarray:
+    return 0.5 ** ((target - np.asarray(season, dtype=float)) / half_life)
 
 
-def pooled_prior(seasons: list[int], players: list[str]) -> tuple[np.ndarray, int, pd.DataFrame]:
+def pooled_prior(seasons: list[int], players: list[str],
+                 half_life: float = HALF_LIFE) -> tuple[np.ndarray, int, pd.DataFrame]:
     """Recency-weighted box prior aligned to the design's player order."""
     off_fit, def_fit = box_prior.fit_nba_models()
     positions = box_prior.wnba_positions(seasons)
@@ -60,7 +75,8 @@ def pooled_prior(seasons: list[int], players: list[str]) -> tuple[np.ndarray, in
         off_k=meta["shrinkage"]["offense"]["k"],
         def_k=meta["shrinkage"]["defense"]["k"],
     )
-    prior_df["w"] = prior_df["mp"] * recency_weight(prior_df["season"])
+    prior_df["w"] = prior_df["mp"] * recency_weight(prior_df["season"],
+                                                    half_life=half_life)
 
     agg = (
         prior_df.dropna(subset=["obpm", "dbpm"])
@@ -123,7 +139,7 @@ def pin_level(ratings: pd.DataFrame, minutes: pd.Series, consts: dict) -> dict:
     }
 
 
-def build() -> dict:
+def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
     poss = pd.concat(
         [espn_lineups.reconstruct(s) for s in CURRENT_SEASONS], ignore_index=True
     )
@@ -131,7 +147,7 @@ def build() -> dict:
     players = design["players"]
     n = len(players)
 
-    prior, matched, _ = pooled_prior(CURRENT_SEASONS, players)
+    prior, matched, _ = pooled_prior(CURRENT_SEASONS, players, half_life=half_life)
 
     kept = poss[poss["garbage_time"] == 0]
     offn = np.column_stack([kept[c].map(box_prior.normalize_name).to_numpy()
@@ -145,8 +161,8 @@ def build() -> dict:
     ])
     rows = kept[ok].reset_index(drop=True)
 
-    weights = recency_weight(rows["season"].to_numpy())
-    b = rapm.fit_ridge_prior(design["A"], design["y"], LAMBDA, prior, weights=weights)
+    weights = recency_weight(rows["season"].to_numpy(), half_life=half_life)
+    b = rapm.fit_ridge_prior(design["A"], design["y"], lam, prior, weights=weights)
 
     r = rapm.ratings_frame(players, b, design)
     r["o_prior"] = prior[:n]
@@ -166,11 +182,12 @@ def build() -> dict:
 
     r["target_minutes"] = r["player"].map(minutes)
     return {"ratings": r, "pin": pin, "prior_matched": matched,
-            "n_players": n, "n_poss": design["n_poss"]}
+            "n_players": n, "n_poss": design["n_poss"],
+            "lambda": lam, "half_life": half_life}
 
 
-def main() -> None:
-    res = build()
+def report(res: dict, label: str, out_name: str) -> pd.DataFrame:
+    """Print diagnostics for one config and write its artifacts."""
     r, pin = res["ratings"], res["pin"]
     consts = json.loads((data.PROCESSED_DIR / "constants.json").read_text())
     B = consts["minutes_baseline"]["value"]
@@ -182,33 +199,47 @@ def main() -> None:
         m = ~np.isnan(mp) & (mp > 0)
         return float(((mp[m] / B) * (v[m] + R)).sum())
 
+    print(f"=== {label} ===")
     print(f"possessions {res['n_poss']:,}  players {res['n_players']}  "
           f"prior matched {res['prior_matched']}/{res['n_players']}")
-    print(f"lambda {LAMBDA:,.0f}  half-life {HALF_LIFE} seasons\n")
-    print(f"level pinning (accounting identity):")
+    print(f"lambda {res['lambda']:,.0f}  half-life {res['half_life']} seasons")
     print(f"  rated players cover {pin['minutes_share']*100:.1f}% of league minutes")
-    print(f"  target summed WAR   {pin['target_war']:.1f}")
     print(f"  offset applied      {pin['offset']:+.3f} pts/100")
-    print(f"  summed WAR before   {summed_war('rapm_unpinned'):.1f}")
-    print(f"  summed WAR after    {summed_war('rapm'):.1f}")
+    print(f"  summed WAR  {summed_war('rapm_unpinned'):.1f} -> {summed_war('rapm'):.1f}"
+          f"  (target {pin['target_war']:.1f})")
 
     mp = r["target_minutes"].to_numpy(float)
     m = ~np.isnan(mp) & (mp > 0)
     print(f"  minutes-wtd mean    {np.average(r['rapm'].to_numpy(float)[m], weights=mp[m]):+.3f}")
+    print(f"  rating sd           {r['rapm'].std():.2f}")
 
-    out = data.PROCESSED_DIR / "ratings.parquet"
-    r.to_parquet(out, index=False)
-    (data.PROCESSED_DIR / "ratings_meta.json").write_text(json.dumps(
-        {"lambda": LAMBDA, "half_life": HALF_LIFE, "seasons": CURRENT_SEASONS,
-         "target_season": TARGET_SEASON, "pin": pin,
+    r.to_parquet(data.PROCESSED_DIR / f"{out_name}.parquet", index=False)
+    (data.PROCESSED_DIR / f"{out_name}_meta.json").write_text(json.dumps(
+        {"lambda": res["lambda"], "half_life": res["half_life"],
+         "seasons": CURRENT_SEASONS, "target_season": TARGET_SEASON, "pin": pin,
          "n_players": res["n_players"], "n_poss": res["n_poss"]}, indent=2))
+    return r
+
+
+def main() -> None:
+    res = build()
+    r = report(res, "descriptive (current-season value)", "ratings")
+
+    fc = build(lam=FORECAST_LAMBDA, half_life=FORECAST_HALF_LIFE)
+    print()
+    fr = report(fc, "forecast (multi-year projections)", "ratings_forecast")
+
+    merged = r[["player", "rapm"]].merge(
+        fc["ratings"][["player", "rapm"]], on="player", suffixes=("_desc", "_fc"))
+    print(f"\ndescriptive vs forecast: corr {merged['rapm_desc'].corr(merged['rapm_fc']):.4f}"
+          f"  mean|diff| {(merged['rapm_desc']-merged['rapm_fc']).abs().mean():.3f}")
 
     cur = r[r["target_minutes"].notna() & (r["target_minutes"] >= 100)]
-    print(f"\nTop 12, {TARGET_SEASON} ({len(cur)} qualified):")
+    print(f"\nTop 12 by descriptive rating, {TARGET_SEASON} ({len(cur)} qualified):")
     print(cur.nlargest(12, "rapm")[
         ["player", "o_rapm", "d_rapm", "rapm", "prior", "target_minutes"]
     ].to_string(index=False, float_format=lambda x: f"{x:+.2f}"))
-    print(f"\nwrote {out}")
+    print(f"\nwrote ratings.parquet, ratings_forecast.parquet (+ _meta.json each)")
 
 
 if __name__ == "__main__":

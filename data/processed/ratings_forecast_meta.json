@@ -1,0 +1,19 @@
+{
+  "lambda": 6000.0,
+  "half_life": 0.75,
+  "seasons": [
+    2023,
+    2024,
+    2025,
+    2026
+  ],
+  "target_season": 2026,
+  "pin": {
+    "offset": 0.16327020868544162,
+    "minutes_share": 0.6188257575757575,
+    "target_war": 153.15937499999998,
+    "rated_minutes": 81685.0
+  },
+  "n_players": 270,
+  "n_poss": 143272
+}

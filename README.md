@@ -314,6 +314,79 @@ The shrinkage constants and the offense/defense replacement split are reused fro
 the full-sample fit rather than re-estimated per split. Both are scalars fitted
 across 17 seasons, so contamination is small but not zero.
 
+### Forward validation
+
+Everything above is tuned *descriptively* — λ chosen to predict held-out games
+inside the fitted window. A contract model prices future seasons, so
+`forecast_validation.py` asks the forward question instead: fit on seasons < T,
+predict season T's games, score per-game **margin** RMSE (margin is
+level-invariant, so candidates with different implicit levels compare fairly).
+Nine test seasons, 2018–2026, ~75s on four workers.
+
+| candidate | mean margin RMSE |
+|---|---|
+| zero (no player information) | 13.5702 |
+| box prior, season T−1 only | 12.8405 |
+| RAPM, single season | 12.7746 |
+| **pooled + recency decay (production recipe)** | **12.6040** |
+| pooled + one year of aging | 12.5948 |
+
+The production recipe is the best of the set and beats the no-information floor
+by 7.1% in every one of the nine seasons, so the ratings do carry genuine
+predictive value — recency-weighted pooling is a steady-state approximation of
+what DARKO's Kalman filter does, and it survives the forward test.
+
+Three findings came out of this:
+
+1. **Forward-optimal shrinkage is heavier than descriptive.** λ=6,000 scores
+   12.5192 against λ=1,500's 12.6040, with 24,000 worse again. A model tuned to
+   describe the current season trusts noisy possession data more than a
+   forecaster should.
+2. **Aging contributes almost nothing at a one-year horizon** — 0.009 RMSE,
+   within noise. It still matters for multi-year *dollar* projections, where it
+   compounds against a rising cap, but not as a rating adjustment.
+3. **14.4% of player-slots are unseen in training** and imputed at league
+   average, rising to ~21% in expansion years (2018, 2026) — visibly the
+   worst-forecast seasons. This is the clearest structural gap against DARKO,
+   which initialises rookies from a common prior.
+
+### Two rating configs
+
+Acting on finding 1, the model now carries two configs rather than one. Both run
+through the identical pipeline and are pinned to the same accounting identity;
+they differ only in (λ, half-life).
+
+| | λ | half-life | rating sd | used for |
+|---|---|---|---|---|
+| **descriptive** | 1,500 | 1.5 | 3.11 | current-season value — "is she worth her contract now" |
+| **forecast** | 6,000 | 0.75 | 2.46 | projection years only (`rating_2027`, `value_2028`, …) |
+
+The forecast pair comes from a 5×5 grid on the forward metric
+(`forecast_validation --sweep`, ~26s), interior on both axes:
+
+|  | HL=0.25 | HL=0.5 | HL=0.75 | HL=1.5 | HL=3.0 |
+|---|---|---|---|---|---|
+| λ=1500 | 12.6620 | 12.6059 | 12.5947 | 12.6040 | 12.6285 |
+| λ=3000 | 12.5605 | 12.5225 | 12.5160 | 12.5273 | 12.5496 |
+| **λ=6000** | 12.5414 | 12.5126 | **12.5085** | 12.5192 | 12.5380 |
+| λ=12000 | 12.5617 | 12.5384 | 12.5375 | 12.5505 | 12.5689 |
+| λ=24000 | 12.5972 | 12.5781 | 12.5809 | 12.5992 | 12.6205 |
+
+λ does nearly all the work — 1,500→6,000 is worth 0.086 — while the half-life
+surface is shallow (0.5/0.75/1.5 all within 0.011), so don't over-read the
+half-life choice. Total gain over the production pair: **+0.0954**.
+
+The two configs correlate 0.945 (mean absolute difference 0.95 pts/100). The
+forecast rating is more conservative — A'ja Wilson 8.12 → 7.10, Breanna Stewart
+6.05 → 4.13 — which is the point: extrapolating a descriptively-tuned rating
+three years forward over-trusts one season of possessions.
+
+Current-season outputs are unchanged by this split (summed WAR 248.3, $100.7M,
+15 above the max), because the descriptive path was not touched.
+
+`PLAN.md` specifies the remaining tranche (rookie draft priors, uncertainty
+bands).
+
 ## Known limitations
 
 - **The prior largely re-derives BPM.** BPM is itself a linear function of box

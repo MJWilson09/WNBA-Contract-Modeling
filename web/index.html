@@ -232,8 +232,12 @@ function derive(p, ov) {
   const war = computeWar(minutes, rating);
   const value = computeValue(war, CUR);
   const marketValue = clampToBand(value, CUR);
+  // Year 0 uses the descriptive rating ("worth it now"); projection years use
+  // the forward-tuned rating, which is more heavily shrunk. Mirrors valuation.py.
+  // A slider adjustment shifts both by the same amount.
+  const forecastRating = (p.ratingForecast ?? p.rating) + adj;
   const proj = SEASONS.map((s, k) => {
-    const r = k === 0 ? rating : projectRating(rating, p.age, k);
+    const r = k === 0 ? rating : projectRating(forecastRating, p.age, k);
     if (r == null) return null;
     const w = computeWar(minutes, r);
     const v = computeValue(w, s);

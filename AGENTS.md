@@ -28,22 +28,34 @@ Run in order. Each stage reads the previous stage's output from `data/processed/
 |---|---|---|---|
 | 1 | `src.wnba_salary.constants` | box scores | `constants.json` |
 | 2 | `src.wnba_salary.box_prior` | BBRef, box scores | `box_prior.parquet`, `box_prior_fit.json` |
-| 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings.parquet`, `ratings_meta.json` |
-| 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings.parquet`, HHS | `valuation.parquet` |
+| 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings{,_forecast}.parquet` + `_meta.json` |
+| 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings{,_forecast}.parquet`, HHS | `valuation.parquet` |
 | 5 | `src.wnba_salary.export_web` | `valuation.parquet`, `constants.json` | `web/players.js`, `web/standalone.html` |
 
 Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
 ~3 min. Both are fully cached afterwards.
 
-`rapm.py` and `rapm_validation.py` are **not** in the production path. They hold
-the solver and the λ-tuning experiment against the 2017–2022 oracle. Re-run
-`rapm_validation` only if you change the prior or the solver.
+`rapm.py`, `rapm_validation.py` and `forecast_validation.py` are **not** in the
+production path.
+
+- `rapm.py` — the solver and possession builder everything else imports.
+- `rapm_validation.py` — leak-free λ tuning against the 2017–2022 oracle,
+  scored *within* season. Re-run only if you change the prior or the solver.
+- `forecast_validation.py` — **forward** validation: fit on seasons < T, predict
+  season T's game margins. ~75s on 4 workers. This is the measuring stick for
+  any change claiming predictive improvement; see `PLAN.md`.
 
 ## 3. Data
 
 `data/raw/` is **gitignored** — a fresh clone fetches ~54 MB on first run.
 Everything is cached to disk after the first fetch; deleting a subdirectory forces
 a refetch.
+
+`data/processed/poss_cache/` holds per-season possession frames (stats-API
+2017–2022, ESPN 2023–2026) so spawned validation workers read them from disk
+rather than rebuilding — macOS uses `spawn`, so workers inherit nothing. Delete
+the directory to force a rebuild after any change to `rapm.build_possessions`
+or `espn_lineups.reconstruct`.
 
 | Source | Coverage | Notes |
 |---|---|---|
@@ -69,9 +81,13 @@ regression until proven otherwise.
 - shrinkage k: offense 75, defense 200
 - replacement split: off −2.80, def −0.18 (empirical sum −3.74 vs derived −2.98)
 
-**ratings_meta.json**
-- λ=1500, half-life 1.5, 143,272 possessions, 270 players, pin offset −0.131
-- minutes-weighted mean of `rapm` must be **0.000**
+**ratings_meta.json** (descriptive) / **ratings_forecast_meta.json** (forecast)
+- descriptive: λ=1500, HL=1.5, pin offset −0.131, rating sd 3.11
+- forecast: λ=6000, HL=0.75, pin offset +0.163, rating sd 2.46
+- both: 143,272 possessions, 270 players, minutes-weighted mean **0.000**,
+  summed WAR pinned to the same 153.2 target
+- the two correlate 0.945; forecast feeds projection years only, descriptive
+  feeds current-season value
 
 **valuation.parquet**
 - 164 players, 163 matched to a salary
@@ -89,6 +105,17 @@ regression until proven otherwise.
 - leak-free λ sweep (`rapm_validation`, 2017–2022): optimum **λ=1,000**,
   clean-prior game RMSE **9.2274** vs prior-only **9.8398** (+0.61); interior
   optimum, 500 and 2,000 both worse
+
+**forecast_validation.py** — mean per-game *margin* RMSE, test seasons 2018–2026.
+These are the numbers any predictive claim must beat:
+- zero (no player info) **13.5702** · box prior **12.8405** · single-season RAPM
+  **12.7746** · pooled+decay λ=1500 **12.6040** · pooled+1yr aging **12.5948**
+- pooled at λ=6,000: **12.5192** — forward-optimal shrinkage is *heavier* than
+  the descriptive optimum
+- `--sweep` grid optimum **λ=6,000 / HL=0.75 → 12.5085** (+0.0954 over the
+  production pair), interior on both axes. λ dominates; the half-life surface is
+  shallow (0.5/0.75/1.5 within 0.011)
+- mean unseen player-slot share **14.4%** (≈21% in expansion years 2018/2026)
 
 ## 5. Traps
 
@@ -148,7 +175,10 @@ produce believable wrong answers rather than errors.
     get zero matches with no error.
 15. **The web UI duplicates the model formula in JS.** `computeWar`,
     `computeValue`, `projectRating` in `web/index.html` mirror `valuation.py`.
-    **Change one, change both**, then re-verify the $117 invariant.
+    **Change one, change both**, then re-verify the ≤~$120 agreement invariant.
+    Note year 0 uses `rating` and projection years use `ratingForecast` on both
+    sides. The browser caches `players.js` aggressively — force a reload before
+    concluding a UI change did not take.
 16. **Players are keyed on normalised names throughout**
     (`box_prior.normalize_name`). The stats feed uses WNBA person IDs, wehoop
     uses ESPN athlete IDs — they do not interoperate. Report match rates whenever
@@ -172,6 +202,10 @@ Do not "fix" these:
   prorated to 44 games via `availability`.
 
 ## 7. Open work
+
+**The next implementation tranche is specified in `PLAN.md`** (forecast-tuned
+config, rookie draft priors, uncertainty bands, docs) — start there. The items
+below are the longer-term backlog.
 
 Ordered by value.
 

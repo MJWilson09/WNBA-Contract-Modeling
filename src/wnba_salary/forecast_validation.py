@@ -58,6 +58,10 @@ HALF_LIFE = 1.5
 LAMBDA_SWEEP = [1500.0, 6000.0, 24000.0]   # pooled candidate only
 REPLACEMENT = 2.98
 
+# Task 1 grid (PLAN.md). Extend either axis if the optimum lands on an edge.
+LAMBDA_GRID = [1500, 3000, 6000, 12000, 24000]
+HALF_LIFE_GRID = [0.25, 0.5, 0.75, 1.5, 3.0]
+
 POSS_CACHE = data.PROCESSED_DIR / "poss_cache"
 MAX_WORKERS = min(4, os.cpu_count() or 1)
 
@@ -99,17 +103,12 @@ def kept_rows(poss: pd.DataFrame, players: list[str]) -> pd.DataFrame:
     return kept[ok].reset_index(drop=True)
 
 
-def fit_rapm(design: dict, rows: pd.DataFrame, prior_frame: pd.DataFrame,
-             anchor: int, lam: float, *, weighted: bool) -> dict[str, tuple[float, float]]:
-    """Fit ridge-to-prior on a prebuilt design; return name -> (o, d).
+def prior_vector(players: list[str], prior_frame: pd.DataFrame) -> np.ndarray:
+    """[obpm..., dbpm..., 0] aligned to `players`, weighted by `prior_frame.w`.
 
-    The design is passed in rather than built here so the λ sweep can reuse it —
-    building it is the expensive step (row filtering over every possession) and
-    is identical across λ values.
+    Separate from `fit_rapm` because a (λ, half-life) sweep rebuilds the prior
+    once per half-life but solves once per (λ, half-life) pair.
     """
-    players = design["players"]
-    n = len(players)
-
     agg = (prior_frame.dropna(subset=["obpm", "dbpm"])
            .groupby("key")
            .apply(lambda g: pd.Series({
@@ -118,36 +117,78 @@ def fit_rapm(design: dict, rows: pd.DataFrame, prior_frame: pd.DataFrame,
                include_groups=False))
     off = np.nan_to_num(np.array([agg["obpm"].get(k, 0.0) for k in players], dtype=float))
     dfn = np.nan_to_num(np.array([agg["dbpm"].get(k, 0.0) for k in players], dtype=float))
-    prior = np.concatenate([off, dfn, [0.0]])
+    return np.concatenate([off, dfn, [0.0]])
+
+
+def fit_rapm(design: dict, rows: pd.DataFrame, prior_frame: pd.DataFrame,
+             anchor: int, lam: float, *, weighted: bool,
+             half_life: float = HALF_LIFE) -> dict[str, tuple[float, float]]:
+    """Fit ridge-to-prior on a prebuilt design; return name -> (o, d).
+
+    The design is passed in rather than built here so the λ sweep can reuse it —
+    building it is the expensive step (row filtering over every possession) and
+    is identical across λ values.
+    """
+    players = design["players"]
+    n = len(players)
+    prior = prior_vector(players, prior_frame)
 
     weights = None
     if weighted:
-        weights = 0.5 ** ((anchor - rows["season"].to_numpy(float)) / HALF_LIFE)
+        weights = 0.5 ** ((anchor - rows["season"].to_numpy(float)) / half_life)
 
     b = rapm.fit_ridge_prior(design["A"], design["y"], lam, prior, weights=weights)
     return {p: (b[i], b[n + i]) for i, p in enumerate(players)}
 
 
-def margin_rmse(test_poss: pd.DataFrame, rating: dict[str, tuple[float, float]],
-                c0: float) -> tuple[float, int, float]:
-    """Per-game margin RMSE, n games, share of player-slots unseen in training."""
+def prep_test(test_poss: pd.DataFrame, players: list[str]) -> dict:
+    """Precompute index arrays for a test season.
+
+    A grid sweep scores the same test possessions dozens of times against
+    different coefficient vectors over the *same* player set, so the name lookup
+    is hoisted out: each on-court slot becomes an integer index into `players`,
+    or -1 for a player unseen in training (imputed league-average).
+    """
     rows = test_poss[test_poss["garbage_time"] == 0].reset_index(drop=True)
     off, dfn = norm_cols(rows)
+    idx = {p: i for i, p in enumerate(players)}
+    lut = np.vectorize(lambda p: idx.get(p, -1), otypes=[np.int64])
+    off_i, def_i = lut(off), lut(dfn)
+    return {
+        "off_i": off_i, "def_i": def_i,
+        "game": rows["game_id"].to_numpy(),
+        "team": rows["off_team"].astype(str).to_numpy(),
+        "y": rows["pts"].to_numpy(float) * 100.0,
+        "unseen": float(np.mean(np.concatenate([off_i.ravel(), def_i.ravel()]) < 0)),
+    }
 
-    o = np.vectorize(lambda p: rating.get(p, (0.0, 0.0))[0])(off).sum(axis=1)
-    d = np.vectorize(lambda p: rating.get(p, (0.0, 0.0))[1])(dfn).sum(axis=1)
-    yhat = o - d + c0
-    unseen = np.mean([p not in rating for p in np.concatenate([off.ravel(), dfn.ravel()])])
 
-    t = pd.DataFrame({"g": rows["game_id"], "team": rows["off_team"].astype(str),
-                      "y": rows["pts"].to_numpy(float) * 100.0, "p": yhat})
+def score(prep: dict, o_vec: np.ndarray, d_vec: np.ndarray, c0: float) -> tuple[float, int]:
+    """Per-game margin RMSE against precomputed indices. Unseen slots score 0."""
+    o_pad = np.append(o_vec, 0.0)
+    d_pad = np.append(d_vec, 0.0)
+    yhat = o_pad[prep["off_i"]].sum(axis=1) - d_pad[prep["def_i"]].sum(axis=1) + c0
+
+    t = pd.DataFrame({"g": prep["game"], "team": prep["team"],
+                      "y": prep["y"], "p": yhat})
     s = t.groupby(["g", "team"], as_index=False).agg(y=("y", "sum"), p=("p", "sum"))
     s = s.sort_values(["g", "team"])
     first = s.groupby("g").nth(0).set_index("g")
     second = s.groupby("g").nth(1).set_index("g")
     m = first.join(second, lsuffix="_a", rsuffix="_b").dropna()
     err = (m["y_a"] - m["y_b"]) / 100.0 - (m["p_a"] - m["p_b"]) / 100.0
-    return float(np.sqrt((err ** 2).mean())), len(m), float(unseen)
+    return float(np.sqrt((err ** 2).mean())), len(m)
+
+
+def margin_rmse(test_poss: pd.DataFrame, rating: dict[str, tuple[float, float]],
+                c0: float) -> tuple[float, int, float]:
+    """Per-game margin RMSE, n games, share of player-slots unseen in training."""
+    players = list(rating)
+    prep = prep_test(test_poss, players)
+    o_vec = np.array([rating[p][0] for p in players], dtype=float) if players else np.zeros(0)
+    d_vec = np.array([rating[p][1] for p in players], dtype=float) if players else np.zeros(0)
+    rmse, n = score(prep, o_vec, d_vec, c0)
+    return rmse, n, prep["unseen"]
 
 
 def evaluate_season(T: int) -> tuple[dict, dict]:
@@ -209,6 +250,69 @@ def evaluate_season(T: int) -> tuple[dict, dict]:
     return row, sweep_row
 
 
+def sweep_season(T: int) -> tuple[int, dict[tuple[float, float], float]]:
+    """Grid-sweep (λ, half-life) for the pooled candidate on one test season."""
+    train = pd.concat([cached_season_poss(s) for s in range(FIRST_SEASON, T)],
+                      ignore_index=True)
+    test = cached_season_poss(T)
+    c0 = float(train[train["garbage_time"] == 0]["pts"].mean() * 100)
+
+    bp = pd.read_parquet(data.PROCESSED_DIR / "box_prior.parquet")
+    bp["key"] = bp["athlete_display_name"].map(box_prior.normalize_name)
+    base = bp[bp["season"] < T].copy()
+
+    design = rapm.build_design(train, min_poss=200)
+    rows = kept_rows(train, design["players"])
+    players = design["players"]
+    n = len(players)
+    prep = prep_test(test, players)
+    age = (T - 1) - rows["season"].to_numpy(float)
+
+    out = {}
+    for hl in HALF_LIFE_GRID:
+        pf = base.copy()
+        pf["w"] = pf["mp"] * 0.5 ** ((T - 1 - pf["season"]) / hl)
+        prior = prior_vector(players, pf)
+        weights = 0.5 ** (age / hl)
+        for lam in LAMBDA_GRID:
+            b = rapm.fit_ridge_prior(design["A"], design["y"], lam, prior,
+                                     weights=weights)
+            out[(lam, hl)] = score(prep, b[:n], b[n:2 * n], c0)[0]
+    return T, out
+
+
+def main_sweep() -> None:
+    seasons = list(range(FIRST_SEASON, 2027))
+    with ProcessPoolExecutor(MAX_WORKERS) as ex:
+        list(ex.map(warm_cache, seasons))
+    print(f"(λ × half-life) sweep: {len(LAMBDA_GRID)}×{len(HALF_LIFE_GRID)} "
+          f"= {len(LAMBDA_GRID)*len(HALF_LIFE_GRID)} configs × "
+          f"{len(TEST_SEASONS)} test seasons, {MAX_WORKERS} workers")
+
+    with ProcessPoolExecutor(MAX_WORKERS) as ex:
+        out = list(ex.map(sweep_season, TEST_SEASONS))
+
+    grid = pd.DataFrame(
+        [[np.mean([d[(lam, hl)] for _, d in out]) for hl in HALF_LIFE_GRID]
+         for lam in LAMBDA_GRID],
+        index=[f"λ={int(l)}" for l in LAMBDA_GRID],
+        columns=[f"HL={hl}" for hl in HALF_LIFE_GRID],
+    )
+    print("\nmean per-game margin RMSE (test seasons 2018-2026):")
+    print(grid.to_string(float_format=lambda x: f"{x:.4f}"))
+
+    flat = grid.stack()
+    best = flat.idxmin()
+    li, hi = LAMBDA_GRID.index(int(best[0].split("=")[1])), \
+        HALF_LIFE_GRID.index(float(best[1].split("=")[1]))
+    interior = (0 < li < len(LAMBDA_GRID) - 1) and (0 < hi < len(HALF_LIFE_GRID) - 1)
+    print(f"\nbest: {best[0]}, {best[1]} -> {flat.min():.4f}")
+    print(f"  interior on both axes: {interior}"
+          f"{'' if interior else '  <-- EXTEND THE GRID (trap 4)'}")
+    print(f"  vs production λ=1500/HL=1.5: {grid.loc['λ=1500','HL=1.5']:.4f}"
+          f"  (gain {grid.loc['λ=1500','HL=1.5'] - flat.min():+.4f})")
+
+
 def main() -> None:
     seasons = list(range(FIRST_SEASON, 2027))
     with ProcessPoolExecutor(MAX_WORKERS) as ex:
@@ -232,4 +336,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+    main_sweep() if "--sweep" in sys.argv else main()

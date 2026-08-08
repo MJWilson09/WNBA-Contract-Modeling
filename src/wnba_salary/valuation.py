@@ -170,6 +170,22 @@ def build() -> pd.DataFrame:
         cur["rating"] = cur["bpm"]
         cur["rating_source"] = "box_prior"
 
+    # Forward-looking rating for the projection years only. Tuned on the forward
+    # metric, where optimal shrinkage is ~4x heavier — a rating tuned to describe
+    # the current season over-trusts noisy possession data when extrapolated.
+    # Year 0 keeps the descriptive rating: "is she worth her contract now" is a
+    # descriptive question.
+    fc_path = data.PROCESSED_DIR / "ratings_forecast.parquet"
+    if fc_path.exists():
+        fc = pd.read_parquet(fc_path)[["player", "rapm"]].rename(
+            columns={"rapm": "rating_forecast", "player": "player_fc"})
+        cur = cur.merge(fc, left_on="key", right_on="player_fc", how="left")
+        cur = cur.drop(columns=["player_fc"])
+        cur["rating_forecast"] = cur["rating_forecast"].where(
+            cur["rating_forecast"].notna(), cur["rating"])
+    else:
+        cur["rating_forecast"] = cur["rating"]
+
     # ---- prorate a partial season to a full 44 games -----------------------
     pbx = data.load("player_box", [CURRENT_SEASON])
     player_team = (
@@ -217,7 +233,7 @@ def build() -> pd.DataFrame:
         s = cba_schedule(season)
         rt, vl, mv = [], [], []
         for _, r in cur.iterrows():
-            proj = project_rating(r["rating"], r["age"], k, curve, replacement)
+            proj = project_rating(r["rating_forecast"], r["age"], k, curve, replacement)
             if np.isnan(proj):
                 rt.append(np.nan); vl.append(np.nan); mv.append(np.nan)
                 continue
