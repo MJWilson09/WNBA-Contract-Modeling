@@ -58,7 +58,11 @@
       "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.ratings)",
       "Bash(python3 -)",
       "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.export_web)",
-      "Bash(time ./.venv/bin/python -W ignore -m src.wnba_salary.forecast_validation)"
+      "Bash(time ./.venv/bin/python -W ignore -m src.wnba_salary.forecast_validation)",
+      "Bash(time ./.venv/bin/python -W ignore -m src.wnba_salary.forecast_validation --sweep)",
+      "Bash(./.venv/bin/python -W ignore -c ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m ' *)"
     ]
   }
 }
