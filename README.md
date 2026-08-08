@@ -435,7 +435,34 @@ Two things were tried and rejected on the evidence:
   (+0.29) and 2022 (+0.20), and 2018 is the one season that got marginally
   worse.
 
-`PLAN.md` has the remaining item (uncertainty bands).
+### Uncertainty bands
+
+`rapm.posterior_se` returns per-player standard errors from the ridge posterior,
+`V = σ̂²(A'WA + λI)⁻¹`, keeping the full inverse because the total rating is
+`o + d` and its variance needs the cross term. These propagate linearly into
+dollars (`value_se`, `value_lo`, `value_hi`) and the web card shows
+`±` alongside value.
+
+**What the interval is.** It is a credible interval that **treats the box prior
+as correct** — it answers "how well do the possessions pin this player down,
+given the prior", not "how uncertain is she in total". It is therefore optimistic
+for players whose prior is itself poorly determined, which includes exactly the
+defensive specialists the box score cannot see.
+
+**Magnitude, and an honest caveat.** Median SE is 3.49 on the descriptive config
+— *larger* than the rating spread itself (sd 3.11). Taken at face value that says
+possession data alone barely separates players, which is precisely why the prior
+does most of the work and why heavy shrinkage wins. The forecast config, being
+more shrunk, has a tighter posterior (median 2.04).
+
+Calibration by split-half (odd vs even games) gives observed/predicted ratios of
+0.67–0.73, so the bands are roughly right but **conservative by ~40%**. The
+residual gap is expected: the halves are not fully independent, sharing both
+lineup structure and the same prior.
+
+SEs rank players correctly by precision — Spearman 0.954 against
+`1/√possessions`, falling monotonically from 4.14 in the fewest-possession
+quintile to 2.85 in the most.
 
 ## Known limitations
 

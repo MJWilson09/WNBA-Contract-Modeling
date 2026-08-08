@@ -88,6 +88,9 @@ regression until proven otherwise.
   summed WAR pinned to the same 153.2 target
 - the two correlate 0.945; forecast feeds projection years only, descriptive
   feeds current-season value
+- `rating_se` (ridge posterior): descriptive median **3.49**, forecast **2.04**.
+  Spearman vs `1/sqrt(poss)` = **0.954**. Split-half calibration ratio 0.67–0.73,
+  i.e. ~40% conservative
 
 **valuation.parquet**
 - 164 players, 163 matched to a salary
@@ -236,7 +239,12 @@ Ordered by value.
    RAPM design includes the current season, so no rated player is unseen. Wiring
    it into `ratings.py` would be a no-op at best. Using rookie draft slots as the
    box prior's shrinkage target was tried and made the harness worse — see README.
-8. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+8. **Do not validate posterior SEs with a naive "2x SE" split-half rule.** Both
+   halves shrink toward the *same* prior, so the shared component cancels in the
+   difference and the correct prediction is
+   `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made
+   the SEs look 4x too wide; the correct one showed ~40% conservative.
+9. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
    ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
    substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 

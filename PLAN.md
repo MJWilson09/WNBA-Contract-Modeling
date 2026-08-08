@@ -89,7 +89,7 @@ Attacks the 14.4% unseen share directly; biggest headroom in expansion years.
 Acceptance: harness improvement (mean and expansion seasons); match rate
 reported; no change to descriptive invariants.
 
-## Task 3 — per-player uncertainty bands
+## Task 3 — per-player uncertainty bands  ✅ DONE
 
 1. In `rapm.py`, add a function returning per-player variance from the ridge
    posterior: `V = σ̂² (A'WA + λI)⁻¹` with σ̂² from training residuals. The
@@ -134,5 +134,7 @@ against 1/√possessions); UI shows bands; JS-Python agreement check still passe
 - **Status: Tasks 4, 1 and 2 complete.** Forecast config λ=6000/HL=0.75
   (+0.0954) and draft priors (+0.1399 on that config) stack to 12.3686 vs the
   original 12.6040. Draft priors are validated but deliberately NOT in the
-  production path — see README "Scope limit". Task 3 remains.
+  production path — see README "Scope limit".
+- **Tranche complete.** Task 3 shipped uncertainty bands (posterior SE, ~40%
+  conservative by split-half). All four tasks done.
 - Commit per task when the user asks; they handle pushes.

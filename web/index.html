@@ -231,6 +231,12 @@ function derive(p, ov) {
 
   const war = computeWar(minutes, rating);
   const value = computeValue(war, CUR);
+  // Value is linear in rating, so the rating SE propagates directly. Tracks the
+  // minutes sliders; the rating-adjustment slider does not change it, since the
+  // SE is estimation uncertainty rather than a user override. Mirrors valuation.py.
+  const valueSe = p.ratingSe == null ? null
+    : (minutes / C.minutes_baseline)
+      * MODEL.schedule[String(CUR)].dollars_per_win * p.ratingSe;
   const marketValue = clampToBand(value, CUR);
   // Year 0 uses the descriptive rating ("worth it now"); projection years use
   // the forward-tuned rating, which is more heavily shrunk. Mirrors valuation.py.
@@ -243,7 +249,7 @@ function derive(p, ov) {
     const v = computeValue(w, s);
     return { season: s, rating: r, war: w, value: v, marketValue: clampToBand(v, s) };
   });
-  return { games, mpg, adj, rating, minutes, war, value, marketValue, touched,
+  return { games, mpg, adj, rating, minutes, war, value, marketValue, touched, valueSe,
            surplus: p.salary == null ? null : marketValue - p.salary,
            cappedBy: value - marketValue, proj };
 }
@@ -349,7 +355,8 @@ function paint(card, p, d) {
         <div class="n">wins above repl.</div></div>
       <div class="cell"><div class="k">Value</div>
         <div class="v">${money(d.value)}</div>
-        <div class="n">unconstrained</div></div>
+        <div class="n">${d.valueSe == null ? "unconstrained"
+            : `unconstrained · &plusmn;${money(d.valueSe)}`}</div></div>
       <div class="cell"><div class="k">Market value</div>
         <div class="v ${d.cappedBy > 1 ? "capped" : ""}">${money(d.marketValue)}</div>
         <div class="n">${d.cappedBy > 1 ? "clipped at max" : "within CBA band"}</div></div>

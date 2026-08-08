@@ -246,6 +246,55 @@ def select_lambda(
             "curve": results, "n_train": len(tr), "n_test": len(te)}
 
 
+def posterior_se(
+    A: sparse.csr_matrix, y: np.ndarray, lam: float, b: np.ndarray,
+    n_players: int, weights: np.ndarray | None = None,
+) -> dict[str, np.ndarray]:
+    """Per-player standard errors from the ridge posterior.
+
+        V = sigma^2 * (A'WA + lambda*I)^-1
+
+    This is the Bayesian posterior covariance under a N(b_box, sigma^2/lambda)
+    prior — i.e. it **treats the box prior as truth**. It is therefore an
+    approximate credible interval, not a frequentist standard error, and it is
+    optimistic for players whose prior is itself poorly determined (few minutes,
+    or a defensive specialist the box score cannot see). Read it as "how much do
+    the possessions pin this down, given the prior", not as a full accounting of
+    uncertainty.
+
+    The total rating is `o + d`, so its variance needs the cross term:
+    `var(o) + var(d) + 2cov(o, d)`. That is why the full inverse is kept rather
+    than just the diagonal.
+    """
+    resid = y - A @ b
+    if weights is None:
+        sigma2 = float((resid ** 2).mean())
+        AtA = (A.T @ A).toarray()
+    else:
+        sigma2 = float(np.average(resid ** 2, weights=weights))
+        W = sparse.diags(weights)
+        AtA = (A.T @ W @ A).toarray()
+
+    k = A.shape[1]
+    pen = np.full(k, lam)
+    pen[-1] = 0.0                      # intercept is unpenalised
+    AtA[np.diag_indices(k)] += pen
+    cov = sigma2 * np.linalg.inv(AtA)
+
+    p = n_players
+    idx = np.arange(p)
+    var_o = np.diag(cov)[:p]
+    var_d = np.diag(cov)[p:2 * p]
+    cov_od = cov[idx, p + idx]
+    var_total = np.clip(var_o + var_d + 2 * cov_od, 0.0, None)
+    return {
+        "o_se": np.sqrt(np.clip(var_o, 0.0, None)),
+        "d_se": np.sqrt(np.clip(var_d, 0.0, None)),
+        "rating_se": np.sqrt(var_total),
+        "sigma2": sigma2,
+    }
+
+
 def ratings_frame(players: list[str], b: np.ndarray, design: dict) -> pd.DataFrame:
     p = len(players)
     A = design["A"]

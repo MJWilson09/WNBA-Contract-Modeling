@@ -163,8 +163,12 @@ def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
 
     weights = recency_weight(rows["season"].to_numpy(), half_life=half_life)
     b = rapm.fit_ridge_prior(design["A"], design["y"], lam, prior, weights=weights)
+    se = rapm.posterior_se(design["A"], design["y"], lam, b, n, weights=weights)
 
     r = rapm.ratings_frame(players, b, design)
+    r["o_se"] = se["o_se"]
+    r["d_se"] = se["d_se"]
+    r["rating_se"] = se["rating_se"]
     r["o_prior"] = prior[:n]
     r["d_prior"] = prior[n:2 * n]
     r["prior"] = r["o_prior"] + r["d_prior"]
@@ -183,7 +187,7 @@ def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
     r["target_minutes"] = r["player"].map(minutes)
     return {"ratings": r, "pin": pin, "prior_matched": matched,
             "n_players": n, "n_poss": design["n_poss"],
-            "lambda": lam, "half_life": half_life}
+            "lambda": lam, "half_life": half_life, "sigma2": se["sigma2"]}
 
 
 def report(res: dict, label: str, out_name: str) -> pd.DataFrame:
@@ -212,6 +216,8 @@ def report(res: dict, label: str, out_name: str) -> pd.DataFrame:
     m = ~np.isnan(mp) & (mp > 0)
     print(f"  minutes-wtd mean    {np.average(r['rapm'].to_numpy(float)[m], weights=mp[m]):+.3f}")
     print(f"  rating sd           {r['rapm'].std():.2f}")
+    print(f"  rating_se  median {r['rating_se'].median():.2f}  "
+          f"p10 {r['rating_se'].quantile(.10):.2f}  p90 {r['rating_se'].quantile(.90):.2f}")
 
     r.to_parquet(data.PROCESSED_DIR / f"{out_name}.parquet", index=False)
     (data.PROCESSED_DIR / f"{out_name}_meta.json").write_text(json.dumps(

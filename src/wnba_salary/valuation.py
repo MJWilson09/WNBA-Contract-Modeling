@@ -162,7 +162,8 @@ def build() -> pd.DataFrame:
     # cannot see defence (see README).
     rapm_path = data.PROCESSED_DIR / "ratings.parquet"
     if rapm_path.exists():
-        rr = pd.read_parquet(rapm_path)[["player", "rapm", "o_rapm", "d_rapm", "prior"]]
+        rr = pd.read_parquet(rapm_path)[
+            ["player", "rapm", "o_rapm", "d_rapm", "prior", "rating_se"]]
         cur = cur.merge(rr, left_on="key", right_on="player", how="left")
         cur["rating"] = cur["rapm"].where(cur["rapm"].notna(), cur["bpm"])
         cur["rating_source"] = np.where(cur["rapm"].notna(), "rapm", "box_prior")
@@ -220,6 +221,15 @@ def build() -> pd.DataFrame:
         value.append(v)
     cur["war"] = war
     cur["value"] = value
+
+    # Uncertainty band. Value is linear in rating, so the SE propagates directly:
+    # d(value)/d(rating) = (minutes / B) * $/win. See rapm.posterior_se for what
+    # this interval does and does not cover.
+    baseline = consts["minutes_baseline"]["value"]
+    dpw = dollars_per_win(consts, CURRENT_SEASON)
+    cur["value_se"] = (cur["proj_minutes"] / baseline) * dpw * cur["rating_se"]
+    cur["value_lo"] = cur["value"] - cur["value_se"]
+    cur["value_hi"] = cur["value"] + cur["value_se"]
 
     sched = cba_schedule(CURRENT_SEASON)
     cur["market_value"] = cur["value"].clip(sched["min_salary"], sched["max_salary"])

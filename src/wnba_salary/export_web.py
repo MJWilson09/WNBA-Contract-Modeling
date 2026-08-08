@@ -71,6 +71,7 @@ def build_payload() -> dict:
             "projMinutes": round(float(r.proj_minutes), 2),
             "rating": round(float(r.rating), 3),
             "ratingForecast": round(float(r.rating_forecast), 3),
+            "ratingSe": None if pd.isna(r.rating_se) else round(float(r.rating_se), 3),
             "oRapm": None if pd.isna(r.o_rapm) else round(float(r.o_rapm), 3),
             "dRapm": None if pd.isna(r.d_rapm) else round(float(r.d_rapm), 3),
             "prior": None if pd.isna(r.prior) else round(float(r.prior), 3),
