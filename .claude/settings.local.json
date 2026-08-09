@@ -79,7 +79,8 @@
       "Bash(rm -f docs/standalone.html)",
       "Bash(./.venv/bin/python scripts/make_site_assets.py)",
       "Bash(sed -n '/site.css?v=/p' docs/index.html)",
-      "Bash(sed -n '/^## 7. Open work/,/^1\\\\./p' AGENTS.md)"
+      "Bash(sed -n '/^## 7. Open work/,/^1\\\\./p' AGENTS.md)",
+      "Bash(sed -n '/^## 7. Open work/,/^1\\\\. \\\\*\\\\*Align/p' AGENTS.md)"
     ]
   }
 }

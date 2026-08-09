@@ -230,12 +230,18 @@ Do not "fix" these:
 
 ## 7. Open work
 
-The `PLAN.md` tranche (forecast-tuned config, rookie draft priors, uncertainty
-bands, docs) is **complete** — kept in the repo as a record of what was measured.
+This is the **standing backlog**: everything genuinely unstarted, ordered by
+value. Items leave this list only when they are done.
 
-Everything below is genuinely unstarted, ordered by value. Nothing here blocks
-the pipeline, which runs end to end with all invariants holding. Settled
-decisions and things-not-to-redo live in §5 and §6, not here.
+`PLAN.md` holds the **current tranche** — the batch being worked now, with
+acceptance criteria — and is rewritten each time one completes. Check it first to
+see what is in flight, and do not duplicate items between the two files. The
+forecast tranche (forward-tuned config, draft priors, uncertainty bands) finished;
+its results live in README §"Forward validation" and §4 above, and the commit
+history is the record of what was done.
+
+Nothing here blocks the pipeline, which runs end to end with all invariants
+holding. Settled decisions and things-not-to-redo live in §5 and §6, not here.
 
 1. **Align the ESPN garbage-time rule.** It flags 2.4% against the archive's
    5.9%. Demonstrably harmless to ratings (r=0.994) but the cleanest remaining
