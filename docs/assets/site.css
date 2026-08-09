@@ -187,14 +187,23 @@ tbody tr.click:hover { background: var(--line-soft); cursor: pointer; }
 td.num, th.num, tbody td { font-variant-numeric: tabular-nums; }
 td.num { font-family: var(--mono); font-size: 13px; }
 .proj th, .proj td { border-bottom: 1px solid var(--line-soft); }
+/* The projection table lives inside a card, so it needs its own scroll
+   container. Without one it is ~404px wide and drags the whole page past a
+   375px viewport — the league table only escapes this because it is already
+   wrapped in .scroll. */
+.proj-wrap { margin-top: 18px; border-radius: var(--radius-sm); }
+.proj-wrap .proj { font-size: 13px; }
 
 .note { font-size: var(--fs-xs); color: var(--ink-3); margin-top: 12px; line-height: 1.55;
   max-width: 78ch; }
 .empty { color: var(--ink-3); font-size: 14px; padding: 24px 0; }
-.toggle { position: fixed; top: 12px; right: 16px; background: var(--panel);
-  border: 1px solid var(--line); color: var(--ink-2); border-radius: var(--radius-sm);
-  padding: 5px 11px; font-size: 12px; cursor: pointer; z-index: 50;
-  font-family: var(--sans); transition: color .12s ease, border-color .12s ease; }
+/* Lives in the nav rather than floating. As a fixed element it sat on top of
+   the projection table on narrow screens, hiding figures and competing with
+   that table's horizontal scroll gesture. */
+.toggle { background: none; border: 1px solid var(--line); color: var(--ink-3);
+  border-radius: var(--radius-sm); padding: 4px 10px; font-size: 12px;
+  cursor: pointer; font-family: var(--sans); align-self: center;
+  transition: color .12s ease, border-color .12s ease; }
 .toggle:hover { color: var(--ink); border-color: var(--ink-3); }
 
 /* ---------- site chrome (multi-page) ---------- */
@@ -269,10 +278,19 @@ td.num { font-family: var(--mono); font-size: 13px; }
 @media (max-width: 640px) {
   :root { --fs-base: 15px; --fs-xl: 24px; }
   .wrap { padding: 26px 16px 70px; }
-  .nav-in { padding: 0 16px; gap: 18px; }
-  .brand { font-size: 14.5px; }
+  .nav-in { padding: 0 14px; gap: 14px; flex-wrap: wrap; row-gap: 0; }
+  .brand { font-size: 14.5px; width: 100%; padding: 12px 0 0; }
+  .nav a.link { padding: 10px 0 12px; }
+  .nav .ext { display: none; }   /* the repo link is on the About page too */
+  .toggle { margin: 0 0 8px; }
   .prose p, .prose li { font-size: 16.5px; }
   .prose h2 { font-size: 21px; margin-top: 42px; }
   .grid { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
-  .toggle { top: auto; bottom: 14px; right: 14px; }
+  .card { padding: 16px; }
+  .controls { gap: 14px; }
+  th, td { padding: 8px 10px; }
+  .proj-wrap .proj { font-size: 12.5px; }
+  .proj-wrap th, .proj-wrap td { padding: 7px 9px; }
+  /* long inline formulas in the page header should wrap, not extend the page */
+  .sub code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
 }

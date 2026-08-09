@@ -24,11 +24,9 @@
 <meta name="twitter:title" content="WNBA Contract Model">
 <meta name="twitter:description" content="What is a WNBA player actually worth? Possession-level impact ratings converted into contract value against the 2026 CBA.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=2">
+<link rel="stylesheet" href="assets/site.css?v=4">
 </head>
 <body>
-<button class="toggle" id="theme">theme</button>
-
 <nav class="nav">
   <div class="nav-in">
     <a class="brand" href="./">WNBA Contract Model</a>
@@ -36,6 +34,7 @@
     <a class="link" href="about.html">About</a>
     <span class="spacer"></span>
     <a class="ext" href="https://github.com/MJWilson09/WNBA-Contract-Modeling">Source</a>
+    <button class="toggle" id="theme" aria-label="Toggle light and dark theme">theme</button>
   </div>
 </nav>
 <div class="wrap">
@@ -297,11 +296,13 @@ function paint(card, p, d) {
       </div>
     </div>
 
-    <table class="proj" style="margin-top:16px">
-      <thead><tr><th>Season</th><th class="num">Rating</th><th class="num">WAR</th>
-        <th class="num">Value</th><th class="num">Capped</th></tr></thead>
-      <tbody>${projRows}</tbody>
-    </table>
+    <div class="scroll proj-wrap">
+      <table class="proj">
+        <thead><tr><th>Season</th><th class="num">Rating</th><th class="num">WAR</th>
+          <th class="num">Value</th><th class="num">Capped</th></tr></thead>
+        <tbody>${projRows}</tbody>
+      </table>
+    </div>
     <p class="note">Future seasons age the rating on the WNBA curve (peak 29) and
       inflate dollars on the CBA's 2026→2032 endpoints. Minutes are held at the
       slider value.</p>`;

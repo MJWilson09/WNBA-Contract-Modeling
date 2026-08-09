@@ -77,7 +77,8 @@
       "Bash(touch docs/.nojekyll)",
       "Bash(git rm *)",
       "Bash(rm -f docs/standalone.html)",
-      "Bash(./.venv/bin/python scripts/make_site_assets.py)"
+      "Bash(./.venv/bin/python scripts/make_site_assets.py)",
+      "Bash(sed -n '/site.css?v=/p' docs/index.html)"
     ]
   }
 }
