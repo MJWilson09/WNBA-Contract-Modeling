@@ -80,7 +80,10 @@
       "Bash(./.venv/bin/python scripts/make_site_assets.py)",
       "Bash(sed -n '/site.css?v=/p' docs/index.html)",
       "Bash(sed -n '/^## 7. Open work/,/^1\\\\./p' AGENTS.md)",
-      "Bash(sed -n '/^## 7. Open work/,/^1\\\\. \\\\*\\\\*Align/p' AGENTS.md)"
+      "Bash(sed -n '/^## 7. Open work/,/^1\\\\. \\\\*\\\\*Align/p' AGENTS.md)",
+      "Bash(./.venv/bin/python scripts/stamp_css_version.py)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(git commit *)"
     ]
   }
 }

@@ -185,9 +185,12 @@ produce believable wrong answers rather than errors.
     Note year 0 uses `rating` and projection years use `ratingForecast` on both
     sides. The browser caches `players.js` and `site.css` aggressively — force a
     reload before concluding a UI change did not take. **`site.css` is loaded as
-    `site.css?v=N`; bump N in both HTML files whenever you edit it**, or
-    returning visitors keep the old stylesheet. A stale sheet looks exactly like
-    broken CSS: fonts silently fall back and layout rules appear to do nothing.
+    `site.css?v=<hash>`; run `./.venv/bin/python scripts/stamp_css_version.py`
+    after editing it**, or returning visitors keep the old stylesheet. The stamp
+    is a content hash, so the script is idempotent and never makes a spurious
+    diff; it exits non-zero if a page was stale, so it also works as a check. A
+    stale sheet looks exactly like broken CSS: fonts silently fall back and
+    layout rules appear to do nothing.
 16. **Players are keyed on normalised names throughout**
     (`box_prior.normalize_name`). The stats feed uses WNBA person IDs, wehoop
     uses ESPN athlete IDs — they do not interoperate. Report match rates whenever

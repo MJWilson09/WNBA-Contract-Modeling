@@ -20,48 +20,22 @@ results are in README §"Forward validation" and AGENTS §4.
 
 ---
 
-## Current tranche: site polish
+## Current tranche: none
 
-The site went up in `704853d`…`a382367` (multi-page, GitHub Pages, typography and
-colour, mobile fixes). What follows is the unfinished part of that work. None of
-it blocks anything; the site is live and correct.
+The site-polish tranche (S1-S5) is complete — commit `bb94ee2`. Results:
 
-### S1 — Reduce the league table on narrow screens
-The table has 13 columns and scrolls horizontally on a phone. That is honest but
-awkward: the columns a reader most wants (Value, Salary, Surplus) are the ones
-off-screen. At `max-width: 640px`, show Player / Rating / Value / Surplus and put
-the rest behind a per-row expand, or a "show all columns" toggle above the table.
+| | Item | Outcome |
+|---|---|---|
+| S1 | Reduce the table on narrow screens | Player/Rating/Value/Surplus fit 341px in a 341px container; `all columns` toggle restores the other nine |
+| S2 | Visual encoding | Inline bars behind Rating and Surplus, centre-baselined so sign reads without reading the number |
+| S3 | Draw uncertainty | Hatched ±1 SE band on the value bar |
+| S4 | Landscape and tablet | 375 / 768 / 812x375 / 1280 all clear, no page overflow |
+| S5 | Tidy | Unused `.placeholder` removed; cache-buster now a content hash via `scripts/stamp_css_version.py` |
 
-*Acceptance:* no horizontal scroll needed for the four core columns at 375px; all
-13 still reachable; sorting still works on hidden columns.
-
-### S2 — Visual encoding in the league table
-The table is 13 columns of undifferentiated figures. An inline bar behind Rating
-and Surplus — scaled to the column's own range, drawn as a CSS gradient so it
-costs no markup — would let a reader scan rather than read. This is the single
-biggest legibility gain available and needs no new data.
-
-*Acceptance:* bars read correctly in both themes; negative values bar leftward
-from a centre baseline; no change to the numbers themselves.
-
-### S3 — Draw uncertainty instead of printing it
-Task 3 produced per-player error bands and the card currently renders them as the
-string `± $557,011`. A band drawn on the max-overflow bar would make the point the
-number cannot: that many players' ranges overlap, so the ranking is softer than a
-sorted table implies. Load the `dataviz` skill before drawing anything.
-
-*Acceptance:* band visible on the card; reads in both themes; the existing
-JS/Python agreement check still passes.
-
-### S4 — Test landscape and tablet
-Only 375px and desktop have been checked. 768px and landscape phone are unseen.
-
-### S5 — Tidy
-- `.placeholder` in `site.css` is now unused (the bio replaced it). Remove, or
-  keep deliberately for future draft sections — decide, don't leave it ambiguous.
-- The stylesheet cache-buster (`site.css?v=N`) is bumped by hand and is currently
-  at `v=4`. Easy to forget; see AGENTS trap 15. Consider having `export_web.py`
-  stamp it, which would make it automatic but couples a data script to the HTML.
+Pick the next tranche from **AGENTS.md §7**. The standing recommendation is
+unchanged: verifying the CBA figures outranks everything else, because every
+published dollar rests on press-reported numbers and an interpolated 2027-31
+schedule.
 
 ---
 

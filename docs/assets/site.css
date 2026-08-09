@@ -63,6 +63,8 @@
   --bg: #faf9f6; --panel: #ffffff; --line: #e6e3dd; --line-soft: #f0ede7;
   --ink: #191817; --ink-2: #5a5651; --ink-3: #767169;
   --pos: #16785a; --neg: #ab3128; --accent: #2a55a4; --cap: #8f6417;
+  --bar-pos: color-mix(in srgb, var(--pos) 20%, transparent);
+  --bar-neg: color-mix(in srgb, var(--neg) 20%, transparent);
   --shadow: 0 8px 24px rgba(25, 24, 23, .10);
 }
 @media (prefers-color-scheme: dark) {
@@ -70,6 +72,8 @@
     --bg: #131418; --panel: #1c1e23; --line: #2f3239; --line-soft: #24272d;
     --ink: #edebe7; --ink-2: #a5a29c; --ink-3: #828079;
     --pos: #45c79a; --neg: #ef7a72; --accent: #86aaf2; --cap: #e5b357;
+    --bar-pos: color-mix(in srgb, var(--pos) 26%, transparent);
+    --bar-neg: color-mix(in srgb, var(--neg) 26%, transparent);
     --shadow: 0 8px 24px rgba(0, 0, 0, .45);
   }
 }
@@ -77,6 +81,8 @@
   --bg: #131418; --panel: #1c1e23; --line: #2f3239; --line-soft: #24272d;
   --ink: #edebe7; --ink-2: #a5a29c; --ink-3: #828079;
   --pos: #45c79a; --neg: #ef7a72; --accent: #86aaf2; --cap: #e5b357;
+  --bar-pos: color-mix(in srgb, var(--pos) 26%, transparent);
+  --bar-neg: color-mix(in srgb, var(--neg) 26%, transparent);
   --shadow: 0 8px 24px rgba(0, 0, 0, .45);
 }
 
@@ -166,6 +172,14 @@ h2 { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.09
 .bar-fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); opacity: .85; }
 .bar-over { position: absolute; top: 0; bottom: 0; background: var(--cap); opacity: .8; }
 .bar-max { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+/* +/- one standard error, drawn over the fill. Hatched rather than solid so it
+   reads as a range and not as another quantity. */
+.bar-se { position: absolute; top: 0; bottom: 0; pointer-events: none;
+  background: repeating-linear-gradient(135deg,
+    color-mix(in srgb, var(--ink) 34%, transparent) 0 2px,
+    transparent 2px 5px);
+  border-left: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+  border-right: 1px solid color-mix(in srgb, var(--ink) 55%, transparent); }
 .bar-legend { display: flex; justify-content: space-between; font-size: var(--fs-micro);
   color: var(--ink-3); margin-top: 6px; font-family: var(--mono);
   font-variant-numeric: tabular-nums; gap: 12px; }
@@ -186,6 +200,26 @@ tbody tr.click:hover { background: var(--line-soft); cursor: pointer; }
 /* tabular figures everywhere numbers are compared down a column */
 td.num, th.num, tbody td { font-variant-numeric: tabular-nums; }
 td.num { font-family: var(--mono); font-size: 13px; }
+/* S2 — inline magnitude bars. The gradient stops arrive as --a/--b/--c from the
+   row template; the centre tick is the second layer so the baseline is visible
+   even where a bar is tiny. Text sits on top and keeps its own colour. */
+td.bar { background-image:
+    linear-gradient(90deg, transparent var(--a), var(--c) var(--a),
+                            var(--c) var(--b), transparent var(--b)),
+    linear-gradient(90deg, transparent calc(50% - .5px),
+                            var(--line) calc(50% - .5px),
+                            var(--line) calc(50% + .5px),
+                            transparent calc(50% + .5px));
+  background-repeat: no-repeat; }
+
+/* S1 — section head with the column toggle */
+.sec-head { display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; }
+.colbtn { display: none; background: none; border: 1px solid var(--line);
+  color: var(--ink-2); border-radius: var(--radius-sm); padding: 4px 10px;
+  font-size: 12px; font-family: var(--sans); cursor: pointer; }
+.colbtn:hover { color: var(--ink); border-color: var(--ink-3); }
+
 .proj th, .proj td { border-bottom: 1px solid var(--line-soft); }
 /* The projection table lives inside a card, so it needs its own scroll
    container. Without one it is ~404px wide and drags the whole page past a
@@ -253,8 +287,6 @@ td.num { font-family: var(--mono); font-size: 13px; }
   background: var(--panel); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   padding: 15px 17px; margin: 0 0 18px; }
 .callout p { margin: 0; font-size: 16px; }
-.placeholder { border: 1px dashed var(--line); border-radius: var(--radius-sm);
-  padding: 16px; color: var(--ink-3); font-size: 14px; }
 /* Tables inside prose stay in the UI face — they are data, not reading.
    They also need the opposite of the league table's rules: the global
    `white-space: nowrap` and right-alignment are correct for columns of figures
@@ -293,4 +325,17 @@ td.num { font-family: var(--mono); font-size: 13px; }
   .proj-wrap th, .proj-wrap td { padding: 7px 9px; }
   /* long inline formulas in the page header should wrap, not extend the page */
   .sub code { display: inline-block; max-width: 100%; overflow-wrap: anywhere; }
+
+  /* S1 — the four columns worth reading on a phone. The rest are one tap away
+     rather than off the right edge, where they were effectively invisible. */
+  .colbtn { display: inline-block; }
+  #league .opt { display: none; }
+  #league.show-all .opt { display: table-cell; }
+  /* The global `nowrap` is right for figures and wrong for names: it alone kept
+     the four-column view 80px wider than its container, so it still scrolled.
+     Let the one text column wrap; rows get taller, the table fits. */
+  #league:not(.show-all) td:first-child,
+  #league:not(.show-all) th:first-child { white-space: normal; min-width: 8.5em; }
+  #league:not(.show-all) th, #league:not(.show-all) td { padding: 8px 7px; }
+  #league:not(.show-all) td.num { font-size: 12.5px; }
 }

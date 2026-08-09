@@ -499,7 +499,7 @@ docs/
   about.html        author bio (placeholder), how the model works, acknowledgments
   assets/site.css   shared stylesheet
   players.js        generated — the only file export_web.py writes
-  assets/site.css   shared stylesheet (loaded as ?v=N — bump N when you edit it)
+  assets/site.css   shared stylesheet (loaded as ?v=<hash>; see stamp script)
   assets/fonts/     self-hosted Inter + Source Serif 4 (latin subsets)
   assets/           icon.svg, favicon-32.png, apple-touch-icon.png, og-card.png
   .nojekyll         serve files verbatim, no Jekyll processing

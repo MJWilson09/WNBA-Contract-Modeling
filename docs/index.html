@@ -24,7 +24,7 @@
 <meta name="twitter:title" content="WNBA Contract Model">
 <meta name="twitter:description" content="What is a WNBA player actually worth? Possession-level impact ratings converted into contract value against the 2026 CBA.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=4">
+<link rel="stylesheet" href="assets/site.css?v=f220a10a">
 </head>
 <body>
 <nav class="nav">
@@ -60,23 +60,26 @@
 <div id="cards"></div>
 <div class="empty" id="empty">Search above, or click any row in the league table.</div>
 
-<h2>League table</h2>
+<div class="sec-head">
+  <h2>League table</h2>
+  <button id="cols" class="colbtn" aria-expanded="false">all columns</button>
+</div>
 <div class="scroll">
   <table id="league">
     <thead><tr>
       <th data-k="name">Player</th>
-      <th data-k="team">Tm</th>
-      <th data-k="age" class="num">Age</th>
-      <th data-k="mpg" class="num">MPG</th>
+      <th data-k="team" class="opt">Tm</th>
+      <th data-k="age" class="num opt">Age</th>
+      <th data-k="mpg" class="num opt">MPG</th>
       <th data-k="rating" class="num">Rating</th>
-      <th data-k="oRapm" class="num">Off</th>
-      <th data-k="dRapm" class="num">Def</th>
-      <th data-k="war" class="num">WAR</th>
+      <th data-k="oRapm" class="num opt">Off</th>
+      <th data-k="dRapm" class="num opt">Def</th>
+      <th data-k="war" class="num opt">WAR</th>
       <th data-k="value" class="num">Value</th>
-      <th data-k="marketValue" class="num">Capped</th>
-      <th data-k="salary" class="num">Salary</th>
+      <th data-k="marketValue" class="num opt">Capped</th>
+      <th data-k="salary" class="num opt">Salary</th>
       <th data-k="surplus" class="num">Surplus</th>
-      <th data-k="signing">Type</th>
+      <th data-k="signing" class="opt">Type</th>
     </tr></thead>
     <tbody></tbody>
   </table>
@@ -249,6 +252,14 @@ function paint(card, p, d) {
   const pctVal = (Math.min(d.value, maxS) / scaleTop) * 100;
   const pctOver = (Math.max(d.value - maxS, 0) / scaleTop) * 100;
 
+  // One standard error either side of the estimate, drawn rather than printed.
+  // The point a number cannot make: these ranges overlap between players, so the
+  // ordering is softer than a sorted table implies.
+  const seLo = Math.max(0, (d.value - d.valueSe) / scaleTop * 100);
+  const seHi = Math.min(100, (d.value + d.valueSe) / scaleTop * 100);
+  const seBand = d.valueSe == null ? "" :
+    `<div class="bar-se" style="left:${seLo}%;width:${Math.max(seHi - seLo, 0.5)}%"></div>`;
+
   const projRows = d.proj.filter(Boolean).map(r => `
     <tr><td>${r.season}</td>
       <td class="num">${sgn(r.rating)}</td>
@@ -286,10 +297,12 @@ function paint(card, p, d) {
       <div class="bar-track">
         <div class="bar-fill" style="width:${pctVal}%"></div>
         <div class="bar-over" style="left:${pctMax}%;width:${pctOver}%"></div>
+        ${seBand}
         <div class="bar-max" style="left:${pctMax}%"></div>
       </div>
       <div class="bar-legend">
-        <span>value ${money(d.value)}</span>
+        <span>value ${money(d.value)}${d.valueSe == null ? "" :
+          ` &plusmn;${money(d.valueSe)}`}</span>
         <span>${d.cappedBy > 1
           ? `${money(d.cappedBy)} above the max — surplus the CBA hands the team`
           : `max ${money(maxS)}`}</span>
@@ -349,6 +362,24 @@ const rows = MODEL.players.map(p => {
   return { ...p, war: d.war, value: d.value, marketValue: d.marketValue,
            surplus: d.surplus };
 });
+// Column extents for the inline bars. Scaled per column to its own largest
+// magnitude, so each column uses its full width rather than being squashed by
+// whichever column happens to have the biggest numbers.
+const ratingMax = Math.max(...rows.map(r => Math.abs(r.rating)));
+const surplusMax = Math.max(...rows.filter(r => r.surplus != null)
+                                   .map(r => Math.abs(r.surplus)));
+
+// A bar drawn from a centre baseline: positive fills rightward, negative
+// leftward, so sign is readable without reading the number. Emitted as CSS
+// custom properties; the gradient itself lives in site.css.
+function bar(v, maxAbs) {
+  if (v == null || !maxAbs) return "";
+  const half = Math.min(Math.abs(v) / maxAbs, 1) * 50;
+  const [a, b] = v >= 0 ? [50, 50 + half] : [50 - half, 50];
+  const c = v >= 0 ? "var(--bar-pos)" : "var(--bar-neg)";
+  return `style="--a:${a}%;--b:${b}%;--c:${c}"`;
+}
+
 let sortK = "value", sortDesc = true;
 function renderTable() {
   const tb = document.querySelector("#league tbody");
@@ -361,22 +392,30 @@ function renderTable() {
   });
   tb.innerHTML = sorted.map(r => `
     <tr class="click" data-id="${r.id}">
-      <td>${r.name}</td><td>${r.team}</td>
-      <td class="num">${r.age ?? "—"}</td>
-      <td class="num">${r.mpg.toFixed(1)}</td>
-      <td class="num ${cls(r.rating)}">${sgn(r.rating)}</td>
-      <td class="num">${sgn(r.oRapm)}</td>
-      <td class="num">${sgn(r.dRapm)}</td>
-      <td class="num">${r.war.toFixed(2)}</td>
+      <td>${r.name}</td><td class="opt">${r.team}</td>
+      <td class="num opt">${r.age ?? "—"}</td>
+      <td class="num opt">${r.mpg.toFixed(1)}</td>
+      <td class="num bar ${cls(r.rating)}" ${bar(r.rating, ratingMax)}>${sgn(r.rating)}</td>
+      <td class="num opt">${sgn(r.oRapm)}</td>
+      <td class="num opt">${sgn(r.dRapm)}</td>
+      <td class="num opt">${r.war.toFixed(2)}</td>
       <td class="num">${moneyK(r.value)}</td>
-      <td class="num ${r.value > r.marketValue + 1 ? "capped" : ""}">${moneyK(r.marketValue)}</td>
-      <td class="num">${moneyK(r.salary)}</td>
-      <td class="num ${cls(r.surplus)}">${r.surplus == null ? "—" : moneyK(r.surplus)}</td>
-      <td>${r.signing}</td>
+      <td class="num opt ${r.value > r.marketValue + 1 ? "capped" : ""}">${moneyK(r.marketValue)}</td>
+      <td class="num opt">${moneyK(r.salary)}</td>
+      <td class="num bar ${cls(r.surplus)}" ${bar(r.surplus, surplusMax)}>${r.surplus == null ? "—" : moneyK(r.surplus)}</td>
+      <td class="opt">${r.signing}</td>
     </tr>`).join("");
   tb.querySelectorAll("tr").forEach(tr =>
     tr.onclick = () => add(+tr.dataset.id));
 }
+const colBtn = document.getElementById("cols");
+colBtn.onclick = () => {
+  const t = document.getElementById("league");
+  const on = t.classList.toggle("show-all");
+  colBtn.setAttribute("aria-expanded", String(on));
+  colBtn.textContent = on ? "fewer columns" : "all columns";
+};
+
 document.querySelectorAll("#league thead th").forEach(th => {
   th.onclick = () => {
     const k = th.dataset.k;
