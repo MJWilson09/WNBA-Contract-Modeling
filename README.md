@@ -16,7 +16,7 @@ shrinks RAPM toward the prior rather than toward zero.
 | A2 | Box-score prior (412 stage 1) | **done** |
 | A3 | Salary layer | **done** |
 | B  | Possession RAPM, ridge-to-prior (412 stages 2-3) | **done, wired in** |
-| A4 | Web UI | **done** |
+| A4 | Site (GitHub Pages) | **done** |
 
 ## Setup
 
@@ -79,7 +79,7 @@ silent failures that produce believable wrong numbers.
   measuring stick for any predictive claim. `--sweep` runs the (λ, HL) grid.
 - `src/wnba_salary/salaries.py` — contracts from Her Hoop Stats.
 - `src/wnba_salary/valuation.py` — ratings + constants → dollars, aging, projections.
-- `src/wnba_salary/export_web.py` — emits `web/players.js` and `web/standalone.html`.
+- `src/wnba_salary/export_web.py` — emits `docs/players.js` for the site.
 
 ## Constants (2026)
 
@@ -487,32 +487,41 @@ quintile to 2.85 in the most.
 - **Minutes are prorated from a partial 2026 season** at each player's current
   rate, adjusted for games missed. Late-season role changes aren't captured.
 
-## Web UI
+## Site
 
-`web/index.html` + `web/players.js`, mirroring Noh's shape — static, no build step,
-no dependencies. `web/standalone.html` is the same page with data inlined, for
-opening or sharing as one file.
+Static, no build step, published with **GitHub Pages** from `main` / `/docs`
+(Settings → Pages → Deploy from a branch). Live at
+<https://mjwilson09.github.io/WNBA-Contract-Modeling/>.
 
-Open `web/index.html` directly, or regenerate with `export_web`.
+```
+docs/
+  index.html        the model — search, player cards, sortable league table
+  about.html        author bio (placeholder), how the model works, acknowledgments
+  assets/site.css   shared stylesheet
+  players.js        generated — the only file export_web.py writes
+  .nojekyll         serve files verbatim, no Jekyll processing
+```
 
-The page recomputes value client-side from the embedded constants rather than
-displaying precomputed numbers, so the sliders (games, minutes per game, rating
-adjustment) actually re-run the model. `computeWar`, `computeValue` and
-`projectRating` in the page mirror `valuation.py` — **change one, change both.**
-Agreement is verified: worst discrepancy across 164 players × 3 seasons is $117
-(0.005%), entirely decimal rounding in the export.
+Only `players.js` is generated; the HTML and CSS are hand-written and safe to
+edit directly. Regenerate the data after a model change:
+
+```bash
+./.venv/bin/python -m src.wnba_salary.export_web
+```
+
+The page recomputes value client-side from embedded constants rather than
+displaying precomputed numbers, so the sliders re-run the model. `computeWar`,
+`computeValue` and `projectRating` in `index.html` mirror `valuation.py` —
+**change one, change both**, then re-check the agreement invariant (worst gap
+$112 across 164 players × 3 seasons).
 
 Two details worth knowing:
 
 - **Default minutes use the pipeline's prorated value, not `games × mpg`.** The
   sliders force `games` to an integer, so `round(44 × availability) × mpg` drifts
-  ~0.6% from `valuation.py`'s continuous arithmetic — enough that the page would
-  disagree with the parquet it was generated from. Once either minutes slider is
-  touched, it switches to the product.
-- **Unconstrained value can go negative.** Three players (Kiah Stokes, Zia Cooke,
-  Diamond Miller) grade far enough below replacement that `value` is negative;
-  `market_value` correctly clamps them to the $270K minimum. That is the formula
-  working, not a bug — below-replacement minutes cost wins.
+  ~0.6% from `valuation.py`'s continuous arithmetic. Once either minutes slider
+  is touched it switches to the product.
+- **Unconstrained value can go negative.** Three players grade far enough below
+  replacement that `value` is negative; `market_value` clamps them to the $270K
+  minimum. That is the formula working — below-replacement minutes cost wins.
 
-The max-overflow bar is the point of the page: for the 15 players priced above
-$1.4M it shows how much value the CBA hands the team for free.

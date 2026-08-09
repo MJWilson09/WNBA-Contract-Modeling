@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About · WNBA Contract Model</title>
+<meta name="description" content="How the WNBA contract model works, what it assumes, and where it falls short.">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<button class="toggle" id="theme">theme</button>
+
+<nav class="nav">
+  <div class="nav-in">
+    <a class="brand" href="./">WNBA Contract Model</a>
+    <a class="link" href="./">Model</a>
+    <a class="link" href="about.html" aria-current="page">About</a>
+    <span class="spacer"></span>
+    <a class="ext" href="https://github.com/MJWilson09/WNBA-Contract-Modeling">Source</a>
+  </div>
+</nav>
+
+<div class="wrap">
+<div class="prose">
+
+<h2 id="author">About me</h2>
+<p class="kicker">Who built this</p>
+<div class="placeholder">
+  Placeholder — to be written.
+</div>
+
+<h2 id="model">How the model works</h2>
+<p class="kicker">The method, the arithmetic, and what it can't do</p>
+
+<p>
+  The goal is a dollar figure: given what a player did on the court, what should
+  she be paid? Getting there takes three steps — measure her impact, convert that
+  impact into wins, and convert wins into money. Each step is simple on its own.
+  The first one is where all the difficulty lives.
+</p>
+
+<h3>Step 1a: why you can't just count points</h3>
+<p>
+  The obvious measure of impact is <strong>plus-minus</strong>: track the score
+  while a player is on the floor. If her team outscores opponents by 8 points in
+  her 30 minutes, she's +8.
+</p>
+<p>
+  This fails immediately, and for a reason statistics has a name for:
+  <strong>confounding</strong>. A bench player who happens to share the floor
+  with three All-Stars will post a glowing plus-minus. A good player on a bad
+  team will look terrible. Plus-minus measures the <em>lineup</em>, not the
+  player. What we want is the effect of one player holding her teammates and
+  opponents fixed — and "holding other variables fixed" is exactly what
+  regression does.
+</p>
+
+<h3>Step 1b: one variable per player</h3>
+<p>
+  So we build a regression. Each row of data is a single possession — one team
+  has the ball, tries to score, and the possession ends. There are about
+  <strong>143,000</strong> of them in this model.
+</p>
+<p>
+  The outcome variable is points scored on that possession (scaled to a
+  per-100-possessions rate, which is how basketball rates are conventionally
+  expressed). The predictors are indicator variables — one for every player in
+  the league. For each possession, a player gets <code>+1</code> if she is on
+  offense, <code>−1</code> if she is on defense, and <code>0</code> if she isn't
+  playing:
+</p>
+<div class="formula">points = (sum of the 5 offensive players' ratings)
+       − (sum of the 5 defensive players' ratings) + baseline</div>
+<p>
+  Fit that by least squares and each coefficient is that player's estimated
+  effect on scoring, with all nine other players on the floor already accounted
+  for. This is called <strong>Adjusted Plus-Minus</strong>. It is, structurally,
+  a multiple regression with about 540 predictors.
+</p>
+
+<h3>Step 1c: the problem with that regression</h3>
+<p>
+  Run it as plain least squares and the results are nonsense — coefficients of
+  +40 and −35 for players who are obviously ordinary.
+</p>
+<p>
+  The culprit is <strong>multicollinearity</strong>: predictors that move
+  together. Two players who are almost always on the floor at the same time
+  produce nearly identical columns of data, and the regression cannot tell which
+  one deserves the credit. It responds by assigning one a huge positive
+  coefficient and the other a huge negative one — a combination that fits the
+  data just as well as any other. This is worse in the WNBA than the NBA:
+  rosters carry 11–12 players instead of 15, seasons are 44 games instead of 82,
+  so the same five-woman groups play together constantly and there is less
+  independent variation to learn from.
+</p>
+<p>
+  On top of that, the outcome is extraordinarily noisy. A single possession
+  yields 0, 2, or 3 points. Predicting <em>that</em> from who is on the floor is
+  like estimating a coin's bias from one flip — the signal is real but tiny
+  relative to the randomness.
+</p>
+
+<h3>Step 1d: shrinkage, the actual fix</h3>
+<p>
+  The solution is to tell the regression that extreme coefficients are
+  implausible. Ordinary least squares picks coefficients to minimise the sum of
+  squared residuals. <strong>Ridge regression</strong> minimises that
+  <em>plus a penalty</em> on how large the coefficients are:
+</p>
+<div class="formula">minimise:  (sum of squared residuals)  +  λ × (sum of squared coefficients)</div>
+<p>
+  The tuning constant λ controls the trade-off. Large λ forces every coefficient
+  toward zero; small λ recovers ordinary least squares and its nonsense. This is
+  the <strong>bias–variance trade-off</strong>: we accept a little bias, pulling
+  estimates toward a default, in exchange for a large reduction in variance. On
+  net the estimates get closer to the truth.
+</p>
+
+<h3>Step 1e: shrink toward a better guess than zero</h3>
+<p>
+  Standard ridge pulls unknown players toward zero, meaning "league average."
+  But we can do better, because we already know something about every player
+  from her box score — points, rebounds, assists, steals, turnover rate, usage.
+</p>
+<p>
+  So the model first builds a <strong>box-score prior</strong>: a prediction of
+  each player's rating using only her counting stats. Then the ridge penalty
+  pulls toward <em>that</em> instead of toward zero:
+</p>
+<div class="formula">minimise:  (sum of squared residuals)  +  λ × (sum of squared distances from the box-score prediction)</div>
+<p>
+  Now a player with few possessions defaults to a sensible box-score-based
+  estimate rather than to "average," and players with lots of possessions can
+  pull away from it where the evidence warrants. This is the core idea of the
+  method, and it is Bayesian in spirit: the box score is a prior belief, the
+  possessions are evidence, and λ sets how much evidence it takes to move you.
+</p>
+<div class="callout">
+  <p>
+    <strong>Where the model earns its keep.</strong> Box scores cannot see
+    defense — there is no statistic for "the shot she prevented." Leonie Fiebich
+    grades <strong>−1.30</strong> from her box score alone and
+    <strong>+3.41</strong> once possessions are included, because teams simply
+    score less when she is out there. That correction is invisible to counting
+    stats.
+  </p>
+</div>
+
+<h3>Step 2: from rating to wins</h3>
+<p>
+  A rating is in points per 100 possessions. To turn it into wins we need two
+  numbers, both estimated from WNBA data rather than borrowed from the NBA.
+</p>
+<p>
+  <strong>Points per win.</strong> Regress each team's season win percentage on
+  its average scoring margin. The slope says how many points of margin buy a
+  win: about <strong>31.8</strong>. As a check, that regression's intercept was
+  left as a free parameter and came out at <strong>0.5000</strong> — a team that
+  outscores opponents by exactly zero wins exactly half its games, which is what
+  it must be if the model is sane.
+</p>
+<p>
+  <strong>Replacement level.</strong> Value should be measured against a freely
+  available player, not against average. That baseline works out to
+  <strong>−2.98</strong> points per 100 possessions. Combining:
+</p>
+<div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
+
+<h3>Step 3: from wins to dollars</h3>
+<p>
+  Here the WNBA differs sharply from the NBA, and copying the NBA approach would
+  be wrong. Under the 2026 CBA a team has a <strong>$7.0M</strong> cap, must
+  roster at least 12 players, and cannot pay anyone below
+  <strong>$270K</strong>. So $3.24M of that cap is already committed before any
+  choices are made. The money a team actually <em>allocates</em> is the
+  remainder — about <strong>$3.76M</strong> per team.
+</p>
+<p>
+  Dividing that league-wide discretionary pool by total wins above replacement
+  gives roughly <strong>$228K per win</strong>. Using the full cap instead would
+  give $424K and make nearly every rotation player look like a bargain, which
+  destroys the resolution you need in a league this compressed.
+</p>
+<div class="formula">value = $270,000 + WAR × $227,879</div>
+<p>
+  One consequence dominates the results: the maximum salary is
+  <strong>$1.4M</strong> against a <strong>$270K</strong> minimum — a ratio of
+  about 5, where the NBA's is about 43. <strong>15 of 164</strong> players are
+  worth more than the maximum the CBA permits anyone to pay them. The gap
+  between what they're worth and what they can be paid is surplus the rules hand
+  to their team.
+</p>
+
+<h3>Does it actually predict anything?</h3>
+<p>
+  A model that only describes the past is easy to fool yourself with, so the
+  ratings are tested the hard way: fit on seasons up to some year, then predict
+  the <em>following</em> season's game results, which the model has never seen.
+  Nine test seasons, scored by average error in predicted game margin.
+</p>
+<table>
+  <thead><tr><th>Information used</th><th class="num">Avg error (points)</th></tr></thead>
+  <tbody>
+    <tr><td>No player information at all</td><td class="num">13.57</td></tr>
+    <tr><td>Box scores only</td><td class="num">12.84</td></tr>
+    <tr><td>Full model</td><td class="num">12.37</td></tr>
+  </tbody>
+</table>
+<p>
+  The improvement is real — it holds in all nine seasons — but notice its size.
+  Basketball games are mostly noise, and no rating system changes that. Be
+  suspicious of anyone claiming otherwise.
+</p>
+
+<h3>Current limitations</h3>
+<p>
+  These are the things most likely to make a number on this site wrong. They are
+  listed because they are known, not because they are resolved.
+</p>
+<ul>
+  <li>
+    <strong>The CBA figures are press-reported, not read from the agreement.</strong>
+    Every dollar output depends on the $7.0M cap, $1.4M max and $270K minimum.
+    Reported caps often exclude benefits that count against the real one. Worse,
+    the 2027–2031 schedule isn't public, so the projection years use a smooth
+    interpolation between the 2026 and 2032 endpoints — an assumption, not a fact.
+  </li>
+  <li>
+    <strong>Replacement level rests on a convention.</strong> It assumes a team
+    of freely available players would win 25% of its games. Nobody fields such a
+    team, so this can't be measured. Plausible alternatives (20%–30%) move every
+    dollar figure by roughly ±7%.
+  </li>
+  <li>
+    <strong>Defense is still only partly visible.</strong> Possession data
+    recovers a lot of what box scores miss, but defensive estimates remain the
+    noisiest part of the model. Treat a surprising defensive rating as a question
+    rather than an answer.
+  </li>
+  <li>
+    <strong>The uncertainty bands are optimistic.</strong> The ± figure on each
+    player's value assumes the box-score prior is correct, so it measures how
+    well the possessions pin her down <em>given</em> that prior — not total
+    uncertainty. It is also large: for a typical player the band is wide enough
+    that neighbouring players cannot be reliably ranked.
+  </li>
+  <li>
+    <strong>Only 2026 salaries are loaded.</strong> Surplus is computed against
+    this season's cap hit. Players with multi-year deals are not evaluated across
+    the whole contract.
+  </li>
+  <li>
+    <strong>2026 is incomplete.</strong> The season is partly played, so minutes
+    are scaled up to a full 44 games at each player's current rate, adjusted for
+    games missed. A late-season role change won't show up.
+  </li>
+  <li>
+    <strong>Small samples stay unreliable.</strong> A player with a few hundred
+    possessions is mostly reporting her box-score prior back to you. The rating
+    is honest about this only through its error band, which is easy to overlook.
+  </li>
+</ul>
+
+<h2 id="thanks">Acknowledgments</h2>
+<p class="kicker">This is assembled from other people's work</p>
+<ul>
+  <li>
+    <a href="https://412sportsanalytics.wordpress.com/2022/08/18/a-detailed-guide-for-developing-player-ratings-for-wnba-and-other-leagues/">412
+    Sports Analytics</a> — the rating method used here, including the key idea of
+    shrinking toward a box-score prior rather than toward zero.
+  </li>
+  <li>
+    <a href="https://github.com/StephenNoh/nbasalarymodel">Stephen Noh's NBA salary
+    model</a> — the template for turning a rating into a contract valuation, and
+    for this site's shape.
+  </li>
+  <li>
+    Seth Partnow, <em>The Midrange Theory</em> — the rating → wins → dollars chain
+    in Chapter 7.
+  </li>
+  <li>
+    <a href="https://www.darko.app/">DARKO</a>, by Kostya Medvedovsky — the
+    reference point for what a predictive player-impact system looks like. The
+    WNBA has no DARKO, which is why this exists.
+  </li>
+  <li>
+    <a href="https://wehoop.sportsdataverse.org/">wehoop</a> and the
+    <a href="https://www.sportsdataverse.org/">SportsDataverse</a> — play-by-play,
+    box scores, rosters and lineup data. Without this the project isn't possible.
+  </li>
+  <li>
+    <a href="https://www.basketball-reference.com/wnba/">Basketball&#8209;Reference</a>
+    — advanced statistics and draft history.
+  </li>
+  <li>
+    <a href="https://herhoopstats.com/">Her Hoop Stats</a> — salary and contract data.
+  </li>
+</ul>
+<p style="margin-top:22px">
+  Mistakes in the model are mine, not theirs.
+</p>
+
+</div>
+</div>
+
+<script>
+document.getElementById("theme").onclick = () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const dark = cur ? cur === "dark"
+    : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+};
+</script>
+</body>
+</html>

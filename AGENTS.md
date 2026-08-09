@@ -30,7 +30,7 @@ Run in order. Each stage reads the previous stage's output from `data/processed/
 | 2 | `src.wnba_salary.box_prior` | BBRef, box scores | `box_prior.parquet`, `box_prior_fit.json` |
 | 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings{,_forecast}.parquet` + `_meta.json` |
 | 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings{,_forecast}.parquet`, HHS | `valuation.parquet` |
-| 5 | `src.wnba_salary.export_web` | `valuation.parquet`, `constants.json` | `web/players.js`, `web/standalone.html` |
+| 5 | `src.wnba_salary.export_web` | `valuation.parquet`, `constants.json` | `docs/players.js` |
 
 Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
 ~3 min. Both are fully cached afterwards.
@@ -180,7 +180,7 @@ produce believable wrong answers rather than errors.
     `int32` in pbp; `team_id` is `int32` vs `float64`. Cast before joining or you
     get zero matches with no error.
 15. **The web UI duplicates the model formula in JS.** `computeWar`,
-    `computeValue`, `projectRating` in `web/index.html` mirror `valuation.py`.
+    `computeValue`, `projectRating` in `docs/index.html` mirror `valuation.py`.
     **Change one, change both**, then re-verify the ≤~$120 agreement invariant.
     Note year 0 uses `rating` and projection years use `ratingForecast` on both
     sides. The browser caches `players.js` aggressively — force a reload before

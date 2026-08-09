@@ -1,15 +1,18 @@
 """Emit the static web UI's data file.
 
-Mirrors Noh's repo shape: a `players.js` holding a data array plus constants, and
-an `index.html` that does the arithmetic client-side. No build step.
+Writes `docs/players.js`, the data file for the static site. `docs/` is the
+GitHub Pages publish directory (Settings -> Pages -> Deploy from branch,
+main /docs), which is why it is not called `web/`.
+
+The site is hand-written HTML plus one shared stylesheet — `index.html`
+(the model), `about.html`, `assets/site.css`. Only the data file is generated;
+no build step.
 
 The JS recomputes value from scratch whenever the user moves a slider, so every
 constant the formula needs is embedded here rather than baked into precomputed
 numbers. The JS implementations of `computeWar`, `computeValue` and
 `projectRating` mirror `valuation.py` exactly — if you change one, change both.
 
-Also writes `standalone.html`, the same page with the data inlined, so the model
-can be opened or shared as a single file.
 """
 
 from __future__ import annotations
@@ -21,7 +24,7 @@ import pandas as pd
 
 from . import data, valuation
 
-WEB_DIR = data.PROJECT_ROOT / "web"
+WEB_DIR = data.PROJECT_ROOT / "docs"
 
 # All-Star rosters appear in the team box alongside real clubs
 NON_TEAMS = {"SPO", "COOP"}
@@ -112,21 +115,10 @@ def main() -> None:
     )
     (WEB_DIR / "players.js").write_text(js)
 
-    index = WEB_DIR / "index.html"
-    if index.exists():
-        html = index.read_text()
-        standalone = html.replace(
-            '<script src="players.js"></script>',
-            f"<script>\n{js}\n</script>",
-        )
-        (WEB_DIR / "standalone.html").write_text(standalone)
-
     n_capped = sum(1 for p in payload["players"] if p["salary"] is not None)
     print(f"wrote {WEB_DIR / 'players.js'}")
     print(f"  {len(payload['players'])} players, {n_capped} with contracts")
     print(f"  seasons: {payload['seasons']}")
-    if index.exists():
-        print(f"wrote {WEB_DIR / 'standalone.html'}")
 
 
 if __name__ == "__main__":
