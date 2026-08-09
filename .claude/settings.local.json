@@ -84,7 +84,8 @@
       "Bash(./.venv/bin/python scripts/stamp_css_version.py)",
       "Bash(echo \"exit=$?\")",
       "Bash(git commit *)",
-      "Bash(grep -n 'commit `' PLAN.md)"
+      "Bash(grep -n 'commit `' PLAN.md)",
+      "Bash(grep -E '\\\\.\\(parquet|json|js\\)$')"
     ]
   }
 }

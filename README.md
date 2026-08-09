@@ -535,3 +535,17 @@ Two details worth knowing:
   replacement that `value` is negative; `market_value` clamps them to the $270K
   minimum. That is the formula working — below-replacement minutes cost wins.
 
+## License
+
+Source code is [MIT](LICENSE).
+
+Two things it deliberately does not cover, both recorded in [NOTICE](NOTICE):
+
+- **The committed data.** Files under `data/processed/` and `docs/players.js`
+  are derived from Basketball-Reference, Her Hoop Stats and wehoop/ESPN, and
+  remain subject to their terms. They are transformed output — coefficients,
+  ratings, valuations — committed so results can be inspected without re-running
+  the pipeline, not a redistribution of anyone's tables. Raw downloads stay
+  gitignored.
+- **The bundled typefaces.** Inter and Source Serif 4 are SIL Open Font License
+  1.1, whose text ships beside them in `docs/assets/fonts/`.

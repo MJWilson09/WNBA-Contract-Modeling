@@ -1,0 +1,76 @@
+NOTICE
+======
+
+This project is MIT licensed (see LICENSE), but it bundles and derives from
+work belonging to other people. This file records what, and under what terms.
+
+
+BUNDLED TYPEFACES
+-----------------
+
+Both are distributed under the SIL Open Font License 1.1, which requires the
+license text to travel with the font files. Full texts are alongside them in
+`docs/assets/fonts/`.
+
+  Inter — Copyright (c) 2016 The Inter Project Authors
+    https://github.com/rsms/inter
+    docs/assets/fonts/inter-normal.woff2
+    License: docs/assets/fonts/OFL-Inter.txt
+
+  Source Serif 4 — Copyright 2014-2023 Adobe, with Reserved Font Name 'Source'
+    https://github.com/adobe-fonts/source-serif
+    docs/assets/fonts/sourceserif-normal.woff2
+    docs/assets/fonts/sourceserif-italic.woff2
+    License: docs/assets/fonts/OFL-SourceSerif4.txt
+
+
+DATA SOURCES
+------------
+
+Raw downloads are gitignored (`data/raw/`) and re-fetched on first run. What is
+committed under `data/processed/` and `docs/players.js` is transformed output —
+model coefficients, ratings and valuations — not reproduced source tables. It is
+included so results can be inspected without re-running the pipeline. None of it
+is relicensed by this project's MIT license, and it should not be treated as a
+redistribution of the underlying datasets.
+
+  wehoop / SportsDataverse — MIT licensed
+    https://github.com/sportsdataverse/wehoop
+    Box scores, play-by-play, rosters, player metadata, and the archived
+    WNBA Stats possession/lineup data.
+
+  Basketball-Reference (Sports Reference LLC)
+    https://www.basketball-reference.com/
+    NBA and WNBA advanced statistics and WNBA draft history, used to fit the
+    box-score prior. Accessed at their requested rate limit. Their terms
+    restrict bulk redistribution; only fitted coefficients and derived ratings
+    are committed here, never their tables.
+
+  Her Hoop Stats
+    https://herhoopstats.com/
+    2026 WNBA salary and contract data.
+
+  ESPN
+    Play-by-play and rosters, reached via the wehoop mirrors above.
+
+
+METHOD AND PRIOR ART
+--------------------
+
+Not licensing obligations, but this project would not exist without them.
+
+  412 Sports Analytics — the rating method: a transfer-learned box-score prior,
+    possession-level RAPM, and a ridge that shrinks toward the prior rather than
+    toward zero.
+    https://412sportsanalytics.wordpress.com/2022/08/18/a-detailed-guide-for-developing-player-ratings-for-wnba-and-other-leagues/
+
+  Stephen Noh, nbasalarymodel — the template for turning a player rating into a
+    contract valuation, and for the shape of this site.
+    https://github.com/StephenNoh/nbasalarymodel
+
+  Seth Partnow, "The Midrange Theory" — the rating to wins to dollars chain.
+
+  Kostya Medvedovsky, DARKO — the reference point for a predictive player-impact
+    system. https://www.darko.app/
+
+  sportsdataverse-py — the bundled WNBA aging curve used for projections.
