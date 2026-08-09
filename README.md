@@ -499,11 +499,19 @@ docs/
   about.html        author bio (placeholder), how the model works, acknowledgments
   assets/site.css   shared stylesheet
   players.js        generated — the only file export_web.py writes
+  assets/           icon.svg, favicon-32.png, apple-touch-icon.png, og-card.png
   .nojekyll         serve files verbatim, no Jekyll processing
 ```
 
 Only `players.js` is generated; the HTML and CSS are hand-written and safe to
-edit directly. Regenerate the data after a model change:
+edit directly. Icons and the link-preview card are generated too, but only when
+the branding changes:
+
+```bash
+./.venv/bin/python scripts/make_site_assets.py
+```
+
+Regenerate the data after a model change:
 
 ```bash
 ./.venv/bin/python -m src.wnba_salary.export_web

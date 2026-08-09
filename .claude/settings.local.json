@@ -76,7 +76,8 @@
       "Bash(mkdir -p docs/assets)",
       "Bash(touch docs/.nojekyll)",
       "Bash(git rm *)",
-      "Bash(rm -f docs/standalone.html)"
+      "Bash(rm -f docs/standalone.html)",
+      "Bash(./.venv/bin/python scripts/make_site_assets.py)"
     ]
   }
 }
