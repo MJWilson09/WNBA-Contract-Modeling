@@ -14,21 +14,48 @@ const MODEL = {
   "schedule": {
     "2026": {
       "min_salary": 270000,
-      "max_salary": 1400000,
+      "max_salary": 1190000,
+      "supermax_salary": 1400000,
       "salary_cap": 7000000,
+      "games": 44,
+      "min_tiers": {
+        "0": 270000,
+        "1": 277500,
+        "4": 285000,
+        "7": 292500,
+        "10": 300000
+      },
       "dollars_per_win": 227878.78787878787
     },
     "2027": {
-      "min_salary": 280575,
-      "max_salary": 1531588,
-      "salary_cap": 7547686,
-      "dollars_per_win": 253380.65302795154
+      "min_salary": 280800,
+      "max_salary": 1284010,
+      "supermax_salary": 1510600,
+      "salary_cap": 7553000,
+      "games": 50,
+      "min_tiers": {
+        "0": 280800,
+        "1": 288600,
+        "4": 296400,
+        "7": 304200,
+        "10": 312000
+      },
+      "dollars_per_win": 223114.66666666666
     },
     "2028": {
-      "min_salary": 291565,
-      "max_salary": 1675544,
-      "salary_cap": 8138223,
-      "dollars_per_win": 281178.3211526072
+      "min_salary": 292000,
+      "max_salary": 1385447,
+      "supermax_salary": 1629937,
+      "salary_cap": 8149687,
+      "games": 50,
+      "min_tiers": {
+        "0": 292000,
+        "1": 300100,
+        "4": 308300,
+        "7": 316400,
+        "10": 324500
+      },
+      "dollars_per_win": 247769.97333333333
     }
   },
   "seasons": [
@@ -109,7 +136,9 @@ const MODEL = {
       "prior": 5.485,
       "source": "rapm",
       "salary": 1400000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 2998928,
@@ -129,7 +158,9 @@ const MODEL = {
       "prior": 3.4,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 4398935,
@@ -149,7 +180,9 @@ const MODEL = {
       "prior": 2.457,
       "source": "rapm",
       "salary": 925000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 2529140,
@@ -169,7 +202,9 @@ const MODEL = {
       "prior": 3.955,
       "source": "rapm",
       "salary": 1200000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 4065870,
@@ -189,7 +224,9 @@ const MODEL = {
       "prior": 2.788,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4433791,
@@ -209,7 +246,9 @@ const MODEL = {
       "prior": 2.972,
       "source": "rapm",
       "salary": 466913,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4433730,
@@ -229,7 +268,9 @@ const MODEL = {
       "prior": 2.696,
       "source": "rapm",
       "salary": 500000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3142250,
@@ -249,7 +290,9 @@ const MODEL = {
       "prior": 1.851,
       "source": "rapm",
       "salary": 650000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 2529122,
@@ -269,7 +312,9 @@ const MODEL = {
       "prior": 0.883,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 2999101,
@@ -289,7 +334,9 @@ const MODEL = {
       "prior": 2.245,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 2529205,
@@ -309,7 +356,9 @@ const MODEL = {
       "prior": 0.795,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 4433524,
@@ -329,7 +378,9 @@ const MODEL = {
       "prior": 0.853,
       "source": "rapm",
       "salary": 436016,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 2987891,
@@ -349,7 +400,9 @@ const MODEL = {
       "prior": 0.973,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 2529130,
@@ -369,7 +422,9 @@ const MODEL = {
       "prior": 1.593,
       "source": "rapm",
       "salary": 700000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 4433790,
@@ -389,7 +444,9 @@ const MODEL = {
       "prior": -0.137,
       "source": "rapm",
       "salary": 500000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3142191,
@@ -409,7 +466,9 @@ const MODEL = {
       "prior": 0.822,
       "source": "rapm",
       "salary": 1400000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 2566106,
@@ -429,7 +488,9 @@ const MODEL = {
       "prior": 1.893,
       "source": "rapm",
       "salary": 1100000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 4432831,
@@ -449,7 +510,9 @@ const MODEL = {
       "prior": 2.6,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4433402,
@@ -469,7 +532,9 @@ const MODEL = {
       "prior": 2.087,
       "source": "rapm",
       "salary": 350692,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 3142328,
@@ -489,7 +554,9 @@ const MODEL = {
       "prior": 0.972,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 3058901,
@@ -509,7 +576,9 @@ const MODEL = {
       "prior": 1.077,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 3906949,
@@ -529,7 +598,9 @@ const MODEL = {
       "prior": 1.677,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 6,
+      "supermax": true
     },
     {
       "id": 4698736,
@@ -549,7 +620,9 @@ const MODEL = {
       "prior": 0.288,
       "source": "rapm",
       "salary": 309622,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4398674,
@@ -569,7 +642,9 @@ const MODEL = {
       "prior": 2.432,
       "source": "rapm",
       "salary": 1100000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 4898384,
@@ -589,7 +664,9 @@ const MODEL = {
       "prior": 0.224,
       "source": "rapm",
       "salary": 407163,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4398915,
@@ -609,7 +686,9 @@ const MODEL = {
       "prior": -1.197,
       "source": "rapm",
       "salary": 840000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 2491205,
@@ -629,7 +708,9 @@ const MODEL = {
       "prior": 1.964,
       "source": "rapm",
       "salary": 920000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 5208982,
@@ -649,7 +730,9 @@ const MODEL = {
       "prior": 0.548,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 2529622,
@@ -669,7 +752,9 @@ const MODEL = {
       "prior": -0.833,
       "source": "rapm",
       "salary": 750000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 4001679,
@@ -689,7 +774,9 @@ const MODEL = {
       "prior": -0.54,
       "source": "rapm",
       "salary": 425000,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 1068,
@@ -709,7 +796,9 @@ const MODEL = {
       "prior": 2.12,
       "source": "rapm",
       "salary": 950000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 15,
+      "supermax": true
     },
     {
       "id": 4433403,
@@ -729,7 +818,9 @@ const MODEL = {
       "prior": 3.836,
       "source": "rapm",
       "salary": 528846,
-      "signing": "--"
+      "signing": "--",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 5208981,
@@ -749,7 +840,9 @@ const MODEL = {
       "prior": 1.096,
       "source": "rapm",
       "salary": 289133,
-      "signing": "--"
+      "signing": "--",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4068042,
@@ -769,7 +862,9 @@ const MODEL = {
       "prior": 1.094,
       "source": "rapm",
       "salary": 303600,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4065780,
@@ -789,7 +884,9 @@ const MODEL = {
       "prior": -1.538,
       "source": "rapm",
       "salary": 600000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 6,
+      "supermax": true
     },
     {
       "id": 3146151,
@@ -809,7 +906,9 @@ const MODEL = {
       "prior": 0.192,
       "source": "rapm",
       "salary": 1085000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 4398911,
@@ -829,7 +928,9 @@ const MODEL = {
       "prior": 0.675,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 3906972,
@@ -849,7 +950,9 @@ const MODEL = {
       "prior": -0.324,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 3906753,
@@ -869,7 +972,9 @@ const MODEL = {
       "prior": 0.292,
       "source": "rapm",
       "salary": 750000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4683006,
@@ -889,7 +994,9 @@ const MODEL = {
       "prior": -0.684,
       "source": "rapm",
       "salary": 293510,
-      "signing": "--"
+      "signing": "--",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 5345444,
@@ -909,7 +1016,9 @@ const MODEL = {
       "prior": -0.829,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 2987869,
@@ -929,7 +1038,9 @@ const MODEL = {
       "prior": -0.134,
       "source": "rapm",
       "salary": 800000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 4594786,
@@ -949,7 +1060,9 @@ const MODEL = {
       "prior": 0.293,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3904576,
@@ -969,7 +1082,9 @@ const MODEL = {
       "prior": 0.917,
       "source": "rapm",
       "salary": 1200000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 2529137,
@@ -989,7 +1104,9 @@ const MODEL = {
       "prior": 0.257,
       "source": "rapm",
       "salary": 555000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 3065570,
@@ -1009,7 +1126,9 @@ const MODEL = {
       "prior": 1.739,
       "source": "rapm",
       "salary": 999999,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 5345325,
@@ -1029,7 +1148,9 @@ const MODEL = {
       "prior": -0.225,
       "source": "rapm",
       "salary": 436016,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4066533,
@@ -1049,7 +1170,9 @@ const MODEL = {
       "prior": 2.595,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 7,
+      "supermax": true
     },
     {
       "id": 4398829,
@@ -1069,7 +1192,9 @@ const MODEL = {
       "prior": -1.971,
       "source": "rapm",
       "salary": 765000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 2988756,
@@ -1089,7 +1214,9 @@ const MODEL = {
       "prior": 0.706,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 4398966,
@@ -1109,7 +1236,9 @@ const MODEL = {
       "prior": -0.571,
       "source": "rapm",
       "salary": 735000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 4790264,
@@ -1129,7 +1258,9 @@ const MODEL = {
       "prior": -0.4,
       "source": "rapm",
       "salary": 500000,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4433405,
@@ -1149,7 +1280,9 @@ const MODEL = {
       "prior": 1.23,
       "source": "rapm",
       "salary": 461171,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 869,
@@ -1169,7 +1302,9 @@ const MODEL = {
       "prior": -0.277,
       "source": "rapm",
       "salary": 500000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 17,
+      "supermax": true
     },
     {
       "id": 2490553,
@@ -1189,7 +1324,9 @@ const MODEL = {
       "prior": 0.574,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 3922628,
@@ -1209,7 +1346,9 @@ const MODEL = {
       "prior": -1.364,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 7,
+      "supermax": true
     },
     {
       "id": 4282173,
@@ -1229,7 +1368,9 @@ const MODEL = {
       "prior": -2.701,
       "source": "rapm",
       "salary": 700000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 6,
+      "supermax": true
     },
     {
       "id": 4281929,
@@ -1249,7 +1390,9 @@ const MODEL = {
       "prior": 1.986,
       "source": "rapm",
       "salary": 815000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 7,
+      "supermax": true
     },
     {
       "id": 5220150,
@@ -1269,7 +1412,9 @@ const MODEL = {
       "prior": 0.97,
       "source": "rapm",
       "salary": 466913,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 5345320,
@@ -1289,7 +1434,9 @@ const MODEL = {
       "prior": -0.061,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 1054,
@@ -1309,7 +1456,9 @@ const MODEL = {
       "prior": -0.104,
       "source": "rapm",
       "salary": 600000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 14,
+      "supermax": true
     },
     {
       "id": 4065760,
@@ -1329,7 +1478,9 @@ const MODEL = {
       "prior": -1.357,
       "source": "rapm",
       "salary": 400000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 7,
+      "supermax": true
     },
     {
       "id": 4398768,
@@ -1349,7 +1500,9 @@ const MODEL = {
       "prior": -0.124,
       "source": "rapm",
       "salary": 436957,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4398729,
@@ -1369,7 +1522,9 @@ const MODEL = {
       "prior": 0.874,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 3054590,
@@ -1389,7 +1544,9 @@ const MODEL = {
       "prior": -0.8,
       "source": "rapm",
       "salary": 350000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 4565505,
@@ -1409,7 +1566,9 @@ const MODEL = {
       "prior": 0.668,
       "source": "rapm",
       "salary": 355058,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4280892,
@@ -1429,7 +1588,9 @@ const MODEL = {
       "prior": 1.213,
       "source": "rapm",
       "salary": 139878,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4399415,
@@ -1449,7 +1610,9 @@ const MODEL = {
       "prior": -0.577,
       "source": "rapm",
       "salary": 501080,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 3907781,
@@ -1469,7 +1632,9 @@ const MODEL = {
       "prior": -0.455,
       "source": "rapm",
       "salary": 665000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 3906769,
@@ -1489,7 +1654,9 @@ const MODEL = {
       "prior": -0.647,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5105737,
@@ -1509,7 +1676,9 @@ const MODEL = {
       "prior": -1.195,
       "source": "rapm",
       "salary": 407163,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4790266,
@@ -1529,7 +1698,9 @@ const MODEL = {
       "prior": -2.163,
       "source": "rapm",
       "salary": 525000,
-      "signing": "SuspCE"
+      "signing": "SuspCE",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 2566081,
@@ -1549,7 +1720,9 @@ const MODEL = {
       "prior": -0.564,
       "source": "rapm",
       "salary": 600000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 3142055,
@@ -1569,7 +1742,9 @@ const MODEL = {
       "prior": -1.403,
       "source": "rapm",
       "salary": 315000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 4433546,
@@ -1589,7 +1764,9 @@ const MODEL = {
       "prior": -1.838,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 5278237,
@@ -1609,7 +1786,9 @@ const MODEL = {
       "prior": -1.096,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3142255,
@@ -1629,7 +1808,9 @@ const MODEL = {
       "prior": -1.155,
       "source": "rapm",
       "salary": 800000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 4873358,
@@ -1649,7 +1830,9 @@ const MODEL = {
       "prior": -1.933,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3910470,
@@ -1669,7 +1852,9 @@ const MODEL = {
       "prior": -2.102,
       "source": "rapm",
       "salary": 270000,
-      "signing": "SuspCE"
+      "signing": "SuspCE",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5274110,
@@ -1689,7 +1874,9 @@ const MODEL = {
       "prior": -0.998,
       "source": "rapm",
       "salary": 300000,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3934218,
@@ -1709,7 +1896,9 @@ const MODEL = {
       "prior": 0.535,
       "source": "rapm",
       "salary": null,
-      "signing": "\u2014"
+      "signing": "\u2014",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4432834,
@@ -1729,7 +1918,9 @@ const MODEL = {
       "prior": -1.046,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4433433,
@@ -1749,7 +1940,9 @@ const MODEL = {
       "prior": -2.628,
       "source": "rapm",
       "salary": 160244,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3913881,
@@ -1769,7 +1962,9 @@ const MODEL = {
       "prior": 1.257,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 5346554,
@@ -1789,7 +1984,9 @@ const MODEL = {
       "prior": -0.711,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 2491214,
@@ -1809,7 +2006,9 @@ const MODEL = {
       "prior": -1.129,
       "source": "rapm",
       "salary": 625000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 4280850,
@@ -1829,7 +2028,9 @@ const MODEL = {
       "prior": -1.922,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 3904577,
@@ -1849,7 +2050,9 @@ const MODEL = {
       "prior": 0.528,
       "source": "rapm",
       "salary": 1190000,
-      "signing": "Core"
+      "signing": "Core",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 5108550,
@@ -1869,7 +2072,9 @@ const MODEL = {
       "prior": -2.164,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4257500,
@@ -1889,7 +2094,9 @@ const MODEL = {
       "prior": -1.093,
       "source": "rapm",
       "salary": 500000,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 981,
@@ -1909,7 +2116,9 @@ const MODEL = {
       "prior": 0.742,
       "source": "rapm",
       "salary": 750000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 16,
+      "supermax": true
     },
     {
       "id": 2529183,
@@ -1929,7 +2138,9 @@ const MODEL = {
       "prior": -2.067,
       "source": "rapm",
       "salary": 750000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 3056730,
@@ -1949,7 +2160,9 @@ const MODEL = {
       "prior": -1.108,
       "source": "rapm",
       "salary": 360000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4432830,
@@ -1969,7 +2182,9 @@ const MODEL = {
       "prior": -2.346,
       "source": "rapm",
       "salary": 332278,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 2529047,
@@ -1989,7 +2204,9 @@ const MODEL = {
       "prior": -1.547,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 13,
+      "supermax": true
     },
     {
       "id": 4336633,
@@ -2009,7 +2226,9 @@ const MODEL = {
       "prior": -1.571,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4433404,
@@ -2029,7 +2248,9 @@ const MODEL = {
       "prior": -0.186,
       "source": "rapm",
       "salary": 493851,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 5105732,
@@ -2049,7 +2270,9 @@ const MODEL = {
       "prior": -1.538,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4899328,
@@ -2069,7 +2292,9 @@ const MODEL = {
       "prior": -1.921,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 2998938,
@@ -2089,7 +2314,9 @@ const MODEL = {
       "prior": -0.526,
       "source": "rapm",
       "salary": 1200000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 5105406,
@@ -2109,7 +2336,9 @@ const MODEL = {
       "prior": -2.055,
       "source": "rapm",
       "salary": 241463,
-      "signing": "Dev"
+      "signing": "Dev",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 2593770,
@@ -2129,7 +2358,9 @@ const MODEL = {
       "prior": -2.355,
       "source": "rapm",
       "salary": 400000,
-      "signing": "SuspCE"
+      "signing": "SuspCE",
+      "exp": 10,
+      "supermax": true
     },
     {
       "id": 4858656,
@@ -2149,7 +2380,9 @@ const MODEL = {
       "prior": -2.665,
       "source": "rapm",
       "salary": 380219,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4337216,
@@ -2169,7 +2402,9 @@ const MODEL = {
       "prior": -0.704,
       "source": "rapm",
       "salary": 277500,
-      "signing": "SuspCE"
+      "signing": "SuspCE",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 5108587,
@@ -2189,7 +2424,9 @@ const MODEL = {
       "prior": -0.192,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4038379,
@@ -2209,7 +2446,9 @@ const MODEL = {
       "prior": -0.902,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 4398764,
@@ -2229,7 +2468,9 @@ const MODEL = {
       "prior": -1.727,
       "source": "rapm",
       "salary": 277500,
-      "signing": "--"
+      "signing": "--",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 3142010,
@@ -2249,7 +2490,9 @@ const MODEL = {
       "prior": 1.052,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 5017721,
@@ -2269,7 +2512,9 @@ const MODEL = {
       "prior": -2.904,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4433633,
@@ -2289,7 +2534,9 @@ const MODEL = {
       "prior": -3.174,
       "source": "rapm",
       "salary": 277500,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 4433807,
@@ -2309,7 +2556,9 @@ const MODEL = {
       "prior": -0.714,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3919496,
@@ -2329,7 +2578,9 @@ const MODEL = {
       "prior": -1.666,
       "source": "rapm",
       "salary": 500000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 2569044,
@@ -2349,7 +2600,9 @@ const MODEL = {
       "prior": -1.459,
       "source": "rapm",
       "salary": 1000000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 6,
+      "supermax": true
     },
     {
       "id": 4684384,
@@ -2369,7 +2622,9 @@ const MODEL = {
       "prior": -0.095,
       "source": "rapm",
       "salary": 331563,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 5349415,
@@ -2389,7 +2644,9 @@ const MODEL = {
       "prior": -2.313,
       "source": "rapm",
       "salary": 210732,
-      "signing": "Dev"
+      "signing": "Dev",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 2566453,
@@ -2409,7 +2666,9 @@ const MODEL = {
       "prior": -0.644,
       "source": "rapm",
       "salary": 400000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 9,
+      "supermax": true
     },
     {
       "id": 4873359,
@@ -2429,7 +2688,9 @@ const MODEL = {
       "prior": -1.972,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4703609,
@@ -2449,7 +2710,9 @@ const MODEL = {
       "prior": -2.72,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5345524,
@@ -2469,7 +2732,9 @@ const MODEL = {
       "prior": -1.869,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5345319,
@@ -2489,7 +2754,9 @@ const MODEL = {
       "prior": -3.118,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4583144,
@@ -2509,7 +2776,9 @@ const MODEL = {
       "prior": -2.852,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4398776,
@@ -2529,7 +2798,9 @@ const MODEL = {
       "prior": -0.87,
       "source": "rapm",
       "salary": 450000,
-      "signing": "RFA"
+      "signing": "RFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 4433630,
@@ -2549,7 +2820,9 @@ const MODEL = {
       "prior": -1.567,
       "source": "rapm",
       "salary": 430654,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 4703794,
@@ -2569,7 +2842,9 @@ const MODEL = {
       "prior": -2.102,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3058892,
@@ -2589,7 +2864,9 @@ const MODEL = {
       "prior": -2.1,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4433797,
@@ -2609,7 +2886,9 @@ const MODEL = {
       "prior": -3.056,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5208983,
@@ -2629,7 +2908,9 @@ const MODEL = {
       "prior": -3.259,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4433815,
@@ -2649,7 +2930,9 @@ const MODEL = {
       "prior": -2.604,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4704594,
@@ -2669,7 +2952,9 @@ const MODEL = {
       "prior": -2.82,
       "source": "rapm",
       "salary": 15366,
-      "signing": "7D"
+      "signing": "7D",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4398907,
@@ -2689,7 +2974,9 @@ const MODEL = {
       "prior": -2.807,
       "source": "rapm",
       "salary": 144390,
-      "signing": "Dev"
+      "signing": "Dev",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 4682797,
@@ -2709,7 +2996,9 @@ const MODEL = {
       "prior": -2.429,
       "source": "rapm",
       "salary": 325000,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4898898,
@@ -2729,7 +3018,9 @@ const MODEL = {
       "prior": -2.229,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 924,
@@ -2749,7 +3040,9 @@ const MODEL = {
       "prior": -3.067,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 14,
+      "supermax": true
     },
     {
       "id": 4398938,
@@ -2769,7 +3062,9 @@ const MODEL = {
       "prior": -1.346,
       "source": "rapm",
       "salary": 318910,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 4399342,
@@ -2789,7 +3084,9 @@ const MODEL = {
       "prior": -2.847,
       "source": "rapm",
       "salary": 51890,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4433643,
@@ -2809,7 +3106,9 @@ const MODEL = {
       "prior": -0.79,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 2529458,
@@ -2829,7 +3128,9 @@ const MODEL = {
       "prior": -0.568,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 12,
+      "supermax": true
     },
     {
       "id": 3102133,
@@ -2849,7 +3150,9 @@ const MODEL = {
       "prior": -2.979,
       "source": "rapm",
       "salary": 350000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 4433431,
@@ -2869,7 +3172,9 @@ const MODEL = {
       "prior": -1.764,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4433690,
@@ -2889,7 +3194,9 @@ const MODEL = {
       "prior": -2.953,
       "source": "rapm",
       "salary": 8780,
-      "signing": "SuspCE"
+      "signing": "SuspCE",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4434020,
@@ -2909,7 +3216,9 @@ const MODEL = {
       "prior": -3.711,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4068159,
@@ -2929,7 +3238,9 @@ const MODEL = {
       "prior": -2.466,
       "source": "rapm",
       "salary": 55285,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 3099736,
@@ -2949,7 +3260,9 @@ const MODEL = {
       "prior": -3.198,
       "source": "rapm",
       "salary": 392500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4282168,
@@ -2969,7 +3282,9 @@ const MODEL = {
       "prior": -3.294,
       "source": "rapm",
       "salary": 58659,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 5,
+      "supermax": true
     },
     {
       "id": 2327695,
@@ -2989,7 +3304,9 @@ const MODEL = {
       "prior": -1.723,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4874375,
@@ -3009,7 +3326,9 @@ const MODEL = {
       "prior": -4.036,
       "source": "rapm",
       "salary": 270000,
-      "signing": "UDFA"
+      "signing": "UDFA",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4433408,
@@ -3029,7 +3348,9 @@ const MODEL = {
       "prior": -1.827,
       "source": "rapm",
       "salary": 375542,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 2566186,
@@ -3049,7 +3370,9 @@ const MODEL = {
       "prior": -2.18,
       "source": "rapm",
       "salary": 425000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 5355509,
@@ -3069,7 +3392,9 @@ const MODEL = {
       "prior": -3.793,
       "source": "rapm",
       "salary": 226098,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4704180,
@@ -3089,7 +3414,9 @@ const MODEL = {
       "prior": -3.448,
       "source": "rapm",
       "salary": 355058,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 4433514,
@@ -3109,7 +3436,9 @@ const MODEL = {
       "prior": -1.141,
       "source": "rapm",
       "salary": 309622,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 4433412,
@@ -3129,7 +3458,9 @@ const MODEL = {
       "prior": -3.453,
       "source": "rapm",
       "salary": 54066,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 2,
+      "supermax": false
     },
     {
       "id": 3142086,
@@ -3149,7 +3480,9 @@ const MODEL = {
       "prior": -5.319,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 4433411,
@@ -3169,7 +3502,9 @@ const MODEL = {
       "prior": -2.933,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3917453,
@@ -3189,7 +3524,9 @@ const MODEL = {
       "prior": -2.058,
       "source": "rapm",
       "salary": 420000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 6,
+      "supermax": true
     },
     {
       "id": 5122345,
@@ -3209,7 +3546,9 @@ const MODEL = {
       "prior": -6.559,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5209202,
@@ -3229,7 +3568,9 @@ const MODEL = {
       "prior": -4.848,
       "source": "rapm",
       "salary": 289133,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 5017726,
@@ -3249,7 +3590,9 @@ const MODEL = {
       "prior": -2.319,
       "source": "rapm",
       "salary": 500000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4432865,
@@ -3269,7 +3612,9 @@ const MODEL = {
       "prior": -2.182,
       "source": "rapm",
       "salary": 402155,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 3,
+      "supermax": false
     },
     {
       "id": 5105729,
@@ -3289,7 +3634,9 @@ const MODEL = {
       "prior": -4.379,
       "source": "rapm",
       "salary": 270000,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 0,
+      "supermax": false
     },
     {
       "id": 3142327,
@@ -3309,7 +3656,9 @@ const MODEL = {
       "prior": -3.045,
       "source": "rapm",
       "salary": 277500,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 8,
+      "supermax": true
     },
     {
       "id": 2590093,
@@ -3329,7 +3678,9 @@ const MODEL = {
       "prior": -3.727,
       "source": "rapm",
       "salary": 375000,
-      "signing": "UFA"
+      "signing": "UFA",
+      "exp": 11,
+      "supermax": true
     },
     {
       "id": 4432832,
@@ -3349,7 +3700,9 @@ const MODEL = {
       "prior": -3.53,
       "source": "rapm",
       "salary": 277500,
-      "signing": "Reserved"
+      "signing": "Reserved",
+      "exp": 4,
+      "supermax": false
     },
     {
       "id": 4433635,
@@ -3369,7 +3722,9 @@ const MODEL = {
       "prior": -2.973,
       "source": "rapm",
       "salary": 536588,
-      "signing": "Rookie"
+      "signing": "Rookie",
+      "exp": 4,
+      "supermax": false
     }
   ]
 };

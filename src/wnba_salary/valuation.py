@@ -42,26 +42,85 @@ PROJECTION_YEARS = 3        # WNBA deals are mostly 1-3 years; 5 is extrapolatio
 CURRENT_SEASON = 2026
 MIN_MINUTES = 100
 
-# CBA headline figures run 2026 -> 2032 (cap $7.0M -> $11M+, max $1.4M -> $2.4M,
-# min $270K -> $340K). The year-by-year schedule is not public, so intermediate
-# years are geometrically interpolated. ASSUMPTION - replace with the real
-# schedule from the CBA text when available.
-CBA_ENDPOINTS = {
-    "salary_cap": (7_000_000, 11_000_000),
-    "max_salary": (1_400_000, 2_400_000),
-    "min_salary": (270_000, 340_000),
+# ---------------------------------------------------------------------------
+# Verified against the 2026 CBA itself (data/raw/cba/wnba_cba.pdf, gitignored;
+# fetched from wnbpa.com). Article and section numbers are given so each figure
+# can be re-checked. This replaced a set of press-reported numbers and an
+# invented year-by-year schedule; see README for what changed.
+# ---------------------------------------------------------------------------
+
+CBA_FIRST_YEAR = 2026
+BASE_SALARY_CAP = 7_000_000        # Art. VII §1(a)(i) — exact, not a projection
+
+# Art. V §8(a)-(b): the maximum is a share of the cap, not a dollar figure.
+SUPERMAX_SHARE = 0.20              # qualifying 5+ yr vets re-signing, Core players,
+STANDARD_MAX_SHARE = 0.17          # rookie-scale extensions; everyone else gets 17%
+MIN_TEAM_SALARY_SHARE = 0.85       # Art. VII §1(c) — floor on total team spend
+
+# Art. VII §1(a)(ii): the cap after 2026 is revenue-determined (a share of SBR),
+# NOT a published schedule. It is only bounded: 2027 may move at most 13% from
+# 2026, and each year after that at most 10%. Any projection is therefore an
+# assumption; this one tracks the league's public "$11M by 2032" trajectory,
+# which works out to ~7.9%/yr and sits comfortably inside the ceiling.
+CAP_GROWTH = 0.079
+CAP_GROWTH_CEILING = {2027: 0.13}  # 0.10 for every later year
+DEFAULT_CAP_CEILING = 0.10
+
+# Art. V §7(a): the minimum is an exact table by Years of Service. Reproduced
+# for the seasons this model can project into. The 0-year column is used for the
+# discretionary-pool arithmetic in constants.py; see the note there.
+MIN_SALARY_TABLE = {                      # season: {years_of_service: minimum}
+    2026: {0: 270_000, 1: 277_500, 4: 285_000, 7: 292_500, 10: 300_000},
+    2027: {0: 280_800, 1: 288_600, 4: 296_400, 7: 304_200, 10: 312_000},
+    2028: {0: 292_000, 1: 300_100, 4: 308_300, 7: 316_400, 10: 324_500},
+    2029: {0: 303_700, 1: 312_100, 4: 320_600, 7: 329_000, 10: 337_500},
+    2030: {0: 315_900, 1: 324_600, 4: 333_400, 7: 342_200, 10: 351_000},
+    2031: {0: 328_500, 1: 337_600, 4: 346_700, 7: 355_900, 10: 365_000},
+    2032: {0: 341_600, 1: 351_100, 4: 360_600, 7: 370_100, 10: 379_600},
 }
-CBA_FIRST_YEAR, CBA_LAST_YEAR = 2026, 2032
+
+# Art. XI: the regular season lengthens over the agreement. The model previously
+# assumed 44 games in every projected year, which understated league-wide wins
+# (and so overstated dollars per win) from 2027 on.
+GAMES_PER_SEASON = {2026: 44, 2027: 50, 2028: 50}
+GAMES_FROM_2029 = 52
 
 
-def cba_schedule(season: int) -> dict:
-    """Interpolated cap/max/min for a season. See CBA_ENDPOINTS caveat."""
-    span = CBA_LAST_YEAR - CBA_FIRST_YEAR
-    t = min(max(season - CBA_FIRST_YEAR, 0), span) / span
-    out = {}
-    for key, (start, end) in CBA_ENDPOINTS.items():
-        out[key] = float(start * (end / start) ** t)
-    return out
+def games_in_season(season: int) -> int:
+    return GAMES_PER_SEASON.get(season, GAMES_FROM_2029 if season >= 2029 else 44)
+
+
+def salary_cap(season: int) -> float:
+    """Projected cap. 2026 is contractual; later years are an assumption."""
+    if season <= CBA_FIRST_YEAR:
+        return float(BASE_SALARY_CAP)
+    cap = float(BASE_SALARY_CAP)
+    for yr in range(CBA_FIRST_YEAR + 1, season + 1):
+        ceiling = CAP_GROWTH_CEILING.get(yr, DEFAULT_CAP_CEILING)
+        cap *= 1 + min(CAP_GROWTH, ceiling)
+    return cap
+
+
+def minimum_salary(season: int, years_of_service: int = 0) -> float:
+    """Minimum for a service level. Falls back to the last tabulated season."""
+    table = MIN_SALARY_TABLE.get(season) or MIN_SALARY_TABLE[max(MIN_SALARY_TABLE)]
+    tier = max(k for k in table if k <= max(int(years_of_service or 0), 0))
+    return float(table[tier])
+
+
+def cba_schedule(season: int, years_of_service: int = 0) -> dict:
+    """Cap, both maxima, and the applicable minimum for a season."""
+    cap = salary_cap(season)
+    return {
+        "salary_cap": cap,
+        "supermax_salary": cap * SUPERMAX_SHARE,
+        "standard_max_salary": cap * STANDARD_MAX_SHARE,
+        # `max_salary` keeps the old key name and means the *standard* maximum,
+        # which is what limits most contracts.
+        "max_salary": cap * STANDARD_MAX_SHARE,
+        "min_salary": minimum_salary(season, years_of_service),
+        "min_team_salary": cap * MIN_TEAM_SALARY_SHARE,
+    }
 
 
 def load_aging_curve() -> pd.DataFrame:
@@ -95,7 +154,9 @@ def dollars_per_win(consts: dict, season: int) -> float:
     cba = consts["cba"]
     discretionary = sched["salary_cap"] - cba["roster_min"] * sched["min_salary"]
     league_disc = discretionary * cba["n_teams"]
-    league_war = (cba["n_teams"] * cba["games_per_team"] / 2) * (
+    # The season lengthens under this CBA (44 -> 50 -> 52), so league-wide wins
+    # grow with it. Holding 44 fixed overstated dollars per win from 2027 on.
+    league_war = (cba["n_teams"] * games_in_season(season) / 2) * (
         1 - consts["replacement_win_pct"]["value"]
     )
     return league_disc / league_war
@@ -232,8 +293,29 @@ def build() -> pd.DataFrame:
     cur["value_hi"] = cur["value"] + cur["value_se"]
 
     sched = cba_schedule(CURRENT_SEASON)
-    cur["market_value"] = cur["value"].clip(sched["min_salary"], sched["max_salary"])
-    cur["capped_by_max"] = cur["value"] > sched["max_salary"]
+
+    # Art. V §8: most contracts are limited to the Standard Maximum (17% of the
+    # cap). The Supermax (20%) is available only to Core players, to qualifying
+    # veterans with 5+ years re-signing with their prior team, and to rookie-scale
+    # extensions. Whether a free agent is re-signing with her *prior* team is not
+    # in any data we have, so 5+ years of service is treated as eligible — that
+    # makes this an upper bound on eligibility. A salary already above the
+    # standard maximum is taken as revealed eligibility.
+    exp = cur["experience_years"].fillna(0)
+    cur["supermax_eligible"] = (
+        cur["signing"].eq("Core")
+        | (exp >= 5)
+        | (cur["salary"].fillna(0) > sched["standard_max_salary"] + 1)
+    )
+    cur["applicable_max"] = np.where(
+        cur["supermax_eligible"], sched["supermax_salary"], sched["standard_max_salary"])
+    cur["applicable_min"] = [
+        minimum_salary(CURRENT_SEASON, e) for e in exp
+    ]
+
+    cur["market_value"] = np.minimum(
+        np.maximum(cur["value"], cur["applicable_min"]), cur["applicable_max"])
+    cur["capped_by_max"] = cur["value"] > cur["applicable_max"]
     cur["surplus"] = cur["market_value"] - cur["salary"]
     cur["surplus_uncapped"] = cur["value"] - cur["salary"]
 
@@ -248,8 +330,11 @@ def build() -> pd.DataFrame:
                 rt.append(np.nan); vl.append(np.nan); mv.append(np.nan)
                 continue
             _, v = value_from_rating(r["proj_minutes"], proj, consts, season)
+            hi = (s["supermax_salary"] if r["supermax_eligible"]
+                  else s["standard_max_salary"])
+            lo = minimum_salary(season, r["experience_years"] or 0)
             rt.append(proj); vl.append(v)
-            mv.append(min(max(v, s["min_salary"]), s["max_salary"]))
+            mv.append(min(max(v, lo), hi))
         cur[f"rating_{season}"] = rt
         cur[f"value_{season}"] = vl
         cur[f"market_value_{season}"] = mv

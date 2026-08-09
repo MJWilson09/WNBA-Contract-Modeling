@@ -102,9 +102,26 @@ function computeValue(war, season) {
   const s = MODEL.schedule[String(season)];
   return s.min_salary + war * s.dollars_per_win;
 }
-function clampToBand(value, season) {
+// Art. V §8 gives two maxima: the Standard Maximum (17% of cap) limits most
+// contracts, the Supermax (20%) is for Core players, qualifying 5+ year vets
+// re-signing, and rookie-scale extensions. Mirrors valuation.py.
+function maxFor(p, season) {
   const s = MODEL.schedule[String(season)];
-  return Math.min(Math.max(value, s.min_salary), s.max_salary);
+  return p.supermax ? s.supermax_salary : s.max_salary;
+}
+// The minimum is also tiered, by Years of Service (Art. V §7(a)), so a veteran
+// floors higher than a rookie. Mirrors valuation.minimum_salary.
+function minFor(p, season) {
+  const s = MODEL.schedule[String(season)];
+  const exp = Math.max(p.exp ?? 0, 0);
+  let best = s.min_salary;
+  for (const [tier, amt] of Object.entries(s.min_tiers || {})) {
+    if (+tier <= exp) best = amt;
+  }
+  return best;
+}
+function clampToBand(value, season, p) {
+  return Math.min(Math.max(value, minFor(p, season)), maxFor(p, season));
 }
 function ageMultiplier(age) {
   const xs = MODEL.agingCurve.age, ys = MODEL.agingCurve.relValue;
@@ -157,7 +174,7 @@ function derive(p, ov) {
   const valueSe = p.ratingSe == null ? null
     : (minutes / C.minutes_baseline)
       * MODEL.schedule[String(CUR)].dollars_per_win * p.ratingSe;
-  const marketValue = clampToBand(value, CUR);
+  const marketValue = clampToBand(value, CUR, p);
   // Year 0 uses the descriptive rating ("worth it now"); projection years use
   // the forward-tuned rating, which is more heavily shrunk. Mirrors valuation.py.
   // A slider adjustment shifts both by the same amount.
@@ -167,7 +184,7 @@ function derive(p, ov) {
     if (r == null) return null;
     const w = computeWar(minutes, r);
     const v = computeValue(w, s);
-    return { season: s, rating: r, war: w, value: v, marketValue: clampToBand(v, s) };
+    return { season: s, rating: r, war: w, value: v, marketValue: clampToBand(v, s, p) };
   });
   return { games, mpg, adj, rating, minutes, war, value, marketValue, touched, valueSe,
            surplus: p.salary == null ? null : marketValue - p.salary,
@@ -246,7 +263,7 @@ function renderCards() {
 
 function paint(card, p, d) {
   const body = card.querySelector("[data-body]");
-  const maxS = MODEL.schedule[String(CUR)].max_salary;
+  const maxS = maxFor(p, CUR);
   const scaleTop = Math.max(d.value, maxS) * 1.05;
   const pctMax = (maxS / scaleTop) * 100;
   const pctVal = (Math.min(d.value, maxS) / scaleTop) * 100;

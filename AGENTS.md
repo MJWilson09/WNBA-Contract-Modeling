@@ -63,6 +63,7 @@ or `espn_lineups.reconstruct`.
 | `wehoop-data` `wnba_stats/` | **2017–2022 only** | pre-solved lineups + possessions + garbage flag |
 | Basketball-Reference | NBA 2005–2025, WNBA 2010–2026 | rate limit **3.5s**, honour it |
 | Her Hoop Stats | 2026 salaries | rate limit 4s |
+| WNBA CBA (wnbpa.com) | 2026–2035 | 409pp PDF; cap/max/min/games verified against it |
 
 ## 4. Invariants
 
@@ -96,7 +97,8 @@ regression until proven otherwise.
 - 164 players, 163 matched to a salary
 - **summed WAR 248.3** vs league-wide 247.5 — nothing is fitted to this, so it is
   a real end-to-end check
-- summed market value $100.7M vs $105M cap · 15 above the $1.4M max · rating sd 3.03
+- summed market value $100.1M vs $105M cap · 17 above their applicable max
+  (6 of them at the $1,190,000 standard max, all rookie-scale) · rating sd 3.03
 
 **Cross-source checks**
 - computed rate stats vs BBRef published: r = 0.998–0.9999
@@ -249,16 +251,12 @@ holding. Settled decisions and things-not-to-redo live in §5 and §6, not here.
 1. **Align the ESPN garbage-time rule.** It flags 2.4% against the archive's
    5.9%. Demonstrably harmless to ratings (r=0.994) but the cleanest remaining
    discrepancy. Tune `espn_lineups.GARBAGE_*` against the oracle.
-2. **Verify CBA figures against the actual agreement text.** All cap/max/min
-   numbers are press-reported. Intermediate years 2027–2031 are geometrically
-   interpolated in `valuation.CBA_ENDPOINTS`; the real schedule is not public.
-   The minimum is a $270–300K range by service time and 270K is used throughout.
-3. **Re-estimate shrinkage constants per split** in `rapm_validation`. They are
+2. **Re-estimate shrinkage constants per split** in `rapm_validation`. They are
    currently reused from the full-sample fit — small residual leakage, disclosed.
-4. **`replacement_win_pct` (0.25) is a convention, not an estimate.** Nobody
+3. **`replacement_win_pct` (0.25) is a convention, not an estimate.** Nobody
    fields a replacement team. Sensitivity is reported across 0.20–0.30; treat any
    dollar figure as carrying that band.
-5. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
+4. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
    years would need Spotrac or HHS team pages (Spotrac is client-rendered and
    returns no table to a plain fetch).
 

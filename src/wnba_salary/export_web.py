@@ -55,8 +55,16 @@ def build_payload() -> dict:
         s = valuation.cba_schedule(season)
         schedule[str(season)] = {
             "min_salary": round(s["min_salary"]),
-            "max_salary": round(s["max_salary"]),
+            "max_salary": round(s["max_salary"]),          # standard maximum
+            "supermax_salary": round(s["supermax_salary"]),
             "salary_cap": round(s["salary_cap"]),
+            "games": valuation.games_in_season(season),
+            # Art. V §7(a) minimum by Years of Service, so the page can floor
+            # each player at the minimum that actually applies to her.
+            "min_tiers": {str(k): round(v) for k, v in
+                          sorted(valuation.MIN_SALARY_TABLE.get(
+                              season, valuation.MIN_SALARY_TABLE[
+                                  max(valuation.MIN_SALARY_TABLE)]).items())},
             "dollars_per_win": valuation.dollars_per_win(consts, season),
         }
 
@@ -81,6 +89,8 @@ def build_payload() -> dict:
             "source": r.rating_source,
             "salary": None if pd.isna(r.salary) else round(float(r.salary)),
             "signing": r.signing if isinstance(r.signing, str) else "—",
+            "exp": None if pd.isna(r.experience_years) else int(r.experience_years),
+            "supermax": bool(r.supermax_eligible),
         })
 
     return {

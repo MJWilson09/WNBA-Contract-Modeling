@@ -148,9 +148,30 @@ later than NBA intuition). It is applied multiplicatively to *value above
 replacement*, not to the raw rating — scaling a −1.0 rating by 0.9 would make a
 below-average player better.
 
-Cap inflation follows the CBA's 2026→2032 endpoints ($7M→$11M cap,
-$1.4M→$2.4M max, $270K→$340K min). Intermediate years are geometrically
-interpolated; the real year-by-year schedule is not public.
+CBA figures are read from the **agreement itself** (`data/raw/cba/`, fetched
+from wnbpa.com), not from press reports. What that changed:
+
+| | previously assumed | the CBA actually says |
+|---|---|---|
+| 2026 cap | $7,000,000 | $7,000,000 — Art. VII §1(a). Correct. |
+| 2027+ cap | geometric to $11M by 2032 | revenue-linked, no schedule; bounded at +13% for 2027 and ±10% after |
+| Maximum | $1,400,000 flat | **17% of cap standard, 20% supermax** — Art. V §8 |
+| Minimum | $270,000 flat | exact table by Years of Service, 2026–2035 — Art. V §7(a) |
+| Games | 44 every year | 44 (2026), 50 (2027–28), 52 (2029+) |
+| Roster | 12 | 12. Correct. |
+
+The maximum being a *share of the cap* rather than a dollar figure is the
+substantive one. There are two maxima, and most contracts are limited to the
+standard 17% ($1,190,000 in 2026), not the $1,400,000 supermax the model used
+for everyone. The supermax reaches only Core players, qualifying five-year
+veterans re-signing with their prior team, and rookie-scale extensions —
+so six rookie-scale players who previously showed headroom to $1.4M now
+correctly cap at $1.19M.
+
+The cap beyond 2026 remains a projection, because the agreement makes it
+revenue-determined rather than scheduled. It is now at least a *bounded* one:
+the growth used (7.9%/yr, tracking the league's public "$11M by 2032" figure)
+sits inside the contractual ceiling.
 
 Both `value` (unconstrained) and `market_value` (clipped to the CBA band) are
 reported. The gap is the surplus a team captures purely because the CBA forbids
@@ -475,9 +496,12 @@ quintile to 2.85 in the most.
   that compression, not a basketball fact.
 - **`Big` is noisier for the WNBA.** The league lists only G/F/C, so `F`
   conflates what the NBA splits into SF and PF.
-- **CBA figures are press-reported.** Verify against the actual CBA text before
-  relying on any dollar output; the minimum is a $270–300K range by service time,
-  and 270K is used throughout.
+- **The cap past 2026 is a projection, not a schedule.** The agreement ties it
+  to revenue and only bounds the growth, so projected years carry that
+  uncertainty. 2026 itself is contractual.
+- **Supermax eligibility is an upper bound.** Whether a free agent is re-signing
+  with her *prior* team decides whether she can reach 20%, and no data here
+  records it, so five-plus years of service is treated as eligible.
 - **Rating dispersion (resolved).** With RAPM wired in, rating sd is 3.03 (was
   2.10 on the box prior) and 15 of 164 players price above the $1.4M max (was 6).
 - **Defensive valuation (largely resolved).** Alanna Smith moved from −3.41 to
