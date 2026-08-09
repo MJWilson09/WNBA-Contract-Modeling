@@ -85,7 +85,10 @@
       "Bash(echo \"exit=$?\")",
       "Bash(git commit *)",
       "Bash(grep -n 'commit `' PLAN.md)",
-      "Bash(grep -E '\\\\.\\(parquet|json|js\\)$')"
+      "Bash(grep -E '\\\\.\\(parquet|json|js\\)$')",
+      "Bash(awk '/<h3>Step 1d/,/<h2 id=\"thanks\">/' docs/about.html)",
+      "Bash(cat)",
+      "Bash(./.venv/bin/python -c ' *)"
     ]
   }
 }

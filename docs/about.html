@@ -68,171 +68,155 @@
 <p class="kicker">The method, the arithmetic, and what it can't do</p>
 
 <p>
-  The goal is a dollar figure: given what a player did on the court, what should
-  she be paid? Getting there takes three steps — measure her impact, convert that
-  impact into wins, and convert wins into money. Each step is simple on its own.
-  The first one is where all the difficulty lives.
+  The question is what a player is worth in dollars. That splits into three
+  parts: measure her impact on the court, turn impact into wins, turn wins into
+  money. The last two are mostly arithmetic. The first one is the hard part.
 </p>
 
-<h3>Step 1a: why you can't just count points</h3>
+<h3>Plus-minus doesn't work</h3>
 <p>
-  The obvious measure of impact is <strong>plus-minus</strong>: track the score
-  while a player is on the floor. If her team outscores opponents by 8 points in
-  her 30 minutes, she's +8.
+  The simplest measure of impact is plus-minus, the score differential while
+  she's on the floor. If her team outscores opponents by 8 in her 30 minutes,
+  she's +8.
 </p>
 <p>
-  This fails immediately, and for a reason statistics has a name for:
-  <strong>confounding</strong>. A bench player who happens to share the floor
-  with three All-Stars will post a glowing plus-minus. A good player on a bad
-  team will look terrible. Plus-minus measures the <em>lineup</em>, not the
-  player. What we want is the effect of one player holding her teammates and
-  opponents fixed — and "holding other variables fixed" is exactly what
-  regression does.
+  The problem is confounding. A bench player who only ever plays next to three
+  All-Stars will look excellent. A good player on a bad team will look awful.
+  Plus-minus measures the lineup, not the player. What I actually want is her
+  effect holding teammates and opponents constant, and holding things constant
+  is what regression is for.
 </p>
 
-<h3>Step 1b: one variable per player</h3>
+<h3>One coefficient per player</h3>
 <p>
-  So we build a regression. Each row of data is a single possession — one team
-  has the ball, tries to score, and the possession ends. There are about
-  <strong>143,000</strong> of them in this model.
+  Each row of the data is a single possession: a team gets the ball, something
+  happens, the possession ends. There are about <strong>143,000</strong> of them
+  in the current fit.
 </p>
 <p>
-  The outcome variable is points scored on that possession (scaled to a
-  per-100-possessions rate, which is how basketball rates are conventionally
-  expressed). The predictors are indicator variables — one for every player in
-  the league. For each possession, a player gets <code>+1</code> if she is on
-  offense, <code>−1</code> if she is on defense, and <code>0</code> if she isn't
-  playing:
+  The response is points scored on that possession, scaled to a per-100 rate
+  because that's the convention for basketball rates. The predictors are
+  indicators, one per player, coded <code>+1</code> on offense, <code>−1</code>
+  on defense, and <code>0</code> when she isn't playing.
 </p>
 <div class="formula">points = (sum of the 5 offensive players' ratings)
        − (sum of the 5 defensive players' ratings) + baseline</div>
 <p>
-  Fit that by least squares and each coefficient is that player's estimated
-  effect on scoring, with all nine other players on the floor already accounted
-  for. This is called <strong>Adjusted Plus-Minus</strong>. It is, structurally,
-  a multiple regression with about 540 predictors.
+  Least squares on that gives every player a coefficient: her effect on scoring
+  with the other nine on the floor already accounted for. This is Adjusted
+  Plus-Minus. Structurally it's a multiple regression with about 540 predictors.
 </p>
 
-<h3>Step 1c: the problem with that regression</h3>
+<h3>Why OLS blows up</h3>
 <p>
-  Run it as plain least squares and the results are nonsense — coefficients of
-  +40 and −35 for players who are obviously ordinary.
+  Fit it with plain least squares and the output is garbage. Coefficients of +40
+  and −35 land on players who are obviously ordinary.
 </p>
 <p>
-  The culprit is <strong>multicollinearity</strong>: predictors that move
-  together. Two players who are almost always on the floor at the same time
-  produce nearly identical columns of data, and the regression cannot tell which
-  one deserves the credit. It responds by assigning one a huge positive
-  coefficient and the other a huge negative one — a combination that fits the
-  data just as well as any other. This is worse in the WNBA than the NBA:
-  rosters carry 11–12 players instead of 15, seasons are 44 games instead of 82,
-  so the same five-woman groups play together constantly and there is less
-  independent variation to learn from.
+  The cause is multicollinearity. Two players who are almost always on the floor
+  together produce nearly identical columns, and the regression has no way to
+  tell whose credit is whose. It resolves that by giving one a huge positive
+  coefficient and the other a huge negative one, which fits the training data
+  exactly as well as any other split. The WNBA has this worse than the NBA:
+  rosters run 11 or 12 deep instead of 15 and a season is 44 games instead of
+  82, so the same five players share the floor constantly.
 </p>
 <p>
-  On top of that, the outcome is extraordinarily noisy. A single possession
-  yields 0, 2, or 3 points. Predicting <em>that</em> from who is on the floor is
-  like estimating a coin's bias from one flip — the signal is real but tiny
-  relative to the randomness.
+  The response is also brutally noisy. One possession returns 0, 2, or 3 points.
+  Predicting that from a lineup is close to estimating a coin's bias from a
+  single flip.
 </p>
 
-<h3>Step 1d: shrinkage, the actual fix</h3>
+<h3>Ridge regression</h3>
 <p>
-  The solution is to tell the regression that extreme coefficients are
-  implausible. Ordinary least squares picks coefficients to minimise the sum of
-  squared residuals. <strong>Ridge regression</strong> minimises that
-  <em>plus a penalty</em> on how large the coefficients are:
+  Ridge fixes this by making large coefficients expensive. OLS minimizes the sum
+  of squared residuals; ridge minimizes that plus a penalty term.
 </p>
-<div class="formula">minimise:  (sum of squared residuals)  +  λ × (sum of squared coefficients)</div>
+<div class="formula">minimize:  (sum of squared residuals)  +  λ × (sum of squared coefficients)</div>
 <p>
-  The tuning constant λ controls the trade-off. Large λ forces every coefficient
-  toward zero; small λ recovers ordinary least squares and its nonsense. This is
-  the <strong>bias–variance trade-off</strong>: we accept a little bias, pulling
-  estimates toward a default, in exchange for a large reduction in variance. On
-  net the estimates get closer to the truth.
+  λ sets the trade-off. Large λ crushes everything toward zero, small λ gives
+  back OLS and its garbage. It's the bias–variance trade-off: take on a little
+  bias to kill a lot of variance, and land closer to the truth on average.
 </p>
 
-<h3>Step 1e: shrink toward a better guess than zero</h3>
+<h3>Shrink toward the box score, not toward zero</h3>
 <p>
-  Standard ridge pulls unknown players toward zero, meaning "league average."
-  But we can do better, because we already know something about every player
-  from her box score — points, rebounds, assists, steals, turnover rate, usage.
+  Plain ridge pulls every player toward zero, meaning league average. That
+  wastes information, because I already know something about each player from
+  her box score: points, rebounds, assists, steals, turnover rate, usage.
 </p>
 <p>
-  So the model first builds a <strong>box-score prior</strong>: a prediction of
-  each player's rating using only her counting stats. Then the ridge penalty
-  pulls toward <em>that</em> instead of toward zero:
+  So I fit a box-score prior first, predicting each player's rating from
+  counting stats alone, and point the ridge penalty at that instead of at zero.
 </p>
-<div class="formula">minimise:  (sum of squared residuals)  +  λ × (sum of squared distances from the box-score prediction)</div>
+<div class="formula">minimize:  (sum of squared residuals)  +  λ × (sum of squared distances from the box-score prediction)</div>
 <p>
-  Now a player with few possessions defaults to a sensible box-score-based
-  estimate rather than to "average," and players with lots of possessions can
-  pull away from it where the evidence warrants. This is the core idea of the
-  method, and it is Bayesian in spirit: the box score is a prior belief, the
-  possessions are evidence, and λ sets how much evidence it takes to move you.
+  Now a player with few possessions falls back on her box score rather than on
+  "average," and a player with thousands can pull away from it. That's the core
+  of the method, and it's Bayesian in flavor: the box score is the prior, the
+  possessions are the likelihood, and λ decides how much evidence it takes to
+  move you.
 </p>
 <div class="callout">
   <p>
-    <strong>Where the model earns its keep.</strong> Box scores cannot see
-    defense — there is no statistic for "the shot she prevented." Leonie Fiebich
-    grades <strong>−1.30</strong> from her box score alone and
-    <strong>+3.41</strong> once possessions are included, because teams simply
-    score less when she is out there. That correction is invisible to counting
-    stats.
+    <strong>Where this earns its keep.</strong> Box scores can't see defense.
+    There's no counting stat for a shot that never got taken. Leonie Fiebich
+    grades <strong>−1.30</strong> from her box score and <strong>+3.41</strong>
+    once possessions are included, because teams simply score less when she's
+    out there.
   </p>
 </div>
 
-<h3>Step 2: from rating to wins</h3>
+<h3>Rating to wins</h3>
 <p>
-  A rating is in points per 100 possessions. To turn it into wins we need two
-  numbers, both estimated from WNBA data rather than borrowed from the NBA.
+  The rating is in points per 100 possessions. Two constants turn it into wins,
+  and I estimated both from WNBA data instead of borrowing the NBA's.
 </p>
 <p>
-  <strong>Points per win.</strong> Regress each team's season win percentage on
-  its average scoring margin. The slope says how many points of margin buy a
-  win: about <strong>31.8</strong>. As a check, that regression's intercept was
-  left as a free parameter and came out at <strong>0.5000</strong> — a team that
-  outscores opponents by exactly zero wins exactly half its games, which is what
-  it must be if the model is sane.
+  For points per win, regress each team's season win percentage on its average
+  scoring margin. The slope works out to about <strong>31.8</strong> points of
+  margin per win. I left the intercept free as a sanity check and it came back
+  at <strong>0.5000</strong>, which is what it has to be if the fit is sound: a
+  team with zero point differential wins half its games.
 </p>
 <p>
-  <strong>Replacement level.</strong> Value should be measured against a freely
-  available player, not against average. That baseline works out to
-  <strong>−2.98</strong> points per 100 possessions. Combining:
+  Replacement level is the second. Value should be measured against a freely
+  available player rather than against average, and that baseline lands at
+  <strong>−2.98</strong> points per 100.
 </p>
 <div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
 
-<h3>Step 3: from wins to dollars</h3>
+<h3>Wins to dollars</h3>
 <p>
-  Here the WNBA differs sharply from the NBA, and copying the NBA approach would
-  be wrong. Under the 2026 CBA a team has a <strong>$7.0M</strong> cap, must
-  roster at least 12 players, and cannot pay anyone below
-  <strong>$270K</strong>. So $3.24M of that cap is already committed before any
-  choices are made. The money a team actually <em>allocates</em> is the
-  remainder — about <strong>$3.76M</strong> per team.
+  This is where the WNBA stops resembling the NBA, and where copying the NBA
+  approach would give the wrong answer. Under the 2026 CBA a team has a
+  <strong>$7.0M</strong> cap, has to carry 12 players, and can't pay anyone
+  below <strong>$270K</strong>. That means $3.24M is committed before anyone
+  makes a single decision. The money a team actually chooses how to spend is the
+  remaining <strong>$3.76M</strong>.
 </p>
 <p>
-  Dividing that league-wide discretionary pool by total wins above replacement
-  gives roughly <strong>$228K per win</strong>. Using the full cap instead would
-  give $424K and make nearly every rotation player look like a bargain, which
-  destroys the resolution you need in a league this compressed.
+  Dividing the league-wide discretionary pool by total wins above replacement
+  gives about <strong>$228K per win</strong>. Pricing off the full cap instead
+  gives $424K, which makes nearly every rotation player look like a bargain and
+  throws away the resolution you need in a league this compressed.
 </p>
 <div class="formula">value = $270,000 + WAR × $227,879</div>
 <p>
-  One consequence dominates the results: the maximum salary is
-  <strong>$1.4M</strong> against a <strong>$270K</strong> minimum — a ratio of
-  about 5, where the NBA's is about 43. <strong>15 of 164</strong> players are
-  worth more than the maximum the CBA permits anyone to pay them. The gap
-  between what they're worth and what they can be paid is surplus the rules hand
-  to their team.
+  The CBA sets the maximum as a share of the cap rather than a fixed number: 17%
+  standard and 20% supermax, so <strong>$1.19M</strong> and
+  <strong>$1.4M</strong> in 2026. Against a $270K minimum that's a band of four
+  or five to one. The NBA's is roughly forty to one. <strong>17 of 164</strong>
+  players here are worth more than anyone is allowed to pay them, and that gap
+  is surplus the rules hand to their team.
 </p>
 
-<h3>Does it actually predict anything?</h3>
+<h3>Does it predict anything?</h3>
 <p>
-  A model that only describes the past is easy to fool yourself with, so the
-  ratings are tested the hard way: fit on seasons up to some year, then predict
-  the <em>following</em> season's game results, which the model has never seen.
-  Nine test seasons, scored by average error in predicted game margin.
+  Descriptive models are easy to fool yourself with, so I tested it forward: fit
+  on every season up to some year, then predict the next season's games, which
+  the model has never seen. Nine test seasons, scored on average error in
+  predicted game margin.
 </p>
 <table>
   <thead><tr><th>Information used</th><th class="num">Avg error (points)</th></tr></thead>
@@ -243,44 +227,39 @@
   </tbody>
 </table>
 <p>
-  The improvement is real — it holds in all nine seasons — but notice its size.
-  Basketball games are mostly noise, and no rating system changes that. Be
-  suspicious of anyone claiming otherwise.
+  The gain holds in all nine seasons, so it's real. It's also small. Basketball
+  games are mostly noise, and no rating system is going to change that.
 </p>
 
 <h3>How this compares to DARKO</h3>
 <p>
-  The NBA's best-known predictive rating is
+  The best-known predictive rating in the NBA is
   <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
-  WNBA has no equivalent, which is the reason this project exists. It is worth
-  being precise about what the two share and where they genuinely differ —
-  DARKO is the more sophisticated system, and this is not a reimplementation of
-  it.
+  WNBA doesn't have one, which is most of why I built this. DARKO is the more
+  sophisticated system and this isn't a reimplementation of it, so it's worth
+  being specific about what the two share and where they actually diverge.
 </p>
 <p>
-  <strong>The same two instincts.</strong> Both refuse to treat a player's
-  rating as a fresh measurement each season. Both lean on the idea that a new
-  observation should move your estimate by an amount that depends on how much
-  you already knew — heavily for an unknown rookie, barely for a veteran with
-  thousands of possessions on record. And both are built to <em>predict</em>
-  rather than to describe, which is a real design choice: the number that best
-  summarises what already happened is not the number that best forecasts what
-  happens next.
+  Both refuse to treat a rating as a fresh measurement every season. Both size
+  the update by how much you already knew, so a new game moves an unknown rookie
+  a lot and a veteran with thousands of possessions barely at all. And both are
+  built to predict rather than describe, which is a real choice: the number that
+  best summarizes what already happened is not the number that best forecasts
+  what happens next.
 </p>
 <p>
-  <strong>The central structural difference</strong> is what actually gets
-  tracked over time. DARKO runs a Kalman filter — a running estimate that
-  updates itself as evidence arrives — on <em>each individual box-score
-  statistic</em>, separately, with its own decay rate and its own aging curve.
-  It then maps that whole projected stat line onto an impact number. This model
-  goes the other way: it estimates impact directly from possessions and uses the
-  box score only as the target that ridge shrinks toward.
+  The structural difference is what gets tracked over time. DARKO runs a Kalman
+  filter, a running estimate that updates as evidence arrives, on each
+  box-score statistic separately, each with its own decay rate and its own aging
+  curve, then maps that projected stat line onto an impact number. I go the
+  other direction: estimate impact straight from possessions and use the box
+  score only as the thing ridge shrinks toward.
 </p>
 <table>
   <thead><tr><th></th><th>DARKO</th><th>This model</th></tr></thead>
   <tbody>
     <tr><td>What is tracked over time</td><td>Each box-score stat separately</td><td>One impact rating per player</td></tr>
-    <tr><td>Time weighting</td><td>Kalman filter, exponential decay in <em>days</em>, rate tuned per stat</td><td>Exponential decay in <em>seasons</em>, one half-life</td></tr>
+    <tr><td>Time weighting</td><td>Kalman filter, exponential decay in days, rate tuned per stat</td><td>Exponential decay in seasons, one half-life</td></tr>
     <tr><td>Update frequency</td><td>Daily</td><td>Re-fit as needed</td></tr>
     <tr><td>How much a new game moves you</td><td>Varies by player and by stat</td><td>Varies by possession count, via one shared λ</td></tr>
     <tr><td>Aging</td><td>A separate curve for every stat</td><td>One curve on the overall rating</td></tr>
@@ -289,78 +268,78 @@
   </tbody>
 </table>
 <p>
-  That difference has a real consequence. Because DARKO models each stat, it can
-  say <em>where</em> a player's improvement is coming from — better shooting,
-  fewer turnovers, more steals. This model cannot. It splits a rating into
-  offense and defense and stops there.
+  That has a real cost. Because DARKO models each statistic, it can tell you
+  where a player's improvement came from: better shooting, fewer turnovers, more
+  steals. Mine can't. It splits a rating into offense and defense and stops.
 </p>
 <p>
-  <strong>Why not simply build DARKO for the WNBA?</strong> Partly because the
-  model is closed, so it would be a reconstruction from a description rather
-  than a port. But mostly because the pieces that make DARKO powerful are
-  answers to problems the WNBA version does not have in the same form. Daily
-  updating matters for in-season NBA decisions; contracts are signed in the
-  offseason, so a rating that refreshes each morning buys nothing. Per-stat
-  filtering needs a lot of games per player to estimate a decay rate for each
-  statistic — and a WNBA season is 44 games, not 82.
+  So why not just rebuild DARKO for the WNBA? Partly because the model is
+  closed, so it would be a reconstruction from a description rather than a port.
+  Mostly because the pieces that make it powerful answer problems I don't have
+  in the same form. Daily updating matters for in-season NBA decisions, but
+  contracts get signed in the offseason, so a rating that refreshes every
+  morning buys nothing. Per-stat filtering needs a lot of games per player to
+  estimate a decay rate for each statistic, and a WNBA season is 44 games.
 </p>
 <p>
-  The honest summary: this borrows DARKO's <em>ideas</em> — shrink toward a
-  prior, weight recent evidence more, tune for prediction rather than
-  description — without its machinery, because at WNBA sample sizes the
-  machinery is not where the remaining error lives. Recency-weighted pooling is
-  roughly what a Kalman filter settles into once it stops learning, and testing
-  bears that out: it beat every simpler alternative on the forward test above.
-  A per-stat filter would be the natural next step if it were ever worth
-  building.
+  What I took were the ideas: shrink toward a prior, weight recent evidence more
+  heavily, tune for prediction instead of description. Recency-weighted pooling
+  is roughly where a Kalman filter settles once it stops learning, and it beat
+  every simpler alternative on the forward test above. A per-stat filter is the
+  obvious next step if it ever turns out to be worth building.
 </p>
 
 <h3>Current limitations</h3>
 <p>
-  These are the things most likely to make a number on this site wrong. They are
-  listed because they are known, not because they are resolved.
+  These are the things most likely to make a number on this site wrong. They're
+  here because they're known, not because they're solved.
 </p>
 <ul>
   <li>
-    <strong>The CBA figures are press-reported, not read from the agreement.</strong>
-    Every dollar output depends on the $7.0M cap, $1.4M max and $270K minimum.
-    Reported caps often exclude benefits that count against the real one. Worse,
-    the 2027–2031 schedule isn't public, so the projection years use a smooth
-    interpolation between the 2026 and 2032 endpoints — an assumption, not a fact.
+    <strong>The cap past 2026 is a projection.</strong> The CBA doesn't schedule
+    it. It's a share of league revenue, bounded to a 13% move in 2027 and 10% a
+    year after that, so every projected season carries that uncertainty. The
+    2026 figures are contractual and exact.
+  </li>
+  <li>
+    <strong>Supermax eligibility is an upper bound.</strong> Reaching 20% of the
+    cap requires re-signing with your prior team, among other conditions, and
+    nothing in my data records which team a free agent came from. I treat five
+    or more years of service as eligible, which overstates it.
   </li>
   <li>
     <strong>Replacement level rests on a convention.</strong> It assumes a team
-    of freely available players would win 25% of its games. Nobody fields such a
-    team, so this can't be measured. Plausible alternatives (20%–30%) move every
-    dollar figure by roughly ±7%.
+    of freely available players wins 25% of its games. Nobody fields that team,
+    so the number can't be measured. Plausible alternatives from 20% to 30% move
+    every dollar figure by roughly ±7%.
   </li>
   <li>
     <strong>Defense is still only partly visible.</strong> Possession data
-    recovers a lot of what box scores miss, but defensive estimates remain the
-    noisiest part of the model. Treat a surprising defensive rating as a question
-    rather than an answer.
+    recovers a lot of what box scores miss, but defensive estimates are the
+    noisiest part of the model. A surprising defensive rating is a question, not
+    an answer.
   </li>
   <li>
-    <strong>The uncertainty bands are optimistic.</strong> The ± figure on each
+    <strong>The uncertainty bands are optimistic.</strong> The ± on each
     player's value assumes the box-score prior is correct, so it measures how
-    well the possessions pin her down <em>given</em> that prior — not total
-    uncertainty. It is also large: for a typical player the band is wide enough
-    that neighbouring players cannot be reliably ranked.
+    well the possessions pin her down given that prior, not total uncertainty.
+    It's also wide enough that neighboring players in the table can't be
+    reliably ranked against each other.
   </li>
   <li>
     <strong>Only 2026 salaries are loaded.</strong> Surplus is computed against
-    this season's cap hit. Players with multi-year deals are not evaluated across
-    the whole contract.
+    this season's cap hit, so players on multi-year deals aren't evaluated
+    across the whole contract.
   </li>
   <li>
-    <strong>2026 is incomplete.</strong> The season is partly played, so minutes
-    are scaled up to a full 44 games at each player's current rate, adjusted for
-    games missed. A late-season role change won't show up.
+    <strong>2026 is unfinished.</strong> The season is partly played, so minutes
+    are scaled up to a full 44 games at each player's current rate and adjusted
+    for games missed. A late-season change in role won't show up.
   </li>
   <li>
     <strong>Small samples stay unreliable.</strong> A player with a few hundred
     possessions is mostly reporting her box-score prior back to you. The rating
-    is honest about this only through its error band, which is easy to overlook.
+    admits this only through its error band, which is easy to miss.
   </li>
 </ul>
 
