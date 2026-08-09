@@ -44,9 +44,13 @@
 
 <h2 id="author">About me</h2>
 <p class="kicker">Who built this</p>
-<div class="placeholder">
-  Placeholder — to be written.
-</div>
+<p>
+  My name is <a href="https://mjwilson09.github.io/">MJ Wilson</a>. I am a high school senior in the Chicago suburbs.
+  I have been a basketball fan since I was a kid, and I have been interested in statistics for a long time.
+  I built this model to learn more about the WNBA and to explore how statistical modeling can be applied to sports.
+  I was inspired by the works of Stephen Noh and darko.app, and I wanted to create a model that could provide insights
+  into the WNBA that were not readily available elsewhere.
+</p>
 
 <h2 id="model">How the model works</h2>
 <p class="kicker">The method, the arithmetic, and what it can't do</p>
@@ -230,6 +234,73 @@
   The improvement is real — it holds in all nine seasons — but notice its size.
   Basketball games are mostly noise, and no rating system changes that. Be
   suspicious of anyone claiming otherwise.
+</p>
+
+<h3>How this compares to DARKO</h3>
+<p>
+  The NBA's best-known predictive rating is
+  <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
+  WNBA has no equivalent, which is the reason this project exists. It is worth
+  being precise about what the two share and where they genuinely differ —
+  DARKO is the more sophisticated system, and this is not a reimplementation of
+  it.
+</p>
+<p>
+  <strong>The same two instincts.</strong> Both refuse to treat a player's
+  rating as a fresh measurement each season. Both lean on the idea that a new
+  observation should move your estimate by an amount that depends on how much
+  you already knew — heavily for an unknown rookie, barely for a veteran with
+  thousands of possessions on record. And both are built to <em>predict</em>
+  rather than to describe, which is a real design choice: the number that best
+  summarises what already happened is not the number that best forecasts what
+  happens next.
+</p>
+<p>
+  <strong>The central structural difference</strong> is what actually gets
+  tracked over time. DARKO runs a Kalman filter — a running estimate that
+  updates itself as evidence arrives — on <em>each individual box-score
+  statistic</em>, separately, with its own decay rate and its own aging curve.
+  It then maps that whole projected stat line onto an impact number. This model
+  goes the other way: it estimates impact directly from possessions and uses the
+  box score only as the target that ridge shrinks toward.
+</p>
+<table>
+  <thead><tr><th></th><th>DARKO</th><th>This model</th></tr></thead>
+  <tbody>
+    <tr><td>What is tracked over time</td><td>Each box-score stat separately</td><td>One impact rating per player</td></tr>
+    <tr><td>Time weighting</td><td>Kalman filter, exponential decay in <em>days</em>, rate tuned per stat</td><td>Exponential decay in <em>seasons</em>, one half-life</td></tr>
+    <tr><td>Update frequency</td><td>Daily</td><td>Re-fit as needed</td></tr>
+    <tr><td>How much a new game moves you</td><td>Varies by player and by stat</td><td>Varies by possession count, via one shared λ</td></tr>
+    <tr><td>Aging</td><td>A separate curve for every stat</td><td>One curve on the overall rating</td></tr>
+    <tr><td>Rookies</td><td>Common prior, then learns</td><td>Box prior; draft-slot priors built and tested</td></tr>
+    <tr><td>Source</td><td>Closed</td><td>Open</td></tr>
+  </tbody>
+</table>
+<p>
+  That difference has a real consequence. Because DARKO models each stat, it can
+  say <em>where</em> a player's improvement is coming from — better shooting,
+  fewer turnovers, more steals. This model cannot. It splits a rating into
+  offense and defense and stops there.
+</p>
+<p>
+  <strong>Why not simply build DARKO for the WNBA?</strong> Partly because the
+  model is closed, so it would be a reconstruction from a description rather
+  than a port. But mostly because the pieces that make DARKO powerful are
+  answers to problems the WNBA version does not have in the same form. Daily
+  updating matters for in-season NBA decisions; contracts are signed in the
+  offseason, so a rating that refreshes each morning buys nothing. Per-stat
+  filtering needs a lot of games per player to estimate a decay rate for each
+  statistic — and a WNBA season is 44 games, not 82.
+</p>
+<p>
+  The honest summary: this borrows DARKO's <em>ideas</em> — shrink toward a
+  prior, weight recent evidence more, tune for prediction rather than
+  description — without its machinery, because at WNBA sample sizes the
+  machinery is not where the remaining error lives. Recency-weighted pooling is
+  roughly what a Kalman filter settles into once it stops learning, and testing
+  bears that out: it beat every simpler alternative on the forward test above.
+  A per-stat filter would be the natural next step if it were ever worth
+  building.
 </p>
 
 <h3>Current limitations</h3>
