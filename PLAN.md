@@ -22,7 +22,7 @@ results are in README §"Forward validation" and AGENTS §4.
 
 ## Current tranche: none
 
-The site-polish tranche (S1-S5) is complete — commit `bb94ee2`. Results:
+The site-polish tranche (S1-S5) is complete — commit `832d58d`. Results:
 
 | | Item | Outcome |
 |---|---|---|
@@ -39,15 +39,6 @@ schedule.
 
 ---
 
-## Not in this tranche, but higher consequence than any of it
-
-**Verifying the CBA figures** (AGENTS §7 item 2) matters more than everything
-above combined. Every dollar the site publishes rests on press-reported cap, max
-and minimum numbers, and the 2027–2031 schedule is an interpolation invented in
-`valuation.CBA_ENDPOINTS`. Nothing on this list can make a number wrong the way
-that can. It is not here only because it is research rather than code.
-
----
 
 ## Non-goals
 
@@ -63,8 +54,9 @@ that can. It is not here only because it is research rather than code.
 
 - Environment: always `./.venv/bin/python`; system pip is PEP-668 blocked.
 - Read `AGENTS.md` first. Traps are numbered and referenced by number.
-- After any `site.css` edit, bump `?v=N` in **both** HTML files. A stale
-  stylesheet presents as fonts silently falling back and new rules doing nothing.
+- After any `site.css` edit run `./.venv/bin/python scripts/stamp_css_version.py`.
+  A stale stylesheet presents as fonts silently falling back and new rules doing
+  nothing, which is easy to misdiagnose as broken CSS.
 - After any change to the value formula, change it in `valuation.py` **and**
   `docs/index.html`, then re-run the agreement check (worst gap ~$112).
 - Commit per item; the user handles pushes.
