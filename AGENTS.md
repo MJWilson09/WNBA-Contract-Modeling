@@ -183,8 +183,11 @@ produce believable wrong answers rather than errors.
     `computeValue`, `projectRating` in `docs/index.html` mirror `valuation.py`.
     **Change one, change both**, then re-verify the ≤~$120 agreement invariant.
     Note year 0 uses `rating` and projection years use `ratingForecast` on both
-    sides. The browser caches `players.js` aggressively — force a reload before
-    concluding a UI change did not take.
+    sides. The browser caches `players.js` and `site.css` aggressively — force a
+    reload before concluding a UI change did not take. **`site.css` is loaded as
+    `site.css?v=N`; bump N in both HTML files whenever you edit it**, or
+    returning visitors keep the old stylesheet. A stale sheet looks exactly like
+    broken CSS: fonts silently fall back and layout rules appear to do nothing.
 16. **Players are keyed on normalised names throughout**
     (`box_prior.normalize_name`). The stats feed uses WNBA person IDs, wehoop
     uses ESPN athlete IDs — they do not interoperate. Report match rates whenever
