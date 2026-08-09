@@ -1,140 +1,96 @@
-# PLAN.md — forecast upgrade tranche
+# PLAN.md — active work
 
-Implementation plan for the next round of model work. Written for a cold Opus
-session: read `AGENTS.md` first (traps are referenced by number below), skim
-`README.md` §"Stage B" for context. Everything here builds on the forward
-validation in `src/wnba_salary/forecast_validation.py`, which is the measuring
-stick for the whole tranche.
+## How work is tracked
 
-## Baseline to beat
+Three files, three jobs. Do not duplicate items between them.
 
-`./.venv/bin/python -m src.wnba_salary.forecast_validation` (~75s, 4 workers)
-produced, as mean per-game margin RMSE over test seasons 2018–2026:
+| File | Holds | Lifetime |
+|---|---|---|
+| **PLAN.md** (this file) | the **current tranche** — a batch of related work with acceptance criteria | rewritten when a tranche completes |
+| **AGENTS.md §7** | the **standing backlog** — everything unstarted, ordered by value | permanent, items move out as they are done |
+| **README.md** | what the model *is* and what it currently produces | permanent |
 
-| candidate | RMSE |
-|---|---|
-| zero (no player info) | 13.5702 |
-| box prior (T−1) | 12.8405 |
-| single-season RAPM | 12.7746 |
-| pooled + decay, λ=1500 (production) | 12.6040 |
-| pooled + 1yr aging | 12.5948 |
-| pooled, λ=6000 | **12.5192** |
+An item lives in AGENTS §7 until it is pulled into a tranche here. When a tranche
+finishes, its findings go into README/AGENTS and this file is rewritten — the
+commit history is the record of what was done, not this file.
 
-Mean unseen player-slot share 14.4% (≈21% in expansion years 2018/2026, the
-worst-forecast seasons). Aging adds ~nothing at a 1-year horizon (finding, not a
-bug). Any change claiming forecast improvement must move these numbers, on this
-harness, not a new metric.
-
-## Design decision already made (do not re-litigate)
-
-Two named rating configs, not one:
-
-- **descriptive** — the existing production recipe (λ=1500, HL=1.5), unchanged.
-  Feeds current-season value: "is she worth her contract right now."
-- **forecast** — forward-tuned (λ, HL) from Task 1. Feeds only the multi-year
-  projection columns (`rating_2027`, `value_2027`, …) in `valuation.py` and the
-  projection table in the web UI.
-
-Current-season invariants (AGENTS §4: summed WAR 248.3, $100.7M, 15 above max)
-must be unchanged by this entire tranche, because the descriptive path is
-untouched. Re-verify after each task.
+**Previously completed here:** the forecast tranche (forward-tuned config, rookie
+draft priors, uncertainty bands) — commits `cb24ceb`, `3a57d40`, `b652250`. Its
+results are in README §"Forward validation" and AGENTS §4.
 
 ---
 
-## Task 1 — forward-tune (λ, half-life); ship the forecast config  ✅ DONE
+## Current tranche: site polish
 
-1. Extend `forecast_validation.py` with a grid sweep for the pooled candidate:
-   λ ∈ {1500, 3000, 6000, 12000, 24000} × HL ∈ {0.75, 1.5, 3.0, 5.0}.
-   Reuse the per-T design (already cached in `evaluate_season`); only weights
-   and prior aggregation change with HL. Expect ~10–20 min wall. Extend either
-   axis if the optimum lands on an edge (trap 4).
-2. Add the winning pair as `FORECAST_LAMBDA` / `FORECAST_HALF_LIFE` in
-   `ratings.py`; emit a second artifact `ratings_forecast.parquet` using the
-   same pipeline (same pinning via `pin_level` — trap 8 applies to both configs).
-3. `valuation.py`: projections start from the forecast rating; year-0 value
-   keeps the descriptive rating. Add a `rating_forecast` column so the parquet
-   records both.
-4. `export_web.py` + `web/index.html`: projection rows use the forecast base
-   rating. The JS mirrors `valuation.py` (trap 15) — change both, then re-verify
-   the ≤ ~$120 JS-vs-Python agreement check.
+The site went up in `704853d`…`a382367` (multi-page, GitHub Pages, typography and
+colour, mobile fixes). What follows is the unfinished part of that work. None of
+it blocks anything; the site is live and correct.
 
-Acceptance: sweep optimum is interior on both axes; forecast config beats
-12.6040 on the harness; descriptive invariants unchanged; README table updated.
+### S1 — Reduce the league table on narrow screens
+The table has 13 columns and scrolls horizontally on a phone. That is honest but
+awkward: the columns a reader most wants (Value, Salary, Surplus) are the ones
+off-screen. At `max-width: 640px`, show Player / Rating / Value / Surplus and put
+the rest behind a per-row expand, or a "show all columns" toggle above the table.
 
-## Task 2 — rookie priors from draft slot  ✅ DONE
+*Acceptance:* no horizontal scroll needed for the four core columns at 375px; all
+13 still reachable; sorting still works on hidden columns.
 
-Attacks the 14.4% unseen share directly; biggest headroom in expansion years.
+### S2 — Visual encoding in the league table
+The table is 13 columns of undifferentiated figures. An inline bar behind Rating
+and Surplus — scaled to the column's own range, drawn as a CSS gradient so it
+costs no markup — would let a reader scan rather than read. This is the single
+biggest legibility gain available and needs no new data.
 
-1. Data: `wnba/draft/parquet` in `sportsdataverse/wehoop-wnba-data` (add a
-   `draft` entry to `data.DATASETS`; inspect the actual filename layout first —
-   the repo tree shows a single parquet plus a csv index, so it may be one file
-   for all seasons rather than per-season).
-2. Fit: first-season rating (use the shrunk box prior from
-   `box_prior.parquet`, which exists back to 2010) regressed on draft slot —
-   log(pick) or a monotone spline; undrafted/UDFA pooled as slot ~40. Split the
-   prediction into (o, d) using the league-average rookie o/d split. Watch
-   survivorship: players who never logged 100 minutes have no rating row, so
-   fit on picks, not on rated players only — treat missing as "below
-   replacement" via a censored/two-stage approach, or at minimum document the
-   bias.
-3. Apply in `forecast_validation.margin_rmse`: unseen players who are incoming
-   rookies get their draft-slot (o, d) instead of (0, 0); unseen veterans keep
-   0. Measure the delta — acceptance is improvement concentrated in 2018/2026.
-4. If (3) wins, apply in production: rookies' `b_box` entries in
-   `ratings.py`'s prior use the draft prior blended with their observed
-   box prior by minutes (the existing `shrink()` machinery fits this).
-5. Name joins are the risk (trap 16): report the draft-name → possession-name
-   match rate; expect misses on transliterated international names.
+*Acceptance:* bars read correctly in both themes; negative values bar leftward
+from a centre baseline; no change to the numbers themselves.
 
-Acceptance: harness improvement (mean and expansion seasons); match rate
-reported; no change to descriptive invariants.
+### S3 — Draw uncertainty instead of printing it
+Task 3 produced per-player error bands and the card currently renders them as the
+string `± $557,011`. A band drawn on the max-overflow bar would make the point the
+number cannot: that many players' ranges overlap, so the ranking is softer than a
+sorted table implies. Load the `dataviz` skill before drawing anything.
 
-## Task 3 — per-player uncertainty bands  ✅ DONE
+*Acceptance:* band visible on the card; reads in both themes; the existing
+JS/Python agreement check still passes.
 
-1. In `rapm.py`, add a function returning per-player variance from the ridge
-   posterior: `V = σ̂² (A'WA + λI)⁻¹` with σ̂² from training residuals. The
-   system is ~540×540 — invert directly. Total-rating variance needs
-   `var(o) + var(d) + 2cov(o, d)` (off-diagonal terms, so keep the full
-   inverse). Document the caveat: this treats the prior as truth, so bands are
-   approximate credible intervals, not frequentist SEs — they will be too
-   narrow for low-minute players.
-2. Thread `rating_se` through `ratings.parquet` → `valuation.parquet`
-   (`value_lo`/`value_hi` at ±1 SE through the same dollar formula) →
-   `export_web.py` → one line in the web card ("value $X ± $Y"). Keep the UI
-   change minimal; remember trap 15.
+### S4 — Test landscape and tablet
+Only 375px and desktop have been checked. 768px and landscape phone are unseen.
 
-Acceptance: SE larger for low-possession players (sanity: rank-correlate SE
-against 1/√possessions); UI shows bands; JS-Python agreement check still passes.
+### S5 — Tidy
+- `.placeholder` in `site.css` is now unused (the bio replaced it). Remove, or
+  keep deliberately for future draft sections — decide, don't leave it ambiguous.
+- The stylesheet cache-buster (`site.css?v=N`) is bumped by hand and is currently
+  at `v=4`. Easy to forget; see AGENTS trap 15. Consider having `export_web.py`
+  stamp it, which would make it automatic but couples a data script to the HTML.
 
-## Task 4 — record the findings (do first, it is 10 minutes)  ✅ DONE
+---
 
-1. README: add a "Forward validation" subsection under Stage B with the
-   baseline table above and the three findings (forward λ heavier than
-   descriptive; aging ≈ 0 at 1yr; unseen-share/expansion effect).
-2. AGENTS §2: add `forecast_validation.py` to the module table. §3: note the
-   possession cache (`data/processed/poss_cache/`, delete to force rebuild).
-   §4: add the baseline invariant line (zero 13.5702 / pooled 12.6040 /
-   λ=6000 12.5192 / unseen 14.4%).
+## Not in this tranche, but higher consequence than any of it
+
+**Verifying the CBA figures** (AGENTS §7 item 2) matters more than everything
+above combined. Every dollar the site publishes rests on press-reported cap, max
+and minimum numbers, and the 2027–2031 schedule is an interpolation invented in
+`valuation.CBA_ENDPOINTS`. Nothing on this list can make a number wrong the way
+that can. It is not here only because it is research rather than code.
+
+---
 
 ## Non-goals
 
-- No per-stat Kalman filtering, no daily updates, no gradient-boost stat→impact
-  mapping (DARKO proper). Closed-source model, wrong granularity for an annual
-  contract cycle, and Tasks 1–2 capture the cheap majority of the headroom.
-- No player subsampling in validation — invalid for a joint regression and
-  saves nothing (runtime scales with possessions).
-- No re-tuning of the descriptive config; its λ=1500 stays.
+- No full redesign. The site is a few pages and should stay that way.
+- No design-system tooling (`DesignSync` / claude.ai/design). There is no
+  component library to sync — two pages and one stylesheet.
+- No per-stat Kalman filtering or daily updates (DARKO proper). Closed model,
+  wrong granularity for an annual contract cycle. See the About page.
+- No player subsampling in validation — invalid for a joint regression.
+- No re-tuning of the descriptive config; λ=1500 stays.
 
 ## Working notes
 
 - Environment: always `./.venv/bin/python`; system pip is PEP-668 blocked.
-- Runtime: harness ~75s; possession cache warm. `stats.wnba.com` is
-  unreachable — do not retry it (trap 1).
-- Order: Task 4 → 1 → 2 → 3. Tasks 2 and 3 are independent of each other.
-- **Status: Tasks 4, 1 and 2 complete.** Forecast config λ=6000/HL=0.75
-  (+0.0954) and draft priors (+0.1399 on that config) stack to 12.3686 vs the
-  original 12.6040. Draft priors are validated but deliberately NOT in the
-  production path — see README "Scope limit".
-- **Tranche complete.** Task 3 shipped uncertainty bands (posterior SE, ~40%
-  conservative by split-half). All four tasks done.
-- Commit per task when the user asks; they handle pushes.
+- Read `AGENTS.md` first. Traps are numbered and referenced by number.
+- After any `site.css` edit, bump `?v=N` in **both** HTML files. A stale
+  stylesheet presents as fonts silently falling back and new rules doing nothing.
+- After any change to the value formula, change it in `valuation.py` **and**
+  `docs/index.html`, then re-run the agreement check (worst gap ~$112).
+- Commit per item; the user handles pushes.
