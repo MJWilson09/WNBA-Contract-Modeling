@@ -105,7 +105,9 @@
       "Bash(./.venv/bin/python scripts/update.py --check)",
       "Bash(time ./.venv/bin/python scripts/update.py)",
       "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.history)",
-      "Bash(sed -n '/^## 5. Traps/,/^## 6/p' AGENTS.md)"
+      "Bash(sed -n '/^## 5. Traps/,/^## 6/p' AGENTS.md)",
+      "WebFetch(domain:www.wnba.com)",
+      "Bash(grep -nE \"not [a-z'\\\\`]+, \\(but \\)?[a-z]|isn't |aren't |rather than a |, not \" README.md)"
     ]
   }
 }
