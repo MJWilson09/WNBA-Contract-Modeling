@@ -100,7 +100,8 @@
       "Bash(echo \"stamp exit=$?\")",
       "Bash(git check-ignore *)",
       "Bash(./.venv/bin/python -m compileall -q src/wnba_salary)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(git merge *)"
     ]
   }
 }
