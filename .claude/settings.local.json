@@ -104,7 +104,8 @@
       "Bash(git merge *)",
       "Bash(./.venv/bin/python scripts/update.py --check)",
       "Bash(time ./.venv/bin/python scripts/update.py)",
-      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.history)"
+      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.history)",
+      "Bash(sed -n '/^## 5. Traps/,/^## 6/p' AGENTS.md)"
     ]
   }
 }
