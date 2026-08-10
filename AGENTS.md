@@ -38,6 +38,16 @@ Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
 (~6 min); it reads stage 4's output only for its self-check, so the two can run
 in either order. All are fully cached afterwards.
 
+**In season, run `scripts/update.py` instead of the stages by hand.** Every
+fetcher caches to disk and never refetches, which is right for finished seasons
+and silently wrong for the one in progress — a full re-run happily reproduces
+figures from weeks-old games. The script forces the current season's inputs to
+refetch, drops the caches derived from them, and runs stages 1–6 (~45s warm).
+`--check` reports staleness without touching anything; it exits 1 when stale.
+
+Note it prints two lags. Ours (cache vs the wehoop mirror) is fixable; the
+mirror's own lag behind live results, currently ~8 days, is not.
+
 `rapm.py`, `rapm_validation.py` and `forecast_validation.py` are **not** in the
 production path.
 
@@ -98,13 +108,15 @@ regression until proven otherwise.
   i.e. ~40% conservative
 
 **valuation.parquet**
-- 164 players, 163 matched to a salary
-- **summed WAR 248.3** vs league-wide 247.5 — nothing is fitted to this, so it is
+- 187 players, 183 matched to a salary
+- **summed WAR 248.5** vs league-wide 247.5 — nothing is fitted to this, so it is
   a real end-to-end check
-- summed market value $100.1M vs $105M cap · 17 above their applicable max
-  (6 of them at the $1,190,000 standard max, all rookie-scale) · rating sd 3.03
+- 17 above their applicable max · rating sd 3.03
+- summed market value $107.2M against a $105M cap. It exceeds the cap because it
+  sums *clipped* values and ~20 barely-played players each floor at the ~$270K
+  minimum; do not quote it as a validation the way summed WAR can be.
 
-**history.parquet** (2017–2026, 1,387 player-seasons)
+**history.parquet** (2017–2026, 1,507 player-seasons)
 - the 2026 slice is produced by a different code path than `valuation.py` and
   must agree with it **exactly** — `max |Δrating| 0.0000, max |Δvalue| $0`.
   `history.main()` prints this; treat any drift as a regression
@@ -113,7 +125,7 @@ regression until proven otherwise.
   in 2025, 247.5 in 2026). Again nothing is fitted to it
 - pin offsets stay small (−0.54 … +0.17) · rating sd 2.98–3.60 · median
   `rating_se` 3.42 (2017, one pooled season) falling to 2.97
-- per-season table counts: 131/139/134/125/133/138/132/136/155/164
+- per-season table counts: 136/150/143/140/145/154/148/142/162/187
 - λ and half-life are **not** re-tuned per season; they were tuned on 2017–2022
   holdouts, so re-tuning per season would be fitting the tuning set
 
@@ -211,15 +223,24 @@ produce believable wrong answers rather than errors.
     diff; it exits non-zero if a page was stale, so it also works as a check. A
     stale sheet looks exactly like broken CSS: fonts silently fall back and
     layout rules appear to do nothing.
-16. **Players are keyed on normalised names throughout**
+16. **Inclusion is gated on `rating_se`, not on current-season minutes.**
+    `valuation.include_mask` is the single rule, used by `valuation.py` and
+    `history.py` both — change it in one place or they drift. The old
+    `mp >= 100` gate conflated "is the rating meaningful" with "did she play",
+    and dropped Napheesa Collier, whose rating rests on 13,821 pooled
+    possessions, because she missed most of 2026 injured. `MAX_RATING_SE = 4.10`
+    is calibrated to the worst SE already on the table, so it admits players
+    without lowering the bar. Players with no RAPM rating have no SE and still
+    fall under the minutes gate.
+17. **Players are keyed on normalised names throughout**
     (`box_prior.normalize_name`). The stats feed uses WNBA person IDs, wehoop
     uses ESPN athlete IDs — they do not interoperate. Report match rates whenever
     you add a join.
-17. **WNBA draft data must come from Basketball-Reference, not wehoop.** The
+18. **WNBA draft data must come from Basketball-Reference, not wehoop.** The
     `wehoop-wnba-data` repo has only `draft_2026.parquet` — one season — despite
     the directory implying a series. `bbref.fetch_advanced(..., kind="draft")`
     covers 2010+ and is what `draft_prior.py` uses.
-18. **Do not validate posterior SEs with a naive "2x SE" split-half rule.** Both
+19. **Do not validate posterior SEs with a naive "2x SE" split-half rule.** Both
     halves shrink toward the *same* prior, so the shared component cancels in the
     difference and the correct prediction is
     `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made

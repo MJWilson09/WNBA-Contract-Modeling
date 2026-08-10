@@ -101,7 +101,10 @@
       "Bash(git check-ignore *)",
       "Bash(./.venv/bin/python -m compileall -q src/wnba_salary)",
       "Bash(git checkout *)",
-      "Bash(git merge *)"
+      "Bash(git merge *)",
+      "Bash(./.venv/bin/python scripts/update.py --check)",
+      "Bash(time ./.venv/bin/python scripts/update.py)",
+      "Bash(./.venv/bin/python -W ignore -m src.wnba_salary.history)"
     ]
   }
 }

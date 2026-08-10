@@ -102,7 +102,9 @@ def valuation_frame(target: int, r: pd.DataFrame, consts: dict) -> pd.DataFrame:
     and none of those have a historical analogue.
     """
     bp = pd.read_parquet(data.PROCESSED_DIR / "box_prior.parquet")
-    cur = bp[(bp["season"] == target) & (bp["mp"] >= valuation.MIN_MINUTES)].copy()
+    # No minutes filter here: inclusion is decided by `valuation.include_mask`
+    # after the ratings merge, so past seasons and the current one use one rule.
+    cur = bp[bp["season"] == target].copy()
     cur["key"] = cur["athlete_display_name"].map(box_prior.normalize_name)
 
     # RAPM where the player cleared the possession floor, box prior otherwise —
@@ -112,6 +114,7 @@ def valuation_frame(target: int, r: pd.DataFrame, consts: dict) -> pd.DataFrame:
         left_on="key", right_on="player", how="left")
     cur["rating"] = cur["rapm"].where(cur["rapm"].notna(), cur["bpm"])
     cur["rating_source"] = np.where(cur["rapm"].notna(), "rapm", "box_prior")
+    cur = cur[valuation.include_mask(cur)].copy()
 
     pbx = data.load("player_box", [target])
     player_team = (

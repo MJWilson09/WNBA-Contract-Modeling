@@ -40,7 +40,12 @@ AGING_CURVE_URL = (
 
 PROJECTION_YEARS = 3        # WNBA deals are mostly 1-3 years; 5 is extrapolation
 CURRENT_SEASON = 2026
-MIN_MINUTES = 100
+MIN_MINUTES = 100      # fallback gate, for players with no RAPM rating
+
+# Determinacy gate for rated players. Calibrated to the worst rating_se already
+# on the table (4.07), so switching to it admits players without lowering the
+# bar for anyone already shown.
+MAX_RATING_SE = 4.10
 
 # ---------------------------------------------------------------------------
 # Verified against the 2026 CBA itself (data/raw/cba/wnba_cba.pdf, gitignored;
@@ -204,6 +209,35 @@ def team_games_played(season: int = CURRENT_SEASON) -> pd.DataFrame:
     )
 
 
+def include_mask(cur: pd.DataFrame) -> np.ndarray:
+    """Which players belong on the table.
+
+    This is two questions that the old `mp >= 100` gate conflated into one:
+
+      * Is the rating meaningful?      -> `rating_se` measures exactly that.
+      * Is there anything to value?    -> she has to have actually played.
+
+    Gating on current-season minutes answered neither well. It excluded Napheesa
+    Collier — whose rating rests on 13,821 pooled possessions and is among the
+    best determined in the league — purely because she missed most of 2026
+    injured. Meanwhile it admitted players whose ratings are far less certain,
+    on the strength of having logged minutes for a bad team.
+
+    Ratings already pool four seasons, so a player who misses time keeps a solid
+    rating; what collapses is her *minutes*, and the WAR formula handles that on
+    its own. She shows up with an honest rating and a small WAR, which is the
+    truthful answer rather than an absence a reader cannot distinguish from a bug.
+
+    Players with no RAPM rating fall back to the box prior and have no
+    `rating_se`, so the minutes gate still governs them.
+    """
+    rated = cur["rapm"].notna().to_numpy()
+    played = (cur["g"] >= 1).to_numpy()
+    se_ok = (cur["rating_se"] <= MAX_RATING_SE).fillna(False).to_numpy()
+    minutes_ok = (cur["mp"] >= MIN_MINUTES).to_numpy()
+    return np.where(rated, played & se_ok, minutes_ok)
+
+
 def build() -> pd.DataFrame:
     consts = json.loads((data.PROCESSED_DIR / "constants.json").read_text())
     curve = load_aging_curve()
@@ -211,9 +245,9 @@ def build() -> pd.DataFrame:
     cba = consts["cba"]
 
     ratings = pd.read_parquet(data.PROCESSED_DIR / "box_prior.parquet")
-    cur = ratings[
-        (ratings["season"] == CURRENT_SEASON) & (ratings["mp"] >= MIN_MINUTES)
-    ].copy()
+    # No minutes filter here — the gate needs rating_se, so it runs after the
+    # ratings merge below. See include_mask.
+    cur = ratings[ratings["season"] == CURRENT_SEASON].copy()
     cur["key"] = cur["athlete_display_name"].map(box_prior.normalize_name)
 
     # ---- rating source: RAPM where available, box prior otherwise -----------
@@ -231,6 +265,10 @@ def build() -> pd.DataFrame:
     else:
         cur["rating"] = cur["bpm"]
         cur["rating_source"] = "box_prior"
+        cur["rapm"] = np.nan
+        cur["rating_se"] = np.nan
+
+    cur = cur[include_mask(cur)].copy()
 
     # Forward-looking rating for the projection years only. Tuned on the forward
     # metric, where optimal shrinkage is ~4x heavier — a rating tuned to describe
