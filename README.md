@@ -8,6 +8,18 @@ The WNBA has no DARKO, so the rating engine is instead the method from
 a transfer-learned box-score prior, possession-level RAPM, and a ridge that
 shrinks RAPM toward the prior rather than toward zero.
 
+## AI Disclaimer
+
+  This model and website was built with the help of AI tools, in particular Claude.
+  When I started this project, my intent was to use AI to help learn about modelling NBA contracts.
+  I soon discovered that this already existed, and I would be replicating existing work, such as https://darko.app.
+  So, after some research, I found that an equivalent model for the WNBA did not exist, and I decided to build one.
+  I used AI to help me understand the existing work, and to work interactively with me to build the WNBA model. 
+  I also used AI to help me write this website, since I have little experience with web development.
+  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking, 
+  and use it in a closed loop to understand every step. 
+  I used it to help me understand the existing work, to interactively build the model, and to help me write the website.
+  
 ## Status
 
 | Stage | What | State |
