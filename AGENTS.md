@@ -79,6 +79,26 @@ through it. Delete the directory to force a rebuild after any change to
 | Her Hoop Stats | 2026 salaries | rate limit 4s |
 | WNBA CBA (wnbpa.com) | 2026–2035 | 409pp PDF; cap/max/min/games verified against it |
 
+**Do not switch to `sportsdataverse/wehoop-wnba-stats-data`.** It presents as
+the maintained successor to the `wehoop-data` archive and has a daily workflow,
+so it looks like the obvious upgrade. It is not, and this was checked properly:
+
+* Its 2026 ingest **stalled on 16 July** — the pbp job logs stop there, and its
+  own `wnba_stats_schedule_coverage.parquet` records `last_date 2026-07-22`
+  against 202 games. The ESPN mirror we use had 219 games through 1 August.
+  Almost certainly the same Akamai block described in trap 1 catching up with
+  the successor repo.
+* Its `lineups/` dataset is **not** per-possession lineups despite the name. It
+  is aggregated five-man unit season totals (`group_name`, `gp`, `off_rating`,
+  182 columns) — useless for a RAPM design matrix.
+* Its `pbp/` is raw 25-column event data with no lineup, possession or
+  garbage-time columns, unlike the 65-column 2017–2022 archive. Using it would
+  mean rewriting `espn_lineups.reconstruct` against a different feed for no
+  accuracy gain.
+
+Re-check it if the WNBA's blocking ever eases; until then ESPN is the more
+complete source for current seasons.
+
 ## 4. Invariants
 
 These are verified numbers. If a change moves one materially, that is a

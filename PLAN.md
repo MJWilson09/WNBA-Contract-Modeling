@@ -22,23 +22,29 @@ results are in README §"Forward validation" and AGENTS §4.
 
 ## Current tranche: none
 
-The site-polish tranche (S1-S5) is complete — commit `832d58d`. Results:
+Recently completed, newest first:
 
-| | Item | Outcome |
+| Work | Commits | Outcome |
 |---|---|---|
-| S1 | Reduce the table on narrow screens | Player/Rating/Value/Surplus fit 341px in a 341px container; `all columns` toggle restores the other nine |
-| S2 | Visual encoding | Inline bars behind Rating and Surplus, centre-baselined so sign reads without reading the number |
-| S3 | Draw uncertainty | Hatched ±1 SE band on the value bar |
-| S4 | Landscape and tablet | 375 / 768 / 812x375 / 1280 all clear, no page overflow |
-| S5 | Tidy | Unused `.placeholder` removed; cache-buster now a content hash via `scripts/stamp_css_version.py` |
+| In-season updater + certainty gate | `a33dbe1`, `67a67d6` | `scripts/update.py`; inclusion now on `rating_se`, 167 → 187 players |
+| Season picker, 2017–2026 | `166a8a6` | `history.py`, 1,507 player-seasons |
+| CBA verified against the agreement | `41405fa` | two maxima, tiered minimums, real game counts |
+| Site polish S1–S5 | `832d58d` | mobile table, inline bars, uncertainty band |
+| Forecast tranche | `cb24ceb`, `3a57d40`, `b652250` | forecast config, draft priors, uncertainty |
 
-Pick the next tranche from **AGENTS.md §7**. The standing recommendation is
-unchanged: verifying the CBA figures outranks everything else, because every
-published dollar rests on press-reported numbers and an interpolated 2027-31
-schedule.
+**Pick the next tranche from `AGENTS.md` §7.** The old standing recommendation
+(verify the CBA) is done; there is no longer one item that dominates the rest.
+
+Two things worth knowing before choosing:
+
+* **A data-freshness line on the page is unbuilt and cheap.** The site is
+  roughly a week behind live results and says so nowhere, so a reader comparing
+  against last night's box score has no way to know the window. One line in
+  `index.html` fed by `MODEL.generated`.
+* **Nothing in §7 is blocking.** The pipeline runs end to end with every
+  invariant holding. Stopping here is a legitimate choice.
 
 ---
-
 
 ## Non-goals
 
@@ -58,5 +64,10 @@ schedule.
   A stale stylesheet presents as fonts silently falling back and new rules doing
   nothing, which is easy to misdiagnose as broken CSS.
 - After any change to the value formula, change it in `valuation.py` **and**
-  `docs/index.html`, then re-run the agreement check (worst gap ~$112).
+  `docs/index.html`, then re-run the agreement check (worst gap ~$113).
+- In season, `scripts/update.py` rather than the stages by hand; `--check`
+  first if you only want to know whether anything moved.
+- Verify claims against the artifacts before writing them down. Several
+  numbers in these files have gone stale after a rebuild and been quoted
+  onward; a two-line pandas check is cheaper than a wrong invariant.
 - Commit per item; the user handles pushes.

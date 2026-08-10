@@ -56,6 +56,20 @@ python3 -m venv .venv && ./.venv/bin/python -m pip install -r requirements.txt
 ./.venv/bin/python -m src.wnba_salary.export_web
 ```
 
+**In season, use the updater instead of running these by hand:**
+
+```bash
+./.venv/bin/python scripts/update.py
+```
+
+It refetches the current season, drops the caches derived from it, and runs
+every stage (~45s warm). `--check` reports staleness and changes nothing,
+exiting 1 when an update is due. This exists because every fetcher caches to
+disk and never refetches on its own, so a plain re-run silently reproduces
+figures built from weeks-old games.
+
+Run the stages individually only when changing the model itself.
+
 Run in that order — each stage reads the previous stage's output from
 `data/processed/`. Cold, `box_prior` takes ~4 minutes (~60 Basketball-Reference
 requests at a 3.5s rate limit) and `ratings` ~3 minutes; both are cached
@@ -63,6 +77,11 @@ afterwards.
 
 `data/raw/` is gitignored, so a fresh clone downloads ~54 MB on first run.
 Everything caches to disk — delete a subdirectory to force a refetch.
+
+**The site is never fully current.** Play-by-play comes from the
+`wehoop-wnba-data` mirror, which trails live results by roughly a week. The
+updater closes the gap between our cache and that mirror; it cannot close the
+mirror's own lag, and `--check` prints both so the two are not confused.
 
 **Working on this with an agent?** See [AGENTS.md](AGENTS.md) for the
 environment traps, the invariants worth re-verifying after a change, and a
@@ -191,17 +210,42 @@ Both `value` (unconstrained) and `market_value` (clipped to the CBA band) are
 reported. The gap is the surplus a team captures purely because the CBA forbids
 paying what a player is worth.
 
+### Who appears on the table
+
+Inclusion is gated on **rating certainty**, not on current-season minutes:
+`rating_se <= 4.10` plus having played at least one game. Players with no RAPM
+rating fall back to the box prior, have no standard error, and are still gated
+on 100 minutes.
+
+The earlier gate (100 current-season minutes) conflated two different questions
+and answered neither. It dropped Napheesa Collier — 2024 Defensive Player of the
+Year, on a Core contract, with 13,821 pooled possessions behind one of the
+better-determined ratings in the league — purely because she missed most of 2026
+injured. Ratings pool four seasons, so missing time costs a player her *minutes*,
+not her rating, and the WAR formula already scales by minutes. She now appears at
++7.49 with 0.67 WAR and $422K of value: elite per minute, little of it this
+season. That is the honest answer, and unlike an absence it is not something a
+reader can mistake for a bug.
+
+4.10 is the worst standard error already on the table, so the switch admitted 20
+players and dropped none. The rule lives in `valuation.include_mask` and is used
+by `history.py` too, so the season picker and the current season cannot diverge.
+
 ### Aggregate validation
 
 | | model | expected |
 |---|---|---|
-| summed WAR | 248.3 | 247.5 league-wide |
-| summed market value | $100.7M | $105M league cap |
+| summed WAR | 248.5 | 247.5 league-wide |
 
-Nothing is fitted to either target, so these are genuine out-of-sample checks on
-the whole chain. Ratings come from `ratings.parquet` (RAPM) where available and
-fall back to the box prior otherwise; `rating_source` records which applied. For
-2026 all 164 qualified players have RAPM coverage.
+Nothing is fitted to that target, so it is a genuine out-of-sample check on the
+whole chain. Ratings come from `ratings.parquet` (RAPM) where available and fall
+back to the box prior otherwise; `rating_source` records which applied. For 2026
+all 187 qualified players have RAPM coverage.
+
+Summed *market value* is deliberately absent from that table. It is $107.2M
+against a $105M cap — over rather than under — because it sums values already
+clipped to the CBA band, and the ~20 barely-played players the certainty gate
+admits each floor at the minimum. It is not a validation the way summed WAR is.
 
 ## Stage B: possession RAPM
 
@@ -420,8 +464,8 @@ forecast rating is more conservative — A'ja Wilson 8.12 → 7.10, Breanna Stew
 6.05 → 4.13 — which is the point: extrapolating a descriptively-tuned rating
 three years forward over-trusts one season of possessions.
 
-Current-season outputs are unchanged by this split (summed WAR 248.3, $100.7M,
-15 above the max), because the descriptive path was not touched.
+Current-season outputs are unchanged by this split (summed WAR 248.5, 17 above
+the applicable max), because the descriptive path was not touched.
 
 ### Rookie draft priors
 
@@ -451,7 +495,7 @@ substitutes.
 
 **Scope limit, stated plainly.** This does not change the shipped 2026
 valuation. In production the RAPM design includes the current season, so every
-rated 2026 player already has possessions and none is "unseen" — all 164 carry
+rated 2026 player already has possessions and none is "unseen" — all 187 carry
 `rating_source = rapm`. The draft prior is validated infrastructure for the
 *preseason* case (rating a season before it is played), which is precisely what
 forward validation simulates. It is deliberately not wired into `ratings.py`.
@@ -531,7 +575,7 @@ all — only that season's minutes.
 | 2023 | 4 | 115,531 | 132 | −0.403 | 3.58 | 3.03 | 198.0 | 198.0 |
 | 2024 | 4 | 133,001 | 136 | −0.538 | 3.60 | 2.97 | 200.1 | 198.0 |
 | 2025 | 4 | 145,689 | 155 | −0.308 | 3.42 | 2.97 | 215.1 | 214.5 |
-| 2026 | 4 | 143,272 | 164 | −0.131 | 3.03 | 3.14 | 248.3 | 247.5 |
+| 2026 | 4 | 145,595 | 187 | −0.157 | 3.13 | 3.18 | 248.5 | 247.5 |
 
 The last two columns are the end-to-end check, and nothing is fitted to make them
 agree: summed WAR over the rated players lands within ~1% of
@@ -572,8 +616,9 @@ past season is selected.
 - **Supermax eligibility is an upper bound.** Whether a free agent is re-signing
   with her *prior* team decides whether she can reach 20%, and no data here
   records it, so five-plus years of service is treated as eligible.
-- **Rating dispersion (resolved).** With RAPM wired in, rating sd is 3.03 (was
-  2.10 on the box prior) and 15 of 164 players price above the $1.4M max (was 6).
+- **Rating dispersion (resolved).** With RAPM wired in, rating sd is 3.13 (was
+  2.10 on the box prior) and 17 of 187 players price above their applicable
+  maximum (was 6).
 - **Defensive valuation (largely resolved).** Alanna Smith moved from −3.41 to
   −0.03 and Leonie Fiebich from −1.30 to +3.41. Remaining large negatives on
   known defenders should still be treated with suspicion, but they are no longer
@@ -617,7 +662,7 @@ The page recomputes value client-side from embedded constants rather than
 displaying precomputed numbers, so the sliders re-run the model. `computeWar`,
 `computeValue` and `projectRating` in `index.html` mirror `valuation.py` —
 **change one, change both**, then re-check the agreement invariant (worst gap
-$113 across 1,387 player-seasons; the gap is emitted-JSON rounding, nothing else).
+$113 across 1,507 player-seasons; the gap is emitted-JSON rounding, nothing else).
 
 Details worth knowing:
 
