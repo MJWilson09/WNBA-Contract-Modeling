@@ -18,30 +18,19 @@ numbers. The JS implementations of `computeWar`, `computeValue` and
 from __future__ import annotations
 
 import json
+import re
 
 import numpy as np
 import pandas as pd
 
-from . import data, valuation
+from . import data, history, valuation
+from .history import team_lookup
 
 WEB_DIR = data.PROJECT_ROOT / "docs"
-
-# All-Star rosters appear in the team box alongside real clubs
-NON_TEAMS = {"SPO", "COOP"}
 
 PROJECTION_SEASONS = [
     valuation.CURRENT_SEASON + k for k in range(valuation.PROJECTION_YEARS)
 ]
-
-
-def team_lookup(season: int) -> dict[int, str]:
-    tb = data.load("team_box", [season])
-    pairs = tb[["team_id", "team_abbreviation"]].drop_duplicates()
-    return {
-        int(r.team_id): r.team_abbreviation
-        for r in pairs.itertuples()
-        if r.team_abbreviation not in NON_TEAMS
-    }
 
 
 def build_payload() -> dict:
@@ -93,6 +82,8 @@ def build_payload() -> dict:
             "supermax": bool(r.supermax_eligible),
         })
 
+    hist_rows, hist_meta = history_payload()
+
     return {
         "generated": pd.Timestamp.utcnow().strftime("%Y-%m-%d"),
         "season": valuation.CURRENT_SEASON,
@@ -112,7 +103,98 @@ def build_payload() -> dict:
             "relValue": [float(v) for v in curve["rel_value"]],
         },
         "players": players,
+        "history": hist_rows,
+        "historyMeta": hist_meta,
     }
+
+
+def history_payload() -> tuple[dict, dict]:
+    """Past seasons for the league table's season picker.
+
+    Only seasons *before* the current one are emitted. The current season keeps
+    coming from `players`, which carries the contract fields history has no
+    analogue for — so the default view of the page is byte-for-byte what it was
+    before the picker existed, and there is one source of truth for it.
+
+    Rows carry the same key names as `players` so the page's `derive()` runs on
+    them unchanged. `salary`/`signing` are null because salaries are loaded for
+    2026 only; `supermax` is false because years of service are not reconstructed
+    historically, so every past season is priced against the standard maximum.
+    """
+    path = data.PROCESSED_DIR / f"{history.OUT_NAME}.parquet"
+    if not path.exists():
+        return {}, {}
+
+    hist = pd.read_parquet(path)
+    meta = json.loads(
+        (data.PROCESSED_DIR / f"{history.OUT_NAME}_meta.json").read_text())
+    by_season = {m["season"]: m for m in meta["seasons"]}
+
+    rows, out_meta = {}, {}
+    for season, g in hist[hist["season"] < valuation.CURRENT_SEASON].groupby("season"):
+        season = int(season)
+        rows[str(season)] = [
+            {
+                "id": int(r.athlete_id),
+                "name": r.athlete_display_name,
+                "team": r.team,
+                "pos": r.pos if isinstance(r.pos, str) else "—",
+                "age": None if pd.isna(r.age) else int(r.age),
+                "g": int(r.g),
+                "mpg": round(float(r.mpg), 3),
+                "availability": round(float(r.availability), 4),
+                "projMinutes": round(float(r.proj_minutes), 2),
+                "rating": round(float(r.rating), 3),
+                "ratingSe": None if pd.isna(r.rating_se) else round(float(r.rating_se), 3),
+                "oRapm": None if pd.isna(r.o_rapm) else round(float(r.o_rapm), 3),
+                "dRapm": None if pd.isna(r.d_rapm) else round(float(r.d_rapm), 3),
+                "source": r.rating_source,
+                "salary": None,
+                "signing": "—",
+                "exp": None,
+                "supermax": False,
+            }
+            for r in g.sort_values("value", ascending=False).itertuples()
+        ]
+        m = by_season.get(season, {})
+        pooled = m.get("pooled_seasons") or [season]
+        out_meta[str(season)] = {
+            "pooled": [int(pooled[0]), int(pooled[-1])],
+            "nPoss": int(m.get("n_poss", 0)),
+            # Games each team actually played that season — 34, 22 (bubble) and
+            # 40 all appear in this window, which is why minutes are normalised.
+            "games": int(valuation.team_games_played(season)["team_games"].max()),
+        }
+    return rows, out_meta
+
+
+def dump_js(payload: dict) -> str:
+    """JSON with the big row lists collapsed to one player per line.
+
+    The payload is mostly small nested config that reads best pretty-printed, but
+    the row lists are ~1,400 flat records; at indent=2 those alone run to 25,000
+    lines. Emitting each record compactly on its own line keeps the file about a
+    tenth the size while still giving a one-row-per-line diff when it changes.
+    """
+    marks: dict[str, list] = {}
+
+    def stash(rows: list) -> str:
+        token = f"@@ROWS{len(marks)}@@"
+        marks[token] = rows
+        return token
+
+    skeleton = dict(payload)
+    skeleton["players"] = stash(payload["players"])
+    skeleton["history"] = {k: stash(v) for k, v in payload["history"].items()}
+
+    text = json.dumps(skeleton, indent=2)
+    for token, rows in marks.items():
+        pad = re.search(rf'^([ ]*)"[^"]+": "{token}"', text, re.M).group(1)
+        body = ",\n".join(f"{pad}  " + json.dumps(r, separators=(",", ":"))
+                          for r in rows)
+        text = text.replace(f'"{token}"',
+                            f"[\n{body}\n{pad}]" if rows else "[]")
+    return text
 
 
 def main() -> None:
@@ -121,14 +203,19 @@ def main() -> None:
 
     js = (
         "// Generated by src/wnba_salary/export_web.py — do not edit by hand.\n"
-        f"const MODEL = {json.dumps(payload, indent=2)};\n"
+        f"const MODEL = {dump_js(payload)};\n"
     )
     (WEB_DIR / "players.js").write_text(js)
 
     n_capped = sum(1 for p in payload["players"] if p["salary"] is not None)
+    hist = payload["history"]
     print(f"wrote {WEB_DIR / 'players.js'}")
     print(f"  {len(payload['players'])} players, {n_capped} with contracts")
-    print(f"  seasons: {payload['seasons']}")
+    print(f"  projection seasons: {payload['seasons']}")
+    if hist:
+        past = sorted(int(s) for s in hist)
+        print(f"  table seasons: {past[0]}–{payload['season']} "
+              f"({sum(len(v) for v in hist.values())} historical rows)")
 
 
 if __name__ == "__main__":

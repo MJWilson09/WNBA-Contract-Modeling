@@ -73,6 +73,8 @@ silent failures that produce believable wrong numbers.
   play-by-play for seasons the archive doesn't cover.
 - `src/wnba_salary/ratings.py` — production ratings: RAPM on ESPN possessions,
   level pinned to the accounting identity.
+- `src/wnba_salary/history.py` — the same recipe run over every season back to
+  2017, for the site's season picker.
 - `src/wnba_salary/draft_prior.py` — draft-slot priors for players with no
   possession history (forward/preseason use; not in the production path).
 - `src/wnba_salary/forecast_validation.py` — forward validation harness; the
@@ -485,6 +487,62 @@ SEs rank players correctly by precision — Spearman 0.954 against
 `1/√possessions`, falling monotonically from 4.14 in the fewest-possession
 quintile to 2.85 in the most.
 
+## Season history (2017–2026)
+
+`history.py` runs the production rating recipe over every season with
+possession-level data, so the site's league table has a season picker rather than
+only a snapshot. 2017 is the floor: the stats-API archive begins there, and ESPN
+substitution data is not reliable enough to reconstruct lineups any earlier
+(2019's ESPN reconstruction already drops 72 of 204 games).
+
+Nothing about the method changes per season. `ratings.build(target=T)` slides the
+whole recipe back — the pooled window `T-3 … T`, the recency weights on both the
+prior and the possessions, and the minutes the level is pinned against. λ and the
+half-life stay at the descriptive optimum, since they were tuned on 2017–2022
+holdouts and re-tuning them per season would be fitting the tuning set.
+
+The scale constants genuinely do not need to move. `points_per_win` and
+`minutes_baseline` are already pooled across 2003–2026, and `replacement_level`
+only looks season-dependent: expanding the identity, team count and games cancel,
+`R = (n·G/2)(1−w)·B / (n·G·5·40) = 0.75·B/400`. The level pin then reduces to
+setting the minutes-weighted mean rating to zero, which needs no CBA figures at
+all — only that season's minutes.
+
+| Season | Pooled | Possessions | Players | Pin offset | Rating sd | Median SE | Σ WAR | Identity |
+|---|---|---|---|---|---|---|---|---|
+| 2017 | 1 | 28,961 | 131 | +0.023 | 3.33 | 3.42 | 197.2 | 198.0 |
+| 2018 | 2 | 59,600 | 139 | −0.235 | 3.45 | 3.24 | 198.3 | 198.0 |
+| 2019 | 3 | 89,120 | 134 | −0.081 | 3.03 | 3.10 | 196.4 | 198.0 |
+| 2020 | 4 | 109,077 | 125 | +0.171 | 2.98 | 3.15 | 197.9 | 198.0 |
+| 2021 | 4 | 107,262 | 133 | −0.073 | 3.18 | 3.08 | 198.0 | 198.0 |
+| 2022 | 4 | 109,406 | 138 | −0.359 | 3.27 | 3.04 | 198.6 | 198.0 |
+| 2023 | 4 | 115,531 | 132 | −0.403 | 3.58 | 3.03 | 198.0 | 198.0 |
+| 2024 | 4 | 133,001 | 136 | −0.538 | 3.60 | 2.97 | 200.1 | 198.0 |
+| 2025 | 4 | 145,689 | 155 | −0.308 | 3.42 | 2.97 | 215.1 | 214.5 |
+| 2026 | 4 | 143,272 | 164 | −0.131 | 3.03 | 3.14 | 248.3 | 247.5 |
+
+The last two columns are the end-to-end check, and nothing is fitted to make them
+agree: summed WAR over the rated players lands within ~1% of
+`n_teams × 44 / 2 × (1 − 0.25)` in every season, and the step changes track
+expansion (12 teams → 13 in 2025 → 15 in 2026). The 2026 row is produced twice by
+two code paths — `history.py` and `valuation.py` — and agrees to $0.
+
+Early seasons pool fewer years, which shows up honestly in the widest median SE
+(3.42 in 2017, one season of possessions) rather than being hidden.
+
+**Two normalisations, both deliberate.** Dollars are always 2026 dollars: we have
+the 2026 CBA and no other, so every season's `value` answers "what would this
+season's play be worth under today's agreement". And minutes are normalised to a
+44-game season (`mpg × 44 × availability`, the same formula the current season
+already uses) because the league played 34, 22 and 40-game seasons in this window
+and raw seasonal WAR would mostly measure season length. The consequence, stated
+plainly: a past season's summed WAR is *not* that season's actual league wins,
+and no historical dollar figure is a salary anyone was paid.
+
+Salaries remain 2026-only, so `salary`, `surplus` and `signing` are null for
+earlier seasons rather than guessed at, and the site hides those columns when a
+past season is selected.
+
 ## Known limitations
 
 - **The prior largely re-derives BPM.** BPM is itself a linear function of box
@@ -547,9 +605,15 @@ The page recomputes value client-side from embedded constants rather than
 displaying precomputed numbers, so the sliders re-run the model. `computeWar`,
 `computeValue` and `projectRating` in `index.html` mirror `valuation.py` —
 **change one, change both**, then re-check the agreement invariant (worst gap
-$112 across 164 players × 3 seasons).
+$113 across 1,387 player-seasons; the gap is emitted-JSON rounding, nothing else).
 
-Two details worth knowing:
+Details worth knowing:
+
+- **The season picker feeds the league table only.** The current season's rows
+  come from `MODEL.players`, past seasons from `MODEL.history`; both are shaped
+  so the page's single `derive()` runs on them unchanged. Player cards stay a
+  2026 contract tool, so a past-season row is clickable only when that player is
+  still in the current-season set.
 
 - **Default minutes use the pipeline's prorated value, not `games × mpg`.** The
   sliders force `games` to an integer, so `round(44 × availability) × mpg` drifts

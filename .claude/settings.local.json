@@ -88,7 +88,19 @@
       "Bash(grep -E '\\\\.\\(parquet|json|js\\)$')",
       "Bash(awk '/<h3>Step 1d/,/<h2 id=\"thanks\">/' docs/about.html)",
       "Bash(cat)",
-      "Bash(./.venv/bin/python -c ' *)"
+      "Bash(./.venv/bin/python -c ' *)",
+      "Bash(awk '/Two players from the 2026 table/,/court\\\\./' docs/about.html)",
+      "Bash(awk '/The 1590 isn/,/derivation is right\\\\./' docs/about.html)",
+      "Bash(./.venv/bin/python -m src.wnba_salary.ratings)",
+      "Bash(./.venv/bin/python -m src.wnba_salary.history)",
+      "Bash(cp docs/players.js /private/tmp/claude-502/-Users-michaelwilson-Documents-WNBA-Contract-Modeling/3b393463-1fb0-4979-807b-cf69abd1f288/scratchpad/base/players.js)",
+      "Bash(./.venv/bin/python -m src.wnba_salary.export_web)",
+      "Bash(./.venv/bin/node -e \"\")",
+      "Bash(node -e ' *)",
+      "Bash(echo \"stamp exit=$?\")",
+      "Bash(git check-ignore *)",
+      "Bash(./.venv/bin/python -m compileall -q src/wnba_salary)",
+      "Bash(git checkout *)"
     ]
   }
 }

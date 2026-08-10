@@ -212,13 +212,30 @@ td.bar { background-image:
                             transparent calc(50% + .5px));
   background-repeat: no-repeat; }
 
-/* S1 — section head with the column toggle */
+/* S1 — section head with the season picker and the column toggle */
 .sec-head { display: flex; align-items: baseline; justify-content: space-between;
-  gap: 12px; }
-.colbtn { display: none; background: none; border: 1px solid var(--line);
+  gap: 12px; flex-wrap: wrap; }
+.sec-tools { display: flex; align-items: center; gap: 8px; }
+.picklab { font-size: var(--fs-micro); text-transform: uppercase;
+  letter-spacing: 0.07em; color: var(--ink-3); font-weight: 600; }
+.colbtn, .pick { background: none; border: 1px solid var(--line);
   color: var(--ink-2); border-radius: var(--radius-sm); padding: 4px 10px;
   font-size: 12px; font-family: var(--sans); cursor: pointer; }
-.colbtn:hover { color: var(--ink); border-color: var(--ink-3); }
+.colbtn { display: none; }
+.colbtn:hover, .pick:hover { color: var(--ink); border-color: var(--ink-3); }
+/* Safari and Firefox draw their own select chrome in a colour that ignores the
+   dark theme, so the native appearance is dropped and the caret redrawn. */
+.pick { appearance: none; padding-right: 24px; font-variant-numeric: tabular-nums;
+  background-image: linear-gradient(45deg, transparent 50%, var(--ink-3) 50%),
+                    linear-gradient(135deg, var(--ink-3) 50%, transparent 50%);
+  background-position: right 11px center, right 7px center;
+  background-size: 4px 4px, 4px 4px; background-repeat: no-repeat; }
+.pick:focus-visible { outline: 2px solid var(--ink-3); outline-offset: 1px; }
+
+/* Past seasons have no contract data — salaries are loaded for the current
+   season only — so those columns come out entirely rather than showing a column
+   of dashes. WAR takes the slot Surplus vacates in the narrow view. */
+#league.no-sal .sal { display: none; }
 
 .proj th, .proj td { border-bottom: 1px solid var(--line-soft); }
 /* The projection table lives inside a card, so it needs its own scroll
@@ -230,6 +247,9 @@ td.bar { background-image:
 
 .note { font-size: var(--fs-xs); color: var(--ink-3); margin-top: 12px; line-height: 1.55;
   max-width: 78ch; }
+#legend b { color: var(--ink-2); font-weight: 600; font-family: var(--mono);
+  font-size: 0.95em; }
+#legend strong { color: var(--ink-2); }
 .empty { color: var(--ink-3); font-size: 14px; padding: 24px 0; }
 /* Lives in the nav rather than floating. As a fixed element it sat on top of
    the projection table on narrow screens, hiding figures and competing with
@@ -331,6 +351,8 @@ td.bar { background-image:
   .colbtn { display: inline-block; }
   #league .opt { display: none; }
   #league.show-all .opt { display: table-cell; }
+  #league.no-sal .war { display: table-cell; }
+  #league.no-sal .sal { display: none; }
   /* The global `nowrap` is right for figures and wrong for names: it alone kept
      the four-column view 80px wider than its container, so it still scrolled.
      Let the one text column wrap; rows get taller, the table fits. */

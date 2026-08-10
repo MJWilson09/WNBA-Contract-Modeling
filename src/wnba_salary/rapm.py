@@ -43,7 +43,7 @@ import pandas as pd
 import requests
 from scipy import sparse
 
-from . import box_prior, data
+from . import box_prior, data, espn_lineups
 
 STATS_BASE = "https://raw.githubusercontent.com/sportsdataverse/wehoop-data/main"
 AVAILABLE_SEASONS = range(2017, 2023)
@@ -52,6 +52,8 @@ OFF_NAME_COLS = [f"off_player{i}" for i in range(1, 6)]
 DEF_NAME_COLS = [f"def_player{i}" for i in range(1, 6)]
 
 MAX_POSS_POINTS = 6   # and-one plus a technical; anything above is a data error
+
+POSS_CACHE = data.PROCESSED_DIR / "poss_cache"
 
 
 def fetch_stats_pbp(season: int, *, refresh: bool = False) -> pd.DataFrame:
@@ -129,6 +131,29 @@ def build_possessions(pbp: pd.DataFrame) -> pd.DataFrame:
         poss = poss[~bad]
     poss.attrs["dropped_bad_points"] = int(bad.sum())
     return poss.reset_index(drop=True)
+
+
+def season_possessions(season: int) -> pd.DataFrame:
+    """One season of possessions, from whichever source covers it, cached to disk.
+
+    The two sources are not interchangeable code paths but they produce the same
+    frame: the archived stats feed through 2022, ESPN reconstruction afterwards.
+    The 2022 overlap is the oracle that licenses the switch (r=0.9937 on ratings;
+    `espn_lineups.validate_against_stats`).
+
+    Cached to `data/processed/poss_cache/` because several callers rebuild the
+    same seasons — the multi-season history sweep and `forecast_validation`'s
+    spawned workers, which inherit nothing on macOS. Delete the directory to
+    force a rebuild after changing `build_possessions` or `reconstruct`.
+    """
+    path = POSS_CACHE / f"poss_{season}.parquet"
+    if path.exists():
+        return pd.read_parquet(path)
+    df = (build_possessions(fetch_stats_pbp(season)) if season in AVAILABLE_SEASONS
+          else espn_lineups.reconstruct(season))
+    path.parent.mkdir(parents=True, exist_ok=True)
+    df.to_parquet(path, index=False)
+    return df
 
 
 def build_design(

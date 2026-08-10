@@ -32,10 +32,16 @@ import json
 import numpy as np
 import pandas as pd
 
-from . import box_prior, data, espn_lineups, rapm, rapm_validation
+from . import box_prior, data, rapm, rapm_validation
 
 CURRENT_SEASONS = [2023, 2024, 2025, 2026]
 TARGET_SEASON = 2026
+
+# The pooled window is the target season plus the three before it. `history.py`
+# slides the same window back over earlier seasons; `CURRENT_SEASONS` is just
+# `pooled_window(2026)` written out.
+WINDOW = 4
+FIRST_POSS_SEASON = 2017        # earliest season with possession-level data
 
 # Descriptive config — "what is she worth right now". λ is the interior optimum
 # from the within-season chronological holdout (rapm_validation).
@@ -60,8 +66,18 @@ def recency_weight(season: np.ndarray | pd.Series, target: int = TARGET_SEASON,
     return 0.5 ** ((target - np.asarray(season, dtype=float)) / half_life)
 
 
+def pooled_window(target: int, window: int = WINDOW) -> list[int]:
+    """The seasons pooled to rate `target`: itself plus the `window - 1` before.
+
+    Truncated at `FIRST_POSS_SEASON`, so the earliest targets pool fewer seasons
+    and their ratings are correspondingly noisier — visible in `rating_se`.
+    """
+    return list(range(max(FIRST_POSS_SEASON, target - window + 1), target + 1))
+
+
 def pooled_prior(seasons: list[int], players: list[str],
-                 half_life: float = HALF_LIFE) -> tuple[np.ndarray, int, pd.DataFrame]:
+                 half_life: float = HALF_LIFE,
+                 target: int = TARGET_SEASON) -> tuple[np.ndarray, int, pd.DataFrame]:
     """Recency-weighted box prior aligned to the design's player order."""
     off_fit, def_fit = box_prior.fit_nba_models()
     positions = box_prior.wnba_positions(seasons)
@@ -76,6 +92,7 @@ def pooled_prior(seasons: list[int], players: list[str],
         def_k=meta["shrinkage"]["defense"]["k"],
     )
     prior_df["w"] = prior_df["mp"] * recency_weight(prior_df["season"],
+                                                    target=target,
                                                     half_life=half_life)
 
     agg = (
@@ -139,15 +156,25 @@ def pin_level(ratings: pd.DataFrame, minutes: pd.Series, consts: dict) -> dict:
     }
 
 
-def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
+def build(lam: float = LAMBDA, half_life: float = HALF_LIFE, *,
+          target: int = TARGET_SEASON, seasons: list[int] | None = None) -> dict:
+    """Rate `target` from the pooled window ending at it.
+
+    `target` is a parameter rather than a constant so the same recipe can be run
+    over earlier seasons (`history.py`). Everything that anchors to "now" —
+    the recency weights on both the prior and the possessions, and the minutes
+    the level is pinned against — moves with it.
+    """
+    seasons = list(seasons) if seasons is not None else pooled_window(target)
     poss = pd.concat(
-        [espn_lineups.reconstruct(s) for s in CURRENT_SEASONS], ignore_index=True
+        [rapm.season_possessions(s) for s in seasons], ignore_index=True
     )
     design = rapm.build_design(poss, min_poss=MIN_POSS)
     players = design["players"]
     n = len(players)
 
-    prior, matched, _ = pooled_prior(CURRENT_SEASONS, players, half_life=half_life)
+    prior, matched, _ = pooled_prior(seasons, players, half_life=half_life,
+                                     target=target)
 
     kept = poss[poss["garbage_time"] == 0]
     offn = np.column_stack([kept[c].map(box_prior.normalize_name).to_numpy()
@@ -161,7 +188,8 @@ def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
     ])
     rows = kept[ok].reset_index(drop=True)
 
-    weights = recency_weight(rows["season"].to_numpy(), half_life=half_life)
+    weights = recency_weight(rows["season"].to_numpy(), target=target,
+                             half_life=half_life)
     b = rapm.fit_ridge_prior(design["A"], design["y"], lam, prior, weights=weights)
     se = rapm.posterior_se(design["A"], design["y"], lam, b, n, weights=weights)
 
@@ -175,7 +203,7 @@ def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
     r["rapm_unpinned"] = r["rapm"]
 
     consts = json.loads((data.PROCESSED_DIR / "constants.json").read_text())
-    minutes = target_minutes()
+    minutes = target_minutes(target)
     pin = pin_level(r, minutes, consts)
 
     # split the offset evenly across offence and defence to preserve the split
@@ -186,7 +214,8 @@ def build(lam: float = LAMBDA, half_life: float = HALF_LIFE) -> dict:
 
     r["target_minutes"] = r["player"].map(minutes)
     return {"ratings": r, "pin": pin, "prior_matched": matched,
-            "n_players": n, "n_poss": design["n_poss"],
+            "n_players": n, "n_poss": design["n_poss"], "seasons": seasons,
+            "target": target,
             "lambda": lam, "half_life": half_life, "sigma2": se["sigma2"]}
 
 
@@ -222,7 +251,7 @@ def report(res: dict, label: str, out_name: str) -> pd.DataFrame:
     r.to_parquet(data.PROCESSED_DIR / f"{out_name}.parquet", index=False)
     (data.PROCESSED_DIR / f"{out_name}_meta.json").write_text(json.dumps(
         {"lambda": res["lambda"], "half_life": res["half_life"],
-         "seasons": CURRENT_SEASONS, "target_season": TARGET_SEASON, "pin": pin,
+         "seasons": res["seasons"], "target_season": res["target"], "pin": pin,
          "n_players": res["n_players"], "n_poss": res["n_poss"]}, indent=2))
     return r
 

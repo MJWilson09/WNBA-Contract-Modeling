@@ -24,7 +24,7 @@
 <meta name="twitter:title" content="WNBA Contract Model">
 <meta name="twitter:description" content="What is a WNBA player actually worth? Possession-level impact ratings converted into contract value against the 2026 CBA.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=f220a10a">
+<link rel="stylesheet" href="assets/site.css?v=fe8514fc">
 </head>
 <body>
 <nav class="nav">
@@ -62,7 +62,11 @@
 
 <div class="sec-head">
   <h2>League table</h2>
-  <button id="cols" class="colbtn" aria-expanded="false">all columns</button>
+  <div class="sec-tools">
+    <label class="picklab" for="season">Season</label>
+    <select id="season" class="pick"></select>
+    <button id="cols" class="colbtn" aria-expanded="false">all columns</button>
+  </div>
 </div>
 <div class="scroll">
   <table id="league">
@@ -74,16 +78,30 @@
       <th data-k="rating" class="num">Rating</th>
       <th data-k="oRapm" class="num opt">Off</th>
       <th data-k="dRapm" class="num opt">Def</th>
-      <th data-k="war" class="num opt">WAR</th>
+      <th data-k="war" class="num opt war">WAR</th>
       <th data-k="value" class="num">Value</th>
       <th data-k="marketValue" class="num opt">Capped</th>
-      <th data-k="salary" class="num opt">Salary</th>
-      <th data-k="surplus" class="num">Surplus</th>
-      <th data-k="signing" class="opt">Type</th>
+      <th data-k="salary" class="num opt sal">Salary</th>
+      <th data-k="surplus" class="num sal">Surplus</th>
+      <th data-k="signing" class="opt sal">Signing</th>
     </tr></thead>
     <tbody></tbody>
   </table>
 </div>
+<p class="note" id="legend">
+  <strong>Signing</strong> is how the player's current contract was entered, not
+  a draft outcome.
+  <b>UFA</b> unrestricted free agent ·
+  <b>RFA</b> restricted free agent ·
+  <b>UDFA</b> undrafted free agent ·
+  <b>Core</b> core designation, the WNBA's franchise tag ·
+  <b>Rookie</b> rookie-scale contract ·
+  <b>Reserved</b> team holds her rights ·
+  <b>Dev</b> developmental roster spot ·
+  <b>7D</b> seven-day contract.
+  Codes come from Her Hoop Stats; a few uncommon ones are passed through as
+  reported.
+</p>
 <p class="note" id="foot"></p>
 
 </div>
@@ -374,17 +392,25 @@ function add(id) {
 }
 
 /* ---- league table ---- */
-const rows = MODEL.players.map(p => {
-  const d = derive(p, null);
-  return { ...p, war: d.war, value: d.value, marketValue: d.marketValue,
-           surplus: d.surplus };
-});
-// Column extents for the inline bars. Scaled per column to its own largest
-// magnitude, so each column uses its full width rather than being squashed by
-// whichever column happens to have the biggest numbers.
-const ratingMax = Math.max(...rows.map(r => Math.abs(r.rating)));
-const surplusMax = Math.max(...rows.filter(r => r.surplus != null)
-                                   .map(r => Math.abs(r.surplus)));
+// The table can show any season back to the first one with possession data.
+// The current season comes from `players` (the only rows carrying contracts);
+// every earlier one from `history`. Both are shaped so `derive()` runs on them
+// unchanged, so there is one value formula, not two.
+const HISTORY = MODEL.history || {};
+const HIST_META = MODEL.historyMeta || {};
+const TABLE_SEASONS = [CUR,
+  ...Object.keys(HISTORY).map(Number).sort((a, b) => b - a)];
+
+let rows = [], ratingMax = 0, surplusMax = 0, tableSeason = CUR;
+
+function buildRows(season) {
+  const src = season === CUR ? MODEL.players : (HISTORY[String(season)] || []);
+  return src.map(p => {
+    const d = derive(p, null);
+    return { ...p, war: d.war, value: d.value, marketValue: d.marketValue,
+             surplus: d.surplus };
+  });
+}
 
 // A bar drawn from a centre baseline: positive fills rightward, negative
 // leftward, so sign is readable without reading the number. Emitted as CSS
@@ -398,6 +424,32 @@ function bar(v, maxAbs) {
 }
 
 let sortK = "value", sortDesc = true;
+
+// Column extents for the inline bars, recomputed per season. Scaled per column
+// to its own largest magnitude, so each column uses its full width rather than
+// being squashed by whichever column happens to have the biggest numbers —
+// which also means a bar's length is only comparable within one season's table.
+function loadSeason(season) {
+  tableSeason = season;
+  rows = buildRows(season);
+  ratingMax = Math.max(...rows.map(r => Math.abs(r.rating)));
+  const sur = rows.filter(r => r.surplus != null).map(r => Math.abs(r.surplus));
+  surplusMax = sur.length ? Math.max(...sur) : 0;
+
+  // Salaries are loaded for the current season only, so the contract columns
+  // come out for past seasons rather than showing a column of dashes.
+  const hist = season !== CUR;
+  document.getElementById("league").classList.toggle("no-sal", hist);
+  document.getElementById("legend").style.display = hist ? "none" : "";
+  // Leaving the sort on a column that just disappeared would look like an
+  // arbitrary order.
+  if (hist && ["salary", "surplus", "signing"].includes(sortK)) {
+    sortK = "value"; sortDesc = true;
+  }
+  renderTable();
+  renderFoot();
+}
+
 function renderTable() {
   const tb = document.querySelector("#league tbody");
   const sorted = rows.slice().sort((a, b) => {
@@ -407,24 +459,32 @@ function renderTable() {
     if (typeof x === "string") return sortDesc ? y.localeCompare(x) : x.localeCompare(y);
     return sortDesc ? y - x : x - y;
   });
+  // A row is only clickable if that player has a current-season card to open;
+  // plenty of players in a 2017 table are long retired.
   tb.innerHTML = sorted.map(r => `
-    <tr class="click" data-id="${r.id}">
+    <tr class="${byId.has(r.id) ? "click" : ""}" data-id="${r.id}">
       <td>${r.name}</td><td class="opt">${r.team}</td>
       <td class="num opt">${r.age ?? "—"}</td>
       <td class="num opt">${r.mpg.toFixed(1)}</td>
       <td class="num bar ${cls(r.rating)}" ${bar(r.rating, ratingMax)}>${sgn(r.rating)}</td>
       <td class="num opt">${sgn(r.oRapm)}</td>
       <td class="num opt">${sgn(r.dRapm)}</td>
-      <td class="num opt">${r.war.toFixed(2)}</td>
+      <td class="num opt war">${r.war.toFixed(2)}</td>
       <td class="num">${moneyK(r.value)}</td>
       <td class="num opt ${r.value > r.marketValue + 1 ? "capped" : ""}">${moneyK(r.marketValue)}</td>
-      <td class="num opt">${moneyK(r.salary)}</td>
-      <td class="num bar ${cls(r.surplus)}" ${bar(r.surplus, surplusMax)}>${r.surplus == null ? "—" : moneyK(r.surplus)}</td>
-      <td class="opt">${r.signing}</td>
+      <td class="num opt sal">${moneyK(r.salary)}</td>
+      <td class="num bar sal ${cls(r.surplus)}" ${bar(r.surplus, surplusMax)}>${r.surplus == null ? "—" : moneyK(r.surplus)}</td>
+      <td class="opt sal">${r.signing}</td>
     </tr>`).join("");
-  tb.querySelectorAll("tr").forEach(tr =>
+  tb.querySelectorAll("tr.click").forEach(tr =>
     tr.onclick = () => add(+tr.dataset.id));
 }
+
+const seasonSel = document.getElementById("season");
+seasonSel.innerHTML = TABLE_SEASONS.map(s =>
+  `<option value="${s}">${s}${s === CUR ? " · current" : ""}</option>`).join("");
+seasonSel.value = String(CUR);
+seasonSel.onchange = () => loadSeason(+seasonSel.value);
 const colBtn = document.getElementById("cols");
 colBtn.onclick = () => {
   const t = document.getElementById("league");
@@ -442,14 +502,37 @@ document.querySelectorAll("#league thead th").forEach(th => {
 });
 
 /* ---- footer ---- */
-const nCapped = rows.filter(r => r.value > r.marketValue + 1).length;
-const s26 = MODEL.schedule[String(CUR)];
-document.getElementById("foot").textContent =
-  `${rows.length} players with ≥100 minutes in ${CUR}. ` +
-  `${nCapped} price above the ${money(s26.max_salary)} maximum — ` +
-  `their surplus is capped by the CBA, not by the model. ` +
-  `B = ${Math.round(C.minutes_baseline)}, R = ${C.replacement_level.toFixed(2)} pts/100, ` +
-  `$/win = ${money(s26.dollars_per_win)}. Generated ${MODEL.generated}.`;
+function renderFoot() {
+  const s26 = MODEL.schedule[String(CUR)];
+  const consts =
+    `B = ${Math.round(C.minutes_baseline)}, R = ${C.replacement_level.toFixed(2)} pts/100, ` +
+    `$/win = ${money(s26.dollars_per_win)}. Generated ${MODEL.generated}.`;
+  const head = `${rows.length} players with ≥100 minutes in ${tableSeason}. `;
+
+  let body;
+  if (tableSeason === CUR) {
+    const nCapped = rows.filter(r => r.value > r.marketValue + 1).length;
+    body = `${nCapped} price above the ${money(s26.max_salary)} maximum — ` +
+      `their surplus is capped by the CBA, not by the model. `;
+  } else {
+    // What a past season's numbers do and do not mean, on the page rather than
+    // only in the docs: the rating is that season's, the price tag is today's.
+    const m = HIST_META[String(tableSeason)] || {};
+    const win = m.pooled
+      ? (m.pooled[0] === m.pooled[1] ? `${m.pooled[0]}` : `${m.pooled[0]}–${m.pooled[1]}`)
+      : `${tableSeason}`;
+    body =
+      `Ratings are fit on ${(m.nPoss || 0).toLocaleString("en-US")} possessions ` +
+      `from ${win}, weighted toward ${tableSeason}. ` +
+      `That season ran ${m.games} games, so minutes are normalised to a ` +
+      `${C.games_per_team}-game season and priced in ${CUR} dollars: the value ` +
+      `column is what that season's play would be worth under today's CBA, not ` +
+      `what anyone was paid. Contracts are loaded for ${CUR} only, so the ` +
+      `salary columns are hidden and Capped uses the standard maximum for ` +
+      `everyone — years of service are not reconstructed this far back. `;
+  }
+  document.getElementById("foot").textContent = head + body + consts;
+}
 
 /* ---- theme ---- */
 document.getElementById("theme").onclick = () => {
@@ -459,7 +542,7 @@ document.getElementById("theme").onclick = () => {
   document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
 };
 
-renderTable();
+loadSeason(CUR);
 renderCards();
 </script>
 </body>

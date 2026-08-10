@@ -49,7 +49,8 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import pandas as pd
 
-from . import box_prior, data, draft_prior, espn_lineups, rapm, valuation
+from . import box_prior, data, draft_prior, rapm, valuation
+from .rapm import season_possessions as cached_season_poss  # noqa: F401  (re-export)
 
 TEST_SEASONS = list(range(2018, 2027))
 FIRST_SEASON = 2017
@@ -62,22 +63,8 @@ REPLACEMENT = 2.98
 LAMBDA_GRID = [1500, 3000, 6000, 12000, 24000]
 HALF_LIFE_GRID = [0.25, 0.5, 0.75, 1.5, 3.0]
 
-POSS_CACHE = data.PROCESSED_DIR / "poss_cache"
+POSS_CACHE = rapm.POSS_CACHE
 MAX_WORKERS = min(4, os.cpu_count() or 1)
-
-
-def cached_season_poss(season: int) -> pd.DataFrame:
-    """Season possessions, cached to parquet so spawned workers can read them."""
-    path = POSS_CACHE / f"poss_{season}.parquet"
-    if path.exists():
-        return pd.read_parquet(path)
-    if season <= 2022:
-        df = rapm.build_possessions(rapm.fetch_stats_pbp(season))
-    else:
-        df = espn_lineups.reconstruct(season)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(path, index=False)
-    return df
 
 
 def warm_cache(season: int) -> int:

@@ -30,10 +30,13 @@ Run in order. Each stage reads the previous stage's output from `data/processed/
 | 2 | `src.wnba_salary.box_prior` | BBRef, box scores | `box_prior.parquet`, `box_prior_fit.json` |
 | 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings{,_forecast}.parquet` + `_meta.json` |
 | 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings{,_forecast}.parquet`, HHS | `valuation.parquet` |
-| 5 | `src.wnba_salary.export_web` | `valuation.parquet`, `constants.json` | `docs/players.js` |
+| 5 | `src.wnba_salary.history` | `constants.json`, `box_prior.parquet`, poss cache | `history.parquet` + `_meta.json` |
+| 6 | `src.wnba_salary.export_web` | `valuation.parquet`, `history.parquet`, `constants.json` | `docs/players.js` |
 
 Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
-~3 min. Both are fully cached afterwards.
+~3 min. Stage 5 re-runs stage 3's recipe for ten target seasons on 4 workers
+(~6 min); it reads stage 4's output only for its self-check, so the two can run
+in either order. All are fully cached afterwards.
 
 `rapm.py`, `rapm_validation.py` and `forecast_validation.py` are **not** in the
 production path.
@@ -52,10 +55,11 @@ Everything is cached to disk after the first fetch; deleting a subdirectory forc
 a refetch.
 
 `data/processed/poss_cache/` holds per-season possession frames (stats-API
-2017–2022, ESPN 2023–2026) so spawned validation workers read them from disk
-rather than rebuilding — macOS uses `spawn`, so workers inherit nothing. Delete
-the directory to force a rebuild after any change to `rapm.build_possessions`
-or `espn_lineups.reconstruct`.
+2017–2022, ESPN 2023–2026) so spawned workers read them from disk rather than
+rebuilding — macOS uses `spawn`, so workers inherit nothing. `rapm.season_possessions`
+is the single loader; `ratings`, `history` and `forecast_validation` all go
+through it. Delete the directory to force a rebuild after any change to
+`rapm.build_possessions` or `espn_lineups.reconstruct`.
 
 | Source | Coverage | Notes |
 |---|---|---|
@@ -100,13 +104,27 @@ regression until proven otherwise.
 - summed market value $100.1M vs $105M cap · 17 above their applicable max
   (6 of them at the $1,190,000 standard max, all rookie-scale) · rating sd 3.03
 
+**history.parquet** (2017–2026, 1,387 player-seasons)
+- the 2026 slice is produced by a different code path than `valuation.py` and
+  must agree with it **exactly** — `max |Δrating| 0.0000, max |Δvalue| $0`.
+  `history.main()` prints this; treat any drift as a regression
+- the summed-WAR identity holds in *every* season, not just 2026: Σ WAR lands
+  within ~1% of `n_teams × 44 / 2 × 0.75` (198.0 for the 12-team seasons, 214.5
+  in 2025, 247.5 in 2026). Again nothing is fitted to it
+- pin offsets stay small (−0.54 … +0.17) · rating sd 2.98–3.60 · median
+  `rating_se` 3.42 (2017, one pooled season) falling to 2.97
+- per-season table counts: 131/139/134/125/133/138/132/136/155/164
+- λ and half-life are **not** re-tuned per season; they were tuned on 2017–2022
+  holdouts, so re-tuning per season would be fitting the tuning set
+
 **Cross-source checks**
 - computed rate stats vs BBRef published: r = 0.998–0.9999
   (`rates.validate_against_bbref`)
 - ESPN-derived vs stats-API RAPM, 2022: **rapm r=0.9937**, o 0.9956, d 0.9795,
   per-player possessions 0.9984 (`espn_lineups.validate_against_stats`)
 - stats-API possessions retain **99.7%** of season points at ~101.4 per 100
-- web UI vs Python: worst value gap **$117** across 164 players × 3 seasons
+- web UI vs Python: worst value gap **$113** across 1,387 player-seasons
+  (2017–2026); it is emitted-JSON rounding and nothing else
 - leak-free λ sweep (`rapm_validation`, 2017–2022): optimum **λ=1,000**,
   clean-prior game RMSE **9.2274** vs prior-only **9.8398** (+0.61); interior
   optimum, 500 and 2,000 both worse
@@ -206,7 +224,19 @@ produce believable wrong answers rather than errors.
     difference and the correct prediction is
     `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made
     the SEs look 4x too wide; the correct one showed ~40% conservative.
-19. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+19. **`player_core.age` is the player's age *now*, not during that season.**
+    `player_core_2017.parquet` lists Sue Bird at 45. Reading the column for a
+    historical season ages everyone by however many years have passed since, and
+    it fails silently into a column of plausible-looking numbers. Compute from
+    `date_of_birth` instead — `history.ages_at_season` floors it against July 1,
+    roughly mid-season. `valuation.py` uses the column directly and is correct
+    only because its target season *is* the current one.
+20. **Anything anchored to "now" must move with `target`.** `ratings.build`
+    takes a target season; three separate things key off it — the prior's
+    recency weights, the possession recency weights, and the minutes the level
+    is pinned against. Missing one leaves a plausible rating anchored to the
+    wrong season. Adding a new season-dependent term? Thread `target` through it.
+21. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
     ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
     substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 
@@ -226,6 +256,15 @@ Do not "fix" these:
   prior adds little beyond BPM; the edge is in the RAPM stage.
 - **2026 is a partial season** (~62% complete as of the last run). Minutes are
   prorated to 44 games via `availability`.
+- **A historical season's summed WAR is not that season's league wins**, and its
+  dollar figures are nobody's actual salary. `history.py` normalises every season
+  to a 44-game schedule and prices all of them in 2026 dollars — the league
+  played 34, 22 and 40-game seasons in this window, and we hold exactly one CBA.
+  Both normalisations are stated in the module docstring, in README §"Season
+  history", and in the site's footnote when a past season is selected.
+- **Historical `Capped` shows the standard max for everyone.** Years of service
+  are not reconstructed before 2026, so `supermax` is false throughout rather
+  than guessed at.
 - **`draft_prior` is validated but deliberately not in the production path.** It
   improves the *forward* harness substantially, yet cannot change current-season
   output: the RAPM design includes the current season, so no rated player is
@@ -259,6 +298,11 @@ holding. Settled decisions and things-not-to-redo live in §5 and §6, not here.
 4. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
    years would need Spotrac or HHS team pages (Spotrac is client-rendered and
    returns no table to a plain fetch).
+5. **Historical salaries and CBA schedules.** `history.parquet` now carries
+   ratings back to 2017, but every season is priced in 2026 dollars because the
+   2026 CBA is the only one loaded. Past caps/maxima/minima plus HHS salary
+   seasons would turn the site's past-season view from "worth this much today"
+   into a real surplus history — the single biggest thing that view is missing.
 
 ---
 

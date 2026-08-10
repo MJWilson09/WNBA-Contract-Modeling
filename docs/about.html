@@ -24,7 +24,7 @@
 <meta name="twitter:title" content="About · WNBA Contract Model">
 <meta name="twitter:description" content="How the model works — from plus-minus and confounding through ridge regression to dollars — plus what it still gets wrong.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=f220a10a">
+<link rel="stylesheet" href="assets/site.css?v=fe8514fc">
 </head>
 <body>
 <nav class="nav">
@@ -68,7 +68,7 @@
 <p class="kicker">The method, the arithmetic, and what it can't do</p>
 
 <p>
-  The question is what a player is worth in dollars. That splits into three
+  The main question I wanted to answer was what a player is worth in dollars. That splits into three
   parts: measure her impact on the court, turn impact into wins, turn wins into
   money. The last two are mostly arithmetic. The first one is the hard part.
 </p>
@@ -80,7 +80,7 @@
   she's +8.
 </p>
 <p>
-  The problem is confounding. A bench player who only ever plays next to three
+  The problem is that a bench player who only ever plays next to three
   All-Stars will look excellent. A good player on a bad team will look awful.
   Plus-minus measures the lineup, not the player. What I actually want is her
   effect holding teammates and opponents constant, and holding things constant
@@ -102,18 +102,18 @@
 <div class="formula">points = (sum of the 5 offensive players' ratings)
        − (sum of the 5 defensive players' ratings) + baseline</div>
 <p>
-  Least squares on that gives every player a coefficient: her effect on scoring
+  A least-squares fit on that gives every player a coefficient: her effect on scoring
   with the other nine on the floor already accounted for. This is Adjusted
   Plus-Minus. Structurally it's a multiple regression with about 540 predictors.
 </p>
 
-<h3>Why OLS blows up</h3>
+<h3>Why OLS (Ordinary Least Squares) blows up</h3>
 <p>
   Fit it with plain least squares and the output is garbage. Coefficients of +40
   and −35 land on players who are obviously ordinary.
 </p>
 <p>
-  The cause is multicollinearity. Two players who are almost always on the floor
+  The cause is strong correlations between players: two players who are almost always on the floor
   together produce nearly identical columns, and the regression has no way to
   tell whose credit is whose. It resolves that by giving one a huge positive
   coefficient and the other a huge negative one, which fits the training data
@@ -127,7 +127,7 @@
   single flip.
 </p>
 
-<h3>Ridge regression</h3>
+<h3>Ridge Regression</h3>
 <p>
   Ridge fixes this by making large coefficients expensive. OLS minimizes the sum
   of squared residuals; ridge minimizes that plus a penalty term.
@@ -151,15 +151,15 @@
 </p>
 <div class="formula">minimize:  (sum of squared residuals)  +  λ × (sum of squared distances from the box-score prediction)</div>
 <p>
-  Now a player with few possessions falls back on her box score rather than on
+  Now, a player with few possessions falls back on her box score rather than on
   "average," and a player with thousands can pull away from it. That's the core
-  of the method, and it's Bayesian in flavor: the box score is the prior, the
+  of the method, and it's sort of like Bayesian inference: the box score is the prior, the
   possessions are the likelihood, and λ decides how much evidence it takes to
   move you.
 </p>
 <div class="callout">
   <p>
-    <strong>Where this earns its keep.</strong> Box scores can't see defense.
+    <strong>Accounting for Defense.</strong> Box scores can't see defense.
     There's no counting stat for a shot that never got taken. Leonie Fiebich
     grades <strong>−1.30</strong> from her box score and <strong>+3.41</strong>
     once possessions are included, because teams simply score less when she's
@@ -180,11 +180,65 @@
   team with zero point differential wins half its games.
 </p>
 <p>
-  Replacement level is the second. Value should be measured against a freely
+  Replacement level is the second constant. Value should be measured against a freely
   available player rather than against average, and that baseline lands at
   <strong>−2.98</strong> points per 100.
 </p>
 <div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
+<p>
+  The 1590 isn't a third constant I had to estimate. It falls out of the other
+  two. A rating is points per 100 possessions, so multiply it by the possessions
+  a player was on the floor for, divide by 100, and divide by points per win:
+</p>
+<div class="formula">WAR = (rating + 2.98) / 100 × possessions played / 31.77</div>
+<p>
+  Possessions played is just minutes × pace, and WNBA pace is 79.92 possessions
+  per 40 minutes, or 1.998 per minute. Substitute that in and rearrange, and
+  every constant collapses into one number:
+</p>
+<div class="formula">1590 = 100 × 31.77 / 1.998
+        = 100 × points per win / possessions per minute</div>
+<p>
+  It's worth noting that 1590 is larger than any WNBA player's season minutes.
+  The busiest player in a recent full season was Kelsey Plum at 1,525 in 2025, which is fine.
+  It isn't a share of a season, it's a unit conversion, and a
+  44-game schedule just means nobody reaches a full unit of it (the WNBA does not have their equivalent of Wilt Chamberlain averaging more than 48 minutes per game yet!). Running the same
+  identity on NBA numbers, about 30 points per win and 100 possessions per 48
+  minutes, gives 1440, within about 2.5% of the 1475 that Stephen Noh's NBA
+  model uses. Neither number was fit to the other, so the agreement is a sign
+  the derivation is right.
+</p>
+<p>
+  Two players from the 2026 table make that concrete. A'ja Wilson is the best
+  player in the model. DeWanna Bonner is a useful veteran sitting almost exactly
+  at the league median rating, and the two play similar minutes, so almost all
+  of the gap between them comes from the rating rather than from playing time.
+</p>
+<table>
+  <thead><tr>
+    <th>Player</th><th class="num">Rating</th><th class="num">Minutes</th><th class="num">WAR</th>
+  </tr></thead>
+  <tbody>
+    <tr><td>A'ja Wilson</td><td class="num">+8.12</td><td class="num">1,280</td><td class="num">8.94</td></tr>
+    <tr><td>DeWanna Bonner</td><td class="num">−0.66</td><td class="num">1,179</td><td class="num">1.72</td></tr>
+  </tbody>
+</table>
+<div class="formula">Wilson:  (1280 / 1590) × (  8.12 + 2.98)  =  0.805 × 11.10  =  8.94
+Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
+<p>
+  Bonner plays about 92% of Wilson's minutes and produces less than a fifth of
+  the wins. That is the whole point of measuring against replacement rather
+  than against zero. Bonner is a genuinely useful player, a bit below
+  league average by this rating, and she clears replacement level comfortably —
+  1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100 above
+  that same baseline, and the minutes multiply it.
+</p>
+<p>
+  It also shows how much minutes matter. Cut Wilson to Bonner's rating and hold
+  her minutes fixed and she would produce 1.87 wins, not 8.94. Nobody is
+  valuable in the abstract; they are valuable for as long as they are on the
+  court.
+</p>
 
 <h3>Wins to dollars</h3>
 <p>
@@ -213,9 +267,11 @@
 
 <h3>Does it predict anything?</h3>
 <p>
-  Descriptive models are easy to fool yourself with, so I tested it forward: fit
-  on every season up to some year, then predict the next season's games, which
-  the model has never seen. Nine test seasons, scored on average error in
+  One of the most important things you learn when creating models is to not mix training and testing data. In other words, a model is only predictive if you can use it to predict data it has never seen; otherwise it is overfitting, and doesn't provide any real predictive value.
+  
+  Therefore, I trained the model to fit
+  on every season up to some year, then predicted the next season's games, which
+  the model has never seen. There were nine test seasons, scored on average error in
   predicted game margin.
 </p>
 <table>
@@ -235,15 +291,14 @@
 <p>
   The best-known predictive rating in the NBA is
   <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
-  WNBA doesn't have one, which is most of why I built this. DARKO is the more
-  sophisticated system and this isn't a reimplementation of it, so it's worth
-  being specific about what the two share and where they actually diverge.
+  WNBA doesn't have one, which I thought it would be interesting to build this. DARKO is the more
+  sophisticated system and this isn't a reimplementation of it, so here I discuss what the two share and where they actually diverge.
 </p>
 <p>
   Both refuse to treat a rating as a fresh measurement every season. Both size
   the update by how much you already knew, so a new game moves an unknown rookie
   a lot and a veteran with thousands of possessions barely at all. And both are
-  built to predict rather than describe, which is a real choice: the number that
+  built to predict rather than describe, which is the ultimate goal: the number that
   best summarizes what already happened is not the number that best forecasts
   what happens next.
 </p>
@@ -299,7 +354,7 @@
     <strong>The cap past 2026 is a projection.</strong> The CBA doesn't schedule
     it. It's a share of league revenue, bounded to a 13% move in 2027 and 10% a
     year after that, so every projected season carries that uncertainty. The
-    2026 figures are contractual and exact.
+    2026 figures are contractual and exact, and available in a PDF from https://www.wnbpa.com/thecba.
   </li>
   <li>
     <strong>Supermax eligibility is an upper bound.</strong> Reaching 20% of the
@@ -316,8 +371,7 @@
   <li>
     <strong>Defense is still only partly visible.</strong> Possession data
     recovers a lot of what box scores miss, but defensive estimates are the
-    noisiest part of the model. A surprising defensive rating is a question, not
-    an answer.
+    noisiest part of the model. 
   </li>
   <li>
     <strong>The uncertainty bands are optimistic.</strong> The ± on each
@@ -330,6 +384,17 @@
     <strong>Only 2026 salaries are loaded.</strong> Surplus is computed against
     this season's cap hit, so players on multi-year deals aren't evaluated
     across the whole contract.
+  </li>
+  <li>
+    <strong>Past seasons are priced in today's money.</strong> The league table
+    goes back to 2017, which is as far as possession data goes. The ratings are
+    genuinely each season's — the same method, refit with that season's data —
+    but the dollars are not. I have one CBA, the 2026 one, so a 2019 value
+    answers "what would this be worth today", not what anyone was paid. Minutes
+    are scaled to a 44-game season too, since the league played 34- and 22-game
+    seasons in that stretch. Those two choices are why the contract columns
+    disappear when you pick an earlier year: there's nothing honest to put in
+    them.
   </li>
   <li>
     <strong>2026 is unfinished.</strong> The season is partly played, so minutes

@@ -1,0 +1,192 @@
+{
+  "seasons": [
+    {
+      "season": 2017,
+      "pooled_seasons": [
+        2017
+      ],
+      "n_poss": 28961,
+      "n_players_fit": 136,
+      "prior_matched": 135,
+      "pin_offset": 0.02291857598809921,
+      "minutes_share": 0.6202045454545455,
+      "n_table": 131,
+      "n_rapm": 130,
+      "rating_sd": 3.3303462189529665,
+      "rating_se_median": 3.4231834186275902,
+      "summed_war": 197.15928915021036
+    },
+    {
+      "season": 2018,
+      "pooled_seasons": [
+        2017,
+        2018
+      ],
+      "n_poss": 59600,
+      "n_players_fit": 176,
+      "prior_matched": 175,
+      "pin_offset": -0.23520526989216428,
+      "minutes_share": 0.6198787878787879,
+      "n_table": 139,
+      "n_rapm": 139,
+      "rating_sd": 3.4494618829248367,
+      "rating_se_median": 3.242152262665282,
+      "summed_war": 198.29146195423533
+    },
+    {
+      "season": 2019,
+      "pooled_seasons": [
+        2017,
+        2018,
+        2019
+      ],
+      "n_poss": 89120,
+      "n_players_fit": 198,
+      "prior_matched": 196,
+      "pin_offset": -0.08097768355554047,
+      "minutes_share": 0.6164090909090909,
+      "n_table": 134,
+      "n_rapm": 133,
+      "rating_sd": 3.0293291717798327,
+      "rating_se_median": 3.098777837884603,
+      "summed_war": 196.43568101531247
+    },
+    {
+      "season": 2020,
+      "pooled_seasons": [
+        2017,
+        2018,
+        2019,
+        2020
+      ],
+      "n_poss": 109077,
+      "n_players_fit": 227,
+      "prior_matched": 225,
+      "pin_offset": 0.1705203678017071,
+      "minutes_share": 0.40021969696969695,
+      "n_table": 125,
+      "n_rapm": 125,
+      "rating_sd": 2.977624682687563,
+      "rating_se_median": 3.153306229871759,
+      "summed_war": 197.87551005876102
+    },
+    {
+      "season": 2021,
+      "pooled_seasons": [
+        2018,
+        2019,
+        2020,
+        2021
+      ],
+      "n_poss": 107262,
+      "n_players_fit": 216,
+      "prior_matched": 215,
+      "pin_offset": -0.07308322056043526,
+      "minutes_share": 0.5897727272727272,
+      "n_table": 133,
+      "n_rapm": 132,
+      "rating_sd": 3.1809335769738216,
+      "rating_se_median": 3.079466559617593,
+      "summed_war": 197.97322045228037
+    },
+    {
+      "season": 2022,
+      "pooled_seasons": [
+        2019,
+        2020,
+        2021,
+        2022
+      ],
+      "n_poss": 109406,
+      "n_players_fit": 222,
+      "prior_matched": 221,
+      "pin_offset": -0.35931045123286864,
+      "minutes_share": 0.6600984848484849,
+      "n_table": 138,
+      "n_rapm": 137,
+      "rating_sd": 3.266741900916112,
+      "rating_se_median": 3.038921463473807,
+      "summed_war": 198.6447812497202
+    },
+    {
+      "season": 2023,
+      "pooled_seasons": [
+        2020,
+        2021,
+        2022,
+        2023
+      ],
+      "n_poss": 115531,
+      "n_players_fit": 225,
+      "prior_matched": 224,
+      "pin_offset": -0.40276360767033204,
+      "minutes_share": 0.7347045454545454,
+      "n_table": 132,
+      "n_rapm": 132,
+      "rating_sd": 3.574656218191328,
+      "rating_se_median": 3.0343904521917913,
+      "summed_war": 198.03925978260753
+    },
+    {
+      "season": 2024,
+      "pooled_seasons": [
+        2021,
+        2022,
+        2023,
+        2024
+      ],
+      "n_poss": 133001,
+      "n_players_fit": 234,
+      "prior_matched": 233,
+      "pin_offset": -0.5380708178710623,
+      "minutes_share": 0.7360227272727272,
+      "n_table": 136,
+      "n_rapm": 136,
+      "rating_sd": 3.6001596235817828,
+      "rating_se_median": 2.973463770398435,
+      "summed_war": 200.10446680540824
+    },
+    {
+      "season": 2025,
+      "pooled_seasons": [
+        2022,
+        2023,
+        2024,
+        2025
+      ],
+      "n_poss": 145689,
+      "n_players_fit": 244,
+      "prior_matched": 243,
+      "pin_offset": -0.30841744882431854,
+      "minutes_share": 0.8721818181818182,
+      "n_table": 155,
+      "n_rapm": 155,
+      "rating_sd": 3.42352058135922,
+      "rating_se_median": 2.9668694462902305,
+      "summed_war": 215.11917519913086
+    },
+    {
+      "season": 2026,
+      "pooled_seasons": [
+        2023,
+        2024,
+        2025,
+        2026
+      ],
+      "n_poss": 143272,
+      "n_players_fit": 270,
+      "prior_matched": 270,
+      "pin_offset": -0.13081814507809097,
+      "minutes_share": 0.6188257575757575,
+      "n_table": 164,
+      "n_rapm": 164,
+      "rating_sd": 3.0330597961178696,
+      "rating_se_median": 3.1373839213697616,
+      "summed_war": 248.34393071099447
+    }
+  ],
+  "pricing_season": 2026,
+  "lambda": 1500.0,
+  "half_life": 1.5,
+  "window": 4
+}
