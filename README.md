@@ -16,10 +16,10 @@ shrinks RAPM toward the prior rather than toward zero.
   So, after some research, I found that an equivalent model for the WNBA did not exist, and I decided to build one.
   I used AI to help me understand the existing work, and to work interactively with me to build the WNBA model. 
   I also used AI to help me write this website, since I have little experience with web development.
-  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking, 
-  and use it in a closed loop to understand every step. 
-  I used it to help me understand the existing work, to interactively build the model, and to help me write the website.
-  
+  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking,
+  and use it in a closed loop to understand every step.
+
+
 ## Status
 
 | Stage | What | State |
@@ -70,20 +70,20 @@ figures built from weeks-old games.
 
 Run the stages individually only when changing the model itself.
 
-Run in that order — each stage reads the previous stage's output from
+Run in that order; each stage reads the previous stage's output from
 `data/processed/`. Cold, `box_prior` takes ~4 minutes (~60 Basketball-Reference
 requests at a 3.5s rate limit) and `ratings` ~3 minutes; both are cached
 afterwards.
 
 `data/raw/` is gitignored, so a fresh clone downloads ~54 MB on first run.
-Everything caches to disk — delete a subdirectory to force a refetch.
+Everything caches to disk, so delete a subdirectory to force a refetch.
 
-**The site is never fully current.** Play-by-play comes from the
-`wehoop-wnba-data` mirror, which trails live results by roughly a week. The
-updater closes the gap between our cache and that mirror; it cannot close the
-mirror's own lag, and `--check` prints both so the two are not confused.
+The site is never fully current. Play-by-play comes from the `wehoop-wnba-data`
+mirror, which trails live results by roughly a week. The updater closes the gap
+between our cache and that mirror; it cannot close the mirror's own lag, and
+`--check` prints both so the two are not confused.
 
-**Working on this with an agent?** See [AGENTS.md](AGENTS.md) for the
+If you are working on this with an agent, see [AGENTS.md](AGENTS.md) for the
 environment traps, the invariants worth re-verifying after a change, and a
 numbered list of mistakes already made in building this. Several of them are
 silent failures that produce believable wrong numbers.
@@ -111,7 +111,7 @@ silent failures that produce believable wrong numbers.
 - `src/wnba_salary/forecast_validation.py` — forward validation harness; the
   measuring stick for any predictive claim. `--sweep` runs the (λ, HL) grid.
 - `src/wnba_salary/salaries.py` — contracts from Her Hoop Stats.
-- `src/wnba_salary/valuation.py` — ratings + constants → dollars, aging, projections.
+- `src/wnba_salary/valuation.py` — ratings + constants to dollars, aging, projections.
 - `src/wnba_salary/export_web.py` — emits `docs/players.js` for the site.
 
 ## Constants (2026)
@@ -124,44 +124,44 @@ silent failures that produce believable wrong numbers.
 | `replacement_level` | −2.98 pts/100 | **derived** from league WAR identity |
 | `dollars_per_win` | $227,879 | discretionary cap pool |
 
-Two of these are identities rather than fits:
+Two of these are identities rather than fits.
 
-**`minutes_baseline`** — for `(minutes/B) × (rating + repl)` to equal wins above
-replacement, `B = 100 × points_per_win / poss_per_min`. Feeding NBA inputs to
-that identity returns 1440 against Noh's 1475, which is where his constant comes
-from.
+For `(minutes/B) × (rating + repl)` to equal wins above replacement,
+`minutes_baseline` has to be `B = 100 × points_per_win / poss_per_min`. Feeding
+NBA inputs to that identity returns 1440 against Noh's 1475, which is where his
+constant comes from.
 
-**`replacement_level`** — summed player WAR must equal league wins above
-replacement, so `R = games × (1 − repl_win_pct) × B / total_team_minutes`. It
-needs no ratings. It lands at −2.98, essentially DARKO's NBA −3.00, but derived
-from WNBA structure rather than borrowed.
+`replacement_level` follows from requiring summed player WAR to equal league wins
+above replacement, so `R = games × (1 − repl_win_pct) × B / total_team_minutes`.
+It needs no ratings, and it lands at −2.98, essentially DARKO's NBA −3.00 but
+derived from WNBA structure rather than borrowed.
 
-`replacement_win_pct` (0.25) is an assumption, not an estimate — nobody fields a
-replacement-level team. Sensitivity is reported across 0.20–0.30.
+`replacement_win_pct` (0.25) is an assumption rather than an estimate, since
+nobody fields a replacement-level team. Sensitivity is reported across 0.20–0.30.
 
-**`dollars_per_win`** is priced out of *discretionary* cap space (cap minus 12
-minimum salaries), not the full cap. Pricing on the full cap gives $424,242 —
-1.9× higher — and makes nearly every rotation player look like surplus, which
-destroys resolution in a league this salary-compressed.
+`dollars_per_win` is priced out of *discretionary* cap space (cap minus 12
+minimum salaries) rather than the full cap. Pricing on the full cap gives
+$424,242, which is 1.9× higher and makes nearly every rotation player look like
+surplus, destroying resolution in a league this salary-compressed.
 
 ## Box prior
 
 Transfer learning per the 412 method, with two deliberate departures:
 
-1. **`OnCourt*OnOff` dropped.** On/off derives from the same possessions that
+1. `OnCourt*OnOff` is dropped. On/off derives from the same possessions that
    become the RAPM response; shrinking a ridge toward a prior built from its own
    response variable undercuts the point of an independent prior.
-2. **Predictors z-scored within league-season.** BPM is defined against NBA
+2. Predictors are z-scored within league-season. BPM is defined against NBA
    usage/pace distributions, so raw WNBA rates through NBA coefficients would
    import a league-mean bias.
 
 `DRB%` is missing from BBRef's WNBA advanced table, so all rate stats are
 recomputed from box scores. `rates.validate_against_bbref()` checks the
-recomputation against BBRef's published WNBA columns — correlations are
+recomputation against BBRef's published WNBA columns; correlations are
 0.998–0.9999, which is what licenses trusting the computed `DRB%`.
 
 Ratings are then regressed toward replacement by sample size, with the shrinkage
-constant estimated (season *t* → *t+1*) rather than assumed.
+constant estimated (season *t* to *t+1*) rather than assumed.
 
 ## Salary layer
 
@@ -172,24 +172,24 @@ value = min_salary + WAR × dollars_per_win
 
 Contracts come from Her Hoop Stats (server-rendered; Spotrac's table is
 client-rendered and returns nothing to a plain fetch). The stats season in the
-URL **must** match the salary season — the page inner-joins the two, so pairing
-2026 salaries with 2025 stats silently drops every rookie (155 players instead
-of 217).
+URL **must** match the salary season, because the page inner-joins the two:
+pairing 2026 salaries with 2025 stats silently drops every rookie (155 players
+instead of 217).
 
 Aging uses sportsdataverse-py's bundled WNBA curve (**peak age 29**, notably
 later than NBA intuition). It is applied multiplicatively to *value above
-replacement*, not to the raw rating — scaling a −1.0 rating by 0.9 would make a
-below-average player better.
+replacement* rather than to the raw rating, since scaling a −1.0 rating by 0.9
+would make a below-average player better.
 
-CBA figures are read from the **agreement itself** (`data/raw/cba/`, fetched
-from wnbpa.com), not from press reports. What that changed:
+CBA figures are read from the agreement itself (`data/raw/cba/`, fetched from
+wnbpa.com) rather than from press reports. What that changed:
 
 | | previously assumed | the CBA actually says |
 |---|---|---|
-| 2026 cap | $7,000,000 | $7,000,000 — Art. VII §1(a). Correct. |
+| 2026 cap | $7,000,000 | $7,000,000, Art. VII §1(a). Correct. |
 | 2027+ cap | geometric to $11M by 2032 | revenue-linked, no schedule; bounded at +13% for 2027 and ±10% after |
-| Maximum | $1,400,000 flat | **17% of cap standard, 20% supermax** — Art. V §8 |
-| Minimum | $270,000 flat | exact table by Years of Service, 2026–2035 — Art. V §7(a) |
+| Maximum | $1,400,000 flat | 17% of cap standard, 20% supermax (Art. V §8) |
+| Minimum | $270,000 flat | exact table by Years of Service, 2026–2035 (Art. V §7(a)) |
 | Games | 44 every year | 44 (2026), 50 (2027–28), 52 (2029+) |
 | Roster | 12 | 12. Correct. |
 
@@ -197,9 +197,9 @@ The maximum being a *share of the cap* rather than a dollar figure is the
 substantive one. There are two maxima, and most contracts are limited to the
 standard 17% ($1,190,000 in 2026), not the $1,400,000 supermax the model used
 for everyone. The supermax reaches only Core players, qualifying five-year
-veterans re-signing with their prior team, and rookie-scale extensions —
-so six rookie-scale players who previously showed headroom to $1.4M now
-correctly cap at $1.19M.
+veterans re-signing with their prior team, and rookie-scale extensions, so six
+rookie-scale players who previously showed headroom to $1.4M now correctly cap
+at $1.19M.
 
 The cap beyond 2026 remains a projection, because the agreement makes it
 revenue-determined rather than scheduled. It is now at least a *bounded* one:
@@ -218,11 +218,11 @@ rating fall back to the box prior, have no standard error, and are still gated
 on 100 minutes.
 
 The earlier gate (100 current-season minutes) conflated two different questions
-and answered neither. It dropped Napheesa Collier — 2024 Defensive Player of the
-Year, on a Core contract, with 13,821 pooled possessions behind one of the
-better-determined ratings in the league — purely because she missed most of 2026
-injured. Ratings pool four seasons, so missing time costs a player her *minutes*,
-not her rating, and the WAR formula already scales by minutes. She now appears at
+and answered neither. It dropped Napheesa Collier, the 2024 Defensive Player of
+the Year, on a Core contract, with 13,821 pooled possessions behind one of the
+better-determined ratings in the league, purely because she missed most of 2026
+injured. Ratings pool four seasons, so missing time costs a player her *minutes*
+rather than her rating, and the WAR formula already scales by minutes. She now appears at
 +7.49 with 0.67 WAR and $422K of value: elite per minute, little of it this
 season. That is the honest answer, and unlike an absence it is not something a
 reader can mistake for a bug.
@@ -243,20 +243,20 @@ back to the box prior otherwise; `rating_source` records which applied. For 2026
 all 187 qualified players have RAPM coverage.
 
 Summed *market value* is deliberately absent from that table. It is $107.2M
-against a $105M cap — over rather than under — because it sums values already
-clipped to the CBA band, and the ~20 barely-played players the certainty gate
+against a $105M cap, over rather than under, because it sums values already
+clipped to the CBA band and the ~20 barely-played players the certainty gate
 admits each floor at the minimum. It is not a validation the way summed WAR is.
 
 ## Stage B: possession RAPM
 
-`rapm.py` implements the 412 solve — `(A'WA + λI)b = A'Wy + λb_box` — on
+`rapm.py` implements the 412 solve, `(A'WA + λI)b = A'Wy + λb_box`, on
 possession data with on-court lineups, garbage time excluded, λ tuned on a
 chronological holdout.
 
 Two possession sources. The WNBA Stats play-by-play archived in
 `sportsdataverse/wehoop-data` ships pre-computed lineups, possession flags and a
-garbage-time flag, but **covers 2017–2022 only** — it is used to tune λ and as the
-validation oracle. Current seasons come from ESPN play-by-play via
+garbage-time flag, but **covers 2017–2022 only**, so it is used to tune λ and as
+the validation oracle. Current seasons come from ESPN play-by-play via
 `espn_lineups.py`, validated against that oracle at r=0.994 (below).
 
 `ratings.py` is the production pipeline: ESPN possessions 2023–2026, recency
@@ -269,8 +269,8 @@ Pooling 2017–2022 gives 169,439 possessions across 539 parameters (314
 obs/param, versus ~100 single-season). `rapm_validation.py` splits each season at
 its 75th-percentile game date, rebuilds the prior from training-window box
 scores only, fits RAPM on training possessions only, and scores both on the same
-held-out games. Scoring is at game level — possession-level RMSE has sd ~111 and
-its entire range across λ is under 0.4%, far too noisy to choose on.
+held-out games. Scoring is at game level, because possession-level RMSE has sd
+~111 and its entire range across λ is under 0.4%, far too noisy to choose on.
 
 | λ | game RMSE (clean prior) | sd of ratings |
 |---|---|---|
@@ -283,7 +283,7 @@ its entire range across λ is under 0.4%, far too noisy to choose on.
 | prior only | 9.8398 | 2.16 |
 
 **RAPM shrunk to the prior beats the prior alone by 0.612 game RMSE (6.2%)**, at
-λ=1,000, with a clean interior optimum — error rises on both sides. That optimum
+λ=1,000, with a clean interior optimum: error rises on both sides. That optimum
 also sits consistently next to the λ=1,500 tuned independently on the ESPN side.
 Refitting on all possessions at λ=1,000 gives ratings correlating 0.759 with the
 prior and sd 3.78 versus the prior's 2.16, so the compression problem largely
@@ -301,37 +301,37 @@ The numbers above are the third version of this experiment. Each earlier version
 contained a defect that changed the conclusion, worth recording because all three
 failed silently:
 
-1. **Split design (dominant).** The first sweep split chronologically across the
-   pooled six seasons — train 2017–2020, test 2021–22 — which makes
+1. Split design, the dominant one. The first sweep split chronologically across
+   the pooled six seasons (train 2017–2020, test 2021–22), which makes
    possession-based ratings stale relative to the test window, so shrinking
    almost entirely to a contemporaneous prior won (optimal λ=64,000, ratings
    correlating 0.998 with the prior, "RAPM adds nothing"). Splitting *within*
    each season keeps ratings contemporaneous with the games they are scored on,
    which is the right design for a descriptive rating, and moved the optimum by
    more than an order of magnitude on its own.
-2. **Prior leakage (secondary).** Building the prior from full-season box scores
-   let it see the held-out games, flattering the prior-only baseline. Fixing it
-   is worth 0.164 game RMSE on that baseline (9.6753 → 9.8398) and widens RAPM's
+2. Prior leakage, secondary. Building the prior from full-season box scores let
+   it see the held-out games, flattering the prior-only baseline. Fixing it is
+   worth 0.164 game RMSE on that baseline (9.6753 to 9.8398) and widens RAPM's
    margin, but does not move the optimal λ.
-3. **Possession response variable (found last).** The original possession builder
+3. The possession response variable, found last. The original possession builder
    grouped on the stats feed's `possession` flag and attributed points per-event,
    silently losing ~13% of points (AGENTS.md trap 2). The sweep was re-run after
-   the fix; the finding survived and strengthened — RAPM's margin roughly doubled
-   (+0.36 → +0.61) and the optimum moved from 4,000 to 1,000.
+   the fix; the finding survived and strengthened, with RAPM's margin roughly
+   doubling (+0.36 to +0.61) and the optimum moving from 4,000 to 1,000.
 
 ### Extending to 2023-2026 from ESPN play-by-play
 
 `espn_lineups.py` reconstructs lineups and possessions from ESPN play-by-play,
 which runs 2002-2026 and is mirrored as parquet.
 
-**Why not stats.wnba.com?** It would be strictly better — same data, lineups and
-possessions already solved. It is blocked by bot mitigation, demonstrated rather
-than assumed: DNS resolves, the TCP socket opens in 0.13s, then the request hangs
-90s returning zero bytes, while `www.wnba.com` 403s instantly from the same host.
-Requests reach Akamai and are evaluated; `stats.wnba.com` chooses to hang. R would
-hit the identical wall — this is a TLS-fingerprint problem, not connectivity — and
-it likely explains why the archive stops at 2022 (no releases, nothing later in
-the tree).
+`stats.wnba.com` would be strictly better: same data, lineups and possessions
+already solved. It is blocked by bot mitigation, demonstrated rather than
+assumed. DNS resolves, the TCP socket opens in 0.13s, then the request hangs 90s
+returning zero bytes, while `www.wnba.com` 403s instantly from the same host.
+Requests reach Akamai and are evaluated; `stats.wnba.com` chooses to hang. R
+would hit the identical wall, since this is a TLS-fingerprint problem rather than
+connectivity, and it likely explains why the archive stops at 2022 (no releases,
+nothing later in the tree).
 
 ESPN substitution events are unambiguous (`athlete_id_1` enters, `athlete_id_2`
 leaves, both always populated). Propagating from `game_rosters` starters through
@@ -352,8 +352,8 @@ dropped, not repaired.
 
 ESPN is 3% short on total possessions (ppp 105.5 vs 101.4) and its garbage-time
 rule flags 2.4% against the archive's 5.9%, yet ratings agree at r=0.994. Those
-gaps are a near-uniform scaling — they move the intercept, not relative player
-coefficients. Per-player possession counts and lineup composition are what RAPM
+gaps are a near-uniform scaling: they move the intercept rather than relative
+player coefficients. Per-player possession counts and lineup composition are what RAPM
 actually depends on, and those agree at 0.9984. Possession-count parity was the
 wrong thing to chase.
 
@@ -363,16 +363,16 @@ wrong thing to chase.
 1.5-season half-life. λ=**1,500** by within-season chronological holdout, a
 genuine interior optimum (worse at both 1,000 and 2,000, and much worse at 100).
 
-Game RMSE 9.3336 against 9.7103 for prior-only — a 3.9% gain. Rating sd rises to
+Game RMSE 9.3336 against 9.7103 for prior-only, a 3.9% gain. Rating sd rises to
 3.11 from the prior's 2.24, correlation with the prior falls to 0.872.
 
-Defence is where it lands, and the corrections are credible: Leonie Fiebich
-−0.43 → +3.28 defensively, Napheesa Collier +1.29 → +4.40, Ezi Magbegor
-+1.00 → +3.69. All three are reputationally strong defenders the box score could
-not see.
+Defence is where it lands, and the corrections are credible: Leonie Fiebich goes
+from −0.43 to +3.28 defensively, Napheesa Collier from +1.29 to +4.40, Ezi
+Magbegor from +1.00 to +3.69. All three are reputationally strong defenders the
+box score could not see.
 
 Effect on the salary model: players priced above the $1.4M max goes from 6 to
-**15**, and Alanna Smith — flagged earlier as the clearest box-prior failure —
+**15**, and Alanna Smith, flagged earlier as the clearest box-prior failure,
 moves from −3.41 to +0.10.
 
 ### Pinning the level
@@ -381,7 +381,7 @@ RAPM's level is not estimable. Predictions are `sum(off) - sum(def) + intercept`
 so adding a constant to *every* offensive and *every* defensive coefficient shifts
 the offensive sum by `+5c` and the defensive contribution by `-5c`, leaving every
 prediction identical. Ridge inherits the level from the prior, and the pooled
-prior is a recency-weighted blend across four seasons — so its level is not the
+prior is a recency-weighted blend across four seasons, so its level is not the
 target season's league average. Unpinned, this inflated summed WAR by ~4%.
 
 `ratings.py` solves for the single offset that satisfies the same accounting
@@ -399,8 +399,8 @@ across 17 seasons, so contamination is small but not zero.
 
 ### Forward validation
 
-Everything above is tuned *descriptively* — λ chosen to predict held-out games
-inside the fitted window. A contract model prices future seasons, so
+Everything above is tuned *descriptively*, with λ chosen to predict held-out
+games inside the fitted window. A contract model prices future seasons, so
 `forecast_validation.py` asks the forward question instead: fit on seasons < T,
 predict season T's games, score per-game **margin** RMSE (margin is
 level-invariant, so candidates with different implicit levels compare fairly).
@@ -416,20 +416,19 @@ Nine test seasons, 2018–2026, ~75s on four workers.
 
 The production recipe is the best of the set and beats the no-information floor
 by 7.1% in every one of the nine seasons, so the ratings do carry genuine
-predictive value — recency-weighted pooling is a steady-state approximation of
+predictive value. Recency-weighted pooling is a steady-state approximation of
 what DARKO's Kalman filter does, and it survives the forward test.
 
 Three findings came out of this:
 
-1. **Forward-optimal shrinkage is heavier than descriptive.** λ=6,000 scores
-   12.5192 against λ=1,500's 12.6040, with 24,000 worse again. A model tuned to
-   describe the current season trusts noisy possession data more than a
-   forecaster should.
-2. **Aging contributes almost nothing at a one-year horizon** — 0.009 RMSE,
-   within noise. It still matters for multi-year *dollar* projections, where it
+1. Forward-optimal shrinkage is heavier than descriptive. λ=6,000 scores 12.5192
+   against λ=1,500's 12.6040, with 24,000 worse again. A model tuned to describe
+   the current season trusts noisy possession data more than a forecaster should.
+2. Aging contributes almost nothing at a one-year horizon: 0.009 RMSE, within
+   noise. It still matters for multi-year *dollar* projections, where it
    compounds against a rising cap, but not as a rating adjustment.
-3. **14.4% of player-slots are unseen in training** and imputed at league
-   average, rising to ~21% in expansion years (2018, 2026) — visibly the
+3. 14.4% of player-slots are unseen in training and imputed at league average,
+   rising to ~21% in expansion years (2018, 2026), which are visibly the
    worst-forecast seasons. This is the clearest structural gap against DARKO,
    which initialises rookies from a common prior.
 
@@ -441,7 +440,7 @@ they differ only in (λ, half-life).
 
 | | λ | half-life | rating sd | used for |
 |---|---|---|---|---|
-| **descriptive** | 1,500 | 1.5 | 3.11 | current-season value — "is she worth her contract now" |
+| **descriptive** | 1,500 | 1.5 | 3.11 | current-season value ("is she worth her contract now") |
 | **forecast** | 6,000 | 0.75 | 2.46 | projection years only (`rating_2027`, `value_2028`, …) |
 
 The forecast pair comes from a 5×5 grid on the forward metric
@@ -455,14 +454,15 @@ The forecast pair comes from a 5×5 grid on the forward metric
 | λ=12000 | 12.5617 | 12.5384 | 12.5375 | 12.5505 | 12.5689 |
 | λ=24000 | 12.5972 | 12.5781 | 12.5809 | 12.5992 | 12.6205 |
 
-λ does nearly all the work — 1,500→6,000 is worth 0.086 — while the half-life
+λ does nearly all the work, with 1,500 to 6,000 worth 0.086, while the half-life
 surface is shallow (0.5/0.75/1.5 all within 0.011), so don't over-read the
 half-life choice. Total gain over the production pair: **+0.0954**.
 
 The two configs correlate 0.945 (mean absolute difference 0.95 pts/100). The
-forecast rating is more conservative — A'ja Wilson 8.12 → 7.10, Breanna Stewart
-6.05 → 4.13 — which is the point: extrapolating a descriptively-tuned rating
-three years forward over-trusts one season of possessions.
+forecast rating is more conservative (A'ja Wilson 8.12 down to 7.10, Breanna
+Stewart 6.05 down to 4.13), which is the point: extrapolating a
+descriptively-tuned rating three years forward over-trusts one season of
+possessions.
 
 Current-season outputs are unchanged by this split (summed WAR 248.5, 17 above
 the applicable max), because the descriptive path was not touched.
@@ -472,16 +472,16 @@ the applicable max), because the descriptive path was not touched.
 Acting on finding 3. Imputing league-average for a player with no history is
 badly wrong for rookies: minutes-weighted they run about −1.2 points/100, and the
 spread by draft slot is wide. `draft_prior.py` fits `obpm ~ a·log(pick) + b`
-(and the same for defence) on rookie seasons since 2010, **weighted by minutes**
-— the prior is consumed per on-court slot, so the relevant expectation is over
-slots, not players. Unweighted it is dragged down by fringe rookies and is too
+(and the same for defence) on rookie seasons since 2010, **weighted by minutes**.
+The prior is consumed per on-court slot, so the relevant expectation is over
+slots rather than players. Unweighted it is dragged down by fringe rookies and is too
 pessimistic exactly where it matters (weighted wR² 0.412 on offence vs 0.335).
 
 | pick | 1 | 3 | 8 | 20 | 36 |
 |---|---|---|---|---|---|
 | prior | +1.49 | −0.14 | −1.59 | −2.95 | −3.82 |
 
-Effect on the forward harness — the two upgrades are complementary and stack:
+Effect on the forward harness, where the two upgrades are complementary and stack:
 
 | | production λ=1500/HL=1.5 | forecast λ=6000/HL=0.75 |
 |---|---|---|
@@ -493,26 +493,25 @@ test seasons. Unseen player-slot share falls from 14.4% to 4.7%. The draft gain
 is *larger* on the forecast config (+0.140 vs +0.109), so the two are not
 substitutes.
 
-**Scope limit, stated plainly.** This does not change the shipped 2026
-valuation. In production the RAPM design includes the current season, so every
-rated 2026 player already has possessions and none is "unseen" — all 187 carry
+To be clear about scope, this does not change the shipped 2026 valuation. In
+production the RAPM design includes the current season, so every rated 2026
+player already has possessions and none is "unseen"; all 187 carry
 `rating_source = rapm`. The draft prior is validated infrastructure for the
 *preseason* case (rating a season before it is played), which is precisely what
 forward validation simulates. It is deliberately not wired into `ratings.py`.
 
 Two things were tried and rejected on the evidence:
 
-- **Rookie draft slots as the box prior's shrinkage target** (instead of generic
-  replacement). Intuitively appealing — Sabrina Ionescu's injured 80-minute
-  rookie year moves from +1.03 to +3.55, which is obviously more sensible — but
-  it made the harness *worse* (12.3686 → 12.3803). The harness scores game
-  margins, which low-minute players barely affect, so it is insensitive to the
-  thing this fixes; absent evidence, it was reverted rather than shipped on
-  intuition.
-- **The expansion-year hypothesis.** Gains were predicted to concentrate in 2018
-  and 2026 (highest unseen share). They did not: the largest gains are 2020
-  (+0.29) and 2022 (+0.20), and 2018 is the one season that got marginally
-  worse.
+- Using rookie draft slots as the box prior's shrinkage target, instead of
+  generic replacement. It is intuitively appealing, since Sabrina Ionescu's
+  injured 80-minute rookie year moves from +1.03 to +3.55, which is obviously
+  more sensible, but it made the harness *worse* (12.3686 to 12.3803). The
+  harness scores game margins, which low-minute players barely affect, so it is
+  insensitive to the thing this fixes; absent evidence, it was reverted rather
+  than shipped on intuition.
+- The expansion-year hypothesis. Gains were predicted to concentrate in 2018 and
+  2026 (highest unseen share). They did not: the largest gains are 2020 (+0.29)
+  and 2022 (+0.20), and 2018 is the one season that got marginally worse.
 
 ### Uncertainty bands
 
@@ -522,16 +521,16 @@ Two things were tried and rejected on the evidence:
 dollars (`value_se`, `value_lo`, `value_hi`) and the web card shows
 `±` alongside value.
 
-**What the interval is.** It is a credible interval that **treats the box prior
-as correct** — it answers "how well do the possessions pin this player down,
-given the prior", not "how uncertain is she in total". It is therefore optimistic
-for players whose prior is itself poorly determined, which includes exactly the
+The interval is a credible one that **treats the box prior as correct**. It
+answers "how well do the possessions pin this player down, given the prior",
+rather than "how uncertain is she in total", and it is therefore optimistic for
+players whose prior is itself poorly determined, which includes exactly the
 defensive specialists the box score cannot see.
 
-**Magnitude, and an honest caveat.** Median SE is 3.49 on the descriptive config
-— *larger* than the rating spread itself (sd 3.11). Taken at face value that says
-possession data alone barely separates players, which is precisely why the prior
-does most of the work and why heavy shrinkage wins. The forecast config, being
+On magnitude, with the caveat that comes with it: median SE is 3.49 on the
+descriptive config, *larger* than the rating spread itself (sd 3.11). Taken at
+face value that says possession data alone barely separates players, which is
+precisely why the prior does most of the work and why heavy shrinkage wins. The forecast config, being
 more shrunk, has a tighter posterior (median 2.04).
 
 Calibration by split-half (odd vs even games) gives observed/predicted ratios of
@@ -539,7 +538,7 @@ Calibration by split-half (odd vs even games) gives observed/predicted ratios of
 residual gap is expected: the halves are not fully independent, sharing both
 lineup structure and the same prior.
 
-SEs rank players correctly by precision — Spearman 0.954 against
+SEs rank players correctly by precision, Spearman 0.954 against
 `1/√possessions`, falling monotonically from 4.14 in the fewest-possession
 quintile to 2.85 in the most.
 
@@ -552,7 +551,7 @@ substitution data is not reliable enough to reconstruct lineups any earlier
 (2019's ESPN reconstruction already drops 72 of 204 games).
 
 Nothing about the method changes per season. `ratings.build(target=T)` slides the
-whole recipe back — the pooled window `T-3 … T`, the recency weights on both the
+whole recipe back: the pooled window `T-3 … T`, the recency weights on both the
 prior and the possessions, and the minutes the level is pinned against. λ and the
 half-life stay at the descriptive optimum, since they were tuned on 2017–2022
 holdouts and re-tuning them per season would be fitting the tuning set.
@@ -561,8 +560,8 @@ The scale constants genuinely do not need to move. `points_per_win` and
 `minutes_baseline` are already pooled across 2003–2026, and `replacement_level`
 only looks season-dependent: expanding the identity, team count and games cancel,
 `R = (n·G/2)(1−w)·B / (n·G·5·40) = 0.75·B/400`. The level pin then reduces to
-setting the minutes-weighted mean rating to zero, which needs no CBA figures at
-all — only that season's minutes.
+setting the minutes-weighted mean rating to zero, which needs only that season's
+minutes and no CBA figures at all.
 
 | Season | Pooled | Possessions | Players | Pin offset | Rating sd | Median SE | Σ WAR | Identity |
 |---|---|---|---|---|---|---|---|---|
@@ -580,15 +579,15 @@ all — only that season's minutes.
 The last two columns are the end-to-end check, and nothing is fitted to make them
 agree: summed WAR over the rated players lands within ~1% of
 `n_teams × 44 / 2 × (1 − 0.25)` in every season, and the step changes track
-expansion (12 teams → 13 in 2025 → 15 in 2026). The 2026 row is produced twice by
-two code paths — `history.py` and `valuation.py` — and agrees to $0.
+expansion (12 teams, then 13 in 2025 and 15 in 2026). The 2026 row is produced
+twice, by `history.py` and by `valuation.py`, and agrees to $0.
 
 Early seasons pool fewer years, which shows up honestly in the widest median SE
 (3.42 in 2017, one season of possessions) rather than being hidden.
 
-**Two normalisations, both deliberate.** Dollars are always 2026 dollars: we have
+Two normalisations here are deliberate. Dollars are always 2026 dollars: we have
 the 2026 CBA and no other, so every season's `value` answers "what would this
-season's play be worth under today's agreement". And minutes are normalised to a
+season's play be worth under today's agreement". Minutes are normalised to a
 44-game season (`mpg × 44 × availability`, the same formula the current season
 already uses) because the league played 34, 22 and 40-game seasons in this window
 and raw seasonal WAR would mostly measure season length. The consequence, stated
@@ -601,43 +600,42 @@ past season is selected.
 
 ## Known limitations
 
-- **The prior largely re-derives BPM.** BPM is itself a linear function of box
+- The prior largely re-derives BPM. BPM is itself a linear function of box
   stats, so fitting box stats to BPM recovers its formula (OBPM r=0.94). The
-  prior inherits BPM's blind spots wholesale and adds nothing beyond it. The
+  prior inherits BPM's blind spots wholesale and adds nothing beyond it; the
   actual edge arrives in Stage B.
-- **Defense is weakly identified.** DBPM r=0.698 — the box cannot see off-ball
-  defense. The offense/defense replacement split (−2.80/−0.18) mostly reflects
-  that compression, not a basketball fact.
-- **`Big` is noisier for the WNBA.** The league lists only G/F/C, so `F`
+- Defense is weakly identified. DBPM r=0.698, because the box cannot see off-ball
+  defense, and the offense/defense replacement split (−2.80/−0.18) mostly
+  reflects that compression rather than a basketball fact.
+- `Big` is noisier for the WNBA, since the league lists only G/F/C, so `F`
   conflates what the NBA splits into SF and PF.
-- **The cap past 2026 is a projection, not a schedule.** The agreement ties it
-  to revenue and only bounds the growth, so projected years carry that
-  uncertainty. 2026 itself is contractual.
-- **Supermax eligibility is an upper bound.** Whether a free agent is re-signing
+- The cap past 2026 is a projection and not a schedule. The agreement ties it to
+  revenue and only bounds the growth, so projected years carry that uncertainty.
+  2026 itself is contractual.
+- Supermax eligibility here is an upper bound. Whether a free agent is re-signing
   with her *prior* team decides whether she can reach 20%, and no data here
   records it, so five-plus years of service is treated as eligible.
-- **Rating dispersion (resolved).** With RAPM wired in, rating sd is 3.13 (was
+- Rating dispersion, now resolved: with RAPM wired in, rating sd is 3.13 (was
   2.10 on the box prior) and 17 of 187 players price above their applicable
   maximum (was 6).
-- **Defensive valuation (largely resolved).** Alanna Smith moved from −3.41 to
-  −0.03 and Leonie Fiebich from −1.30 to +3.41. Remaining large negatives on
-  known defenders should still be treated with suspicion, but they are no longer
+- Defensive valuation, largely resolved: Alanna Smith moved from −3.41 to −0.03
+  and Leonie Fiebich from −1.30 to +3.41. Remaining large negatives on known
+  defenders should still be treated with suspicion, but they are no longer
   systematic artifacts.
-- **Minutes are prorated from a partial 2026 season** at each player's current
-  rate, adjusted for games missed. Late-season role changes aren't captured.
+- Minutes are prorated from a partial 2026 season at each player's current rate,
+  adjusted for games missed, so late-season role changes aren't captured.
 
 ## Site
 
 Static, no build step, published with **GitHub Pages** from `main` / `/docs`
-(Settings → Pages → Deploy from a branch). Live at
+(Settings > Pages > Deploy from a branch). Live at
 <https://mjwilson09.github.io/WNBA-Contract-Modeling/>.
 
 ```
 docs/
-  index.html        the model — search, player cards, sortable league table
-  about.html        author bio (placeholder), how the model works, acknowledgments
-  assets/site.css   shared stylesheet
-  players.js        generated — the only file export_web.py writes
+  index.html        the model: search, player cards, sortable league table
+  about.html        author bio, how the model works, acknowledgments
+  players.js        generated; the only file export_web.py writes
   assets/site.css   shared stylesheet (loaded as ?v=<hash>; see stamp script)
   assets/fonts/     self-hosted Inter + Source Serif 4 (latin subsets)
   assets/           icon.svg, favicon-32.png, apple-touch-icon.png, og-card.png
@@ -660,25 +658,25 @@ Regenerate the data after a model change:
 
 The page recomputes value client-side from embedded constants rather than
 displaying precomputed numbers, so the sliders re-run the model. `computeWar`,
-`computeValue` and `projectRating` in `index.html` mirror `valuation.py` —
+`computeValue` and `projectRating` in `index.html` mirror `valuation.py`, so
 **change one, change both**, then re-check the agreement invariant (worst gap
 $113 across 1,507 player-seasons; the gap is emitted-JSON rounding, nothing else).
 
 Details worth knowing:
 
-- **The season picker feeds the league table only.** The current season's rows
-  come from `MODEL.players`, past seasons from `MODEL.history`; both are shaped
-  so the page's single `derive()` runs on them unchanged. Player cards stay a
-  2026 contract tool, so a past-season row is clickable only when that player is
-  still in the current-season set.
-
-- **Default minutes use the pipeline's prorated value, not `games × mpg`.** The
-  sliders force `games` to an integer, so `round(44 × availability) × mpg` drifts
-  ~0.6% from `valuation.py`'s continuous arithmetic. Once either minutes slider
-  is touched it switches to the product.
-- **Unconstrained value can go negative.** Three players grade far enough below
+- The season picker feeds the league table only. The current season's rows come
+  from `MODEL.players`, past seasons from `MODEL.history`; both are shaped so the
+  page's single `derive()` runs on them unchanged. Player cards stay a 2026
+  contract tool, so a past-season row is clickable only when that player is still
+  in the current-season set.
+- Default minutes use the pipeline's prorated value rather than `games × mpg`.
+  The sliders force `games` to an integer, so `round(44 × availability) × mpg`
+  drifts ~0.6% from `valuation.py`'s continuous arithmetic. Once either minutes
+  slider is touched it switches to the product.
+- Unconstrained value can go negative. Three players grade far enough below
   replacement that `value` is negative; `market_value` clamps them to the $270K
-  minimum. That is the formula working — below-replacement minutes cost wins.
+  minimum. That is the formula working, since below-replacement minutes cost
+  wins.
 
 ## License
 
@@ -686,11 +684,11 @@ Source code is [MIT](LICENSE).
 
 Two things it deliberately does not cover, both recorded in [NOTICE](NOTICE):
 
-- **The committed data.** Files under `data/processed/` and `docs/players.js`
-  are derived from Basketball-Reference, Her Hoop Stats and wehoop/ESPN, and
-  remain subject to their terms. They are transformed output — coefficients,
-  ratings, valuations — committed so results can be inspected without re-running
-  the pipeline, not a redistribution of anyone's tables. Raw downloads stay
+- The committed data. Files under `data/processed/` and `docs/players.js` are
+  derived from Basketball-Reference, Her Hoop Stats and wehoop/ESPN, and remain
+  subject to their terms. They are transformed output (coefficients, ratings,
+  valuations) committed so results can be inspected without re-running the
+  pipeline, rather than a redistribution of anyone's tables. Raw downloads stay
   gitignored.
-- **The bundled typefaces.** Inter and Source Serif 4 are SIL Open Font License
-  1.1, whose text ships beside them in `docs/assets/fonts/`.
+- The bundled typefaces. Inter and Source Serif 4 are SIL Open Font License 1.1,
+  whose text ships beside them in `docs/assets/fonts/`.

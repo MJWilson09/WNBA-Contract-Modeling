@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>About · WNBA Contract Model</title>
-<meta name="description" content="How the model works — from plus-minus and confounding through ridge regression to dollars — plus what it still gets wrong.">
+<meta name="description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
 <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
@@ -15,14 +15,14 @@
 <meta property="og:site_name" content="WNBA Contract Model">
 <meta property="og:url" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/about.html">
 <meta property="og:title" content="About · WNBA Contract Model">
-<meta property="og:description" content="How the model works — from plus-minus and confounding through ridge regression to dollars — plus what it still gets wrong.">
+<meta property="og:description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
 <meta property="og:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="WNBA Contract Model — what is a WNBA player actually worth?">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="About · WNBA Contract Model">
-<meta name="twitter:description" content="How the model works — from plus-minus and confounding through ridge regression to dollars — plus what it still gets wrong.">
+<meta name="twitter:description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
 <link rel="stylesheet" href="assets/site.css?v=fe8514fc">
 </head>
@@ -59,9 +59,8 @@
   So, after some research, I found that an equivalent model for the WNBA did not exist, and I decided to build one.
   I used AI to help me understand the existing work, and to work interactively with me to build the WNBA model. 
   I also used AI to help me write this website, since I have little experience with web development.
-  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking, 
-  and use it in a closed loop to understand every step. 
-  I used it to help me understand the existing work, to interactively build the model, and to help me write the website.
+  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking,
+  and use it in a closed loop to understand every step.
 </p>
 
 <h2 id="model">How the model works</h2>
@@ -199,10 +198,11 @@
 <div class="formula">1590 = 100 × 31.77 / 1.998
         = 100 × points per win / possessions per minute</div>
 <p>
-  It's worth noting that 1590 is larger than any WNBA player's season minutes.
-  The busiest player in a recent full season was Kelsey Plum at 1,525 in 2025, which is fine.
-  It isn't a share of a season, it's a unit conversion, and a
-  44-game schedule just means nobody reaches a full unit of it (the WNBA does not have their equivalent of Wilt Chamberlain averaging more than 48 minutes per game yet!). Running the same
+  1590 is larger than any WNBA player's season minutes; the busiest player in a
+  recent full season was Kelsey Plum at 1,525 in 2025. That is fine, because it is
+  a unit conversion rather than a share of a season, and a 44-game schedule just
+  means nobody reaches a full unit of it (the WNBA does not have their equivalent
+  of Wilt Chamberlain averaging more than 48 minutes per game yet!). Running the same
   identity on NBA numbers, about 30 points per win and 100 possessions per 48
   minutes, gives 1440, within about 2.5% of the 1475 that Stephen Noh's NBA
   model uses. Neither number was fit to the other, so the agreement is a sign
@@ -229,9 +229,9 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
   Bonner plays about 92% of Wilson's minutes and produces less than a fifth of
   the wins. That is the whole point of measuring against replacement rather
   than against zero. Bonner is a genuinely useful player, a bit below
-  league average by this rating, and she clears replacement level comfortably —
-  1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100 above
-  that same baseline, and the minutes multiply it.
+  league average by this rating, and she clears replacement level comfortably,
+  worth 1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100
+  above that same baseline, and the minutes multiply it.
 </p>
 <p>
   It also shows how much minutes matter. Cut Wilson to Bonner's rating and hold
@@ -267,12 +267,12 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
 
 <h3>Does it predict anything?</h3>
 <p>
-  One of the most important things you learn when creating models is to not mix training and testing data. In other words, a model is only predictive if you can use it to predict data it has never seen; otherwise it is overfitting, and doesn't provide any real predictive value.
-  
-  Therefore, I trained the model to fit
-  on every season up to some year, then predicted the next season's games, which
-  the model has never seen. There were nine test seasons, scored on average error in
-  predicted game margin.
+  One of the first things you learn building models is not to mix training and
+  testing data. A model is only predictive if it can predict data it has never
+  seen; score it on the data it was fit to and you are measuring overfitting. So
+  I fit on every season up to some year, then predicted the next season's games,
+  which the model has never seen. There were nine test seasons, scored on average
+  error in predicted game margin.
 </p>
 <table>
   <thead><tr><th>Information used</th><th class="num">Avg error (points)</th></tr></thead>
@@ -291,16 +291,17 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
 <p>
   The best-known predictive rating in the NBA is
   <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
-  WNBA doesn't have one, which I thought it would be interesting to build this. DARKO is the more
-  sophisticated system and this isn't a reimplementation of it, so here I discuss what the two share and where they actually diverge.
+  WNBA doesn't have one, which is why I thought this would be interesting to
+  build. DARKO is the more sophisticated system and this isn't a reimplementation
+  of it, so what follows is what the two share and where they diverge.
 </p>
 <p>
-  Both refuse to treat a rating as a fresh measurement every season. Both size
-  the update by how much you already knew, so a new game moves an unknown rookie
-  a lot and a veteran with thousands of possessions barely at all. And both are
-  built to predict rather than describe, which is the ultimate goal: the number that
-  best summarizes what already happened is not the number that best forecasts
-  what happens next.
+  Neither system treats a rating as a fresh measurement every season, and both
+  size the update by how much you already knew, so a new game moves an unknown
+  rookie a lot and a veteran with thousands of possessions barely at all. They
+  are also both tuned to predict rather than to describe, which is what I
+  actually wanted: the number that best summarizes what already happened is not
+  the number that best forecasts what happens next.
 </p>
 <p>
   The structural difference is what gets tracked over time. DARKO runs a Kalman
@@ -328,10 +329,10 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
   steals. Mine can't. It splits a rating into offense and defense and stops.
 </p>
 <p>
-  So why not just rebuild DARKO for the WNBA? Partly because the model is
-  closed, so it would be a reconstruction from a description rather than a port.
-  Mostly because the pieces that make it powerful answer problems I don't have
-  in the same form. Daily updating matters for in-season NBA decisions, but
+  Rebuilding DARKO for the WNBA outright was never really on the table. The
+  model is closed, so it would be a reconstruction from a description rather
+  than a port, and more to the point the pieces that make it powerful answer
+  problems I don't have in the same form. Daily updating matters for in-season NBA decisions, but
   contracts get signed in the offseason, so a rating that refreshes every
   morning buys nothing. Per-stat filtering needs a lot of games per player to
   estimate a decay rate for each statistic, and a WNBA season is 44 games.
@@ -346,65 +347,65 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
 
 <h3>Current limitations</h3>
 <p>
-  These are the things most likely to make a number on this site wrong. They're
-  here because they're known, not because they're solved.
+  These are the things most likely to make a number on this site wrong. Knowing
+  about them is not the same as having fixed them, so they are listed rather
+  than buried.
 </p>
 <ul>
   <li>
-    <strong>The cap past 2026 is a projection.</strong> The CBA doesn't schedule
-    it. It's a share of league revenue, bounded to a 13% move in 2027 and 10% a
-    year after that, so every projected season carries that uncertainty. The
-    2026 figures are contractual and exact, and available in a PDF from https://www.wnbpa.com/thecba.
+    The cap past 2026 is a projection. The CBA doesn't schedule it; it's a share
+    of league revenue, bounded to a 13% move in 2027 and 10% a year after that,
+    so every projected season carries that uncertainty. The 2026 figures are
+    contractual and exact, and available in a PDF from
+    <a href="https://www.wnbpa.com/thecba">wnbpa.com</a>.
   </li>
   <li>
-    <strong>Supermax eligibility is an upper bound.</strong> Reaching 20% of the
-    cap requires re-signing with your prior team, among other conditions, and
+    Supermax eligibility here is an upper bound. Reaching 20% of the cap
+    requires re-signing with your prior team, among other conditions, and
     nothing in my data records which team a free agent came from. I treat five
     or more years of service as eligible, which overstates it.
   </li>
   <li>
-    <strong>Replacement level rests on a convention.</strong> It assumes a team
-    of freely available players wins 25% of its games. Nobody fields that team,
-    so the number can't be measured. Plausible alternatives from 20% to 30% move
-    every dollar figure by roughly ±7%.
+    Replacement level rests on a convention: that a team of freely available
+    players wins 25% of its games. Nobody fields that team, so the number can't
+    be measured. Plausible alternatives from 20% to 30% move every dollar figure
+    by roughly ±7%.
   </li>
   <li>
-    <strong>Defense is still only partly visible.</strong> Possession data
-    recovers a lot of what box scores miss, but defensive estimates are the
-    noisiest part of the model. 
+    Defense is still only partly visible. Possession data recovers a lot of what
+    box scores miss, but defensive estimates remain the noisiest part of the
+    model.
   </li>
   <li>
-    <strong>The uncertainty bands are optimistic.</strong> The ± on each
-    player's value assumes the box-score prior is correct, so it measures how
-    well the possessions pin her down given that prior, not total uncertainty.
-    It's also wide enough that neighboring players in the table can't be
-    reliably ranked against each other.
+    The uncertainty bands are optimistic. The ± on each player's value assumes
+    the box-score prior is correct, so it measures how well the possessions pin
+    her down given that prior, not total uncertainty. It's also wide enough that
+    neighboring players in the table can't be reliably ranked against each other.
   </li>
   <li>
-    <strong>Only 2026 salaries are loaded.</strong> Surplus is computed against
-    this season's cap hit, so players on multi-year deals aren't evaluated
-    across the whole contract.
+    Only 2026 salaries are loaded, so surplus is computed against this season's
+    cap hit and players on multi-year deals aren't evaluated across the whole
+    contract.
   </li>
   <li>
-    <strong>Past seasons are priced in today's money.</strong> The league table
-    goes back to 2017, which is as far as possession data goes. The ratings are
-    genuinely each season's — the same method, refit with that season's data —
-    but the dollars are not. I have one CBA, the 2026 one, so a 2019 value
-    answers "what would this be worth today", not what anyone was paid. Minutes
-    are scaled to a 44-game season too, since the league played 34- and 22-game
-    seasons in that stretch. Those two choices are why the contract columns
-    disappear when you pick an earlier year: there's nothing honest to put in
-    them.
+    Past seasons are priced in today's money. The league table goes back to 2017,
+    which is as far as possession data goes, and the ratings there are genuinely
+    each season's: the same method, refit with that season's data. The dollars
+    are not. I have one CBA, the 2026 one, so a 2019 value answers "what would
+    this be worth today", not what anyone was paid. Minutes are scaled to a
+    44-game season too, since the league played 34- and 22-game seasons in that
+    stretch. Those two choices are why the contract columns disappear when you
+    pick an earlier year: there's nothing honest to put in them.
   </li>
   <li>
-    <strong>2026 is unfinished.</strong> The season is partly played, so minutes
-    are scaled up to a full 44 games at each player's current rate and adjusted
-    for games missed. A late-season change in role won't show up.
+    2026 is unfinished. The season is partly played, so minutes are scaled up to
+    a full 44 games at each player's current rate and adjusted for games missed.
+    A late-season change in role won't show up.
   </li>
   <li>
-    <strong>Small samples stay unreliable.</strong> A player with a few hundred
-    possessions is mostly reporting her box-score prior back to you. The rating
-    admits this only through its error band, which is easy to miss.
+    Small samples stay unreliable. A player with a few hundred possessions is
+    mostly reporting her box-score prior back to you, and the rating admits this
+    only through its error band, which is easy to miss.
   </li>
 </ul>
 
@@ -422,7 +423,7 @@ Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
     for this site's shape.
   </li>
   <li>
-    Seth Partnow, <em>The Midrange Theory</em> — the rating → wins → dollars chain
+    Seth Partnow, <em>The Midrange Theory</em> — the rating-to-wins-to-dollars chain
     in Chapter 7.
   </li>
   <li>
