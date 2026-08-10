@@ -245,19 +245,19 @@ produce believable wrong answers rather than errors.
     difference and the correct prediction is
     `Var(b_e - b_o) = M_e(sigma^2 X'WX_e)M_e + M_o(...)M_o`. The naive rule made
     the SEs look 4x too wide; the correct one showed ~40% conservative.
-19. **`player_core.age` is the player's age *now*, not during that season.**
+20. **`player_core.age` is the player's age *now*, not during that season.**
     `player_core_2017.parquet` lists Sue Bird at 45. Reading the column for a
     historical season ages everyone by however many years have passed since, and
     it fails silently into a column of plausible-looking numbers. Compute from
     `date_of_birth` instead — `history.ages_at_season` floors it against July 1,
     roughly mid-season. `valuation.py` uses the column directly and is correct
     only because its target season *is* the current one.
-20. **Anything anchored to "now" must move with `target`.** `ratings.build`
+21. **Anything anchored to "now" must move with `target`.** `ratings.build`
     takes a target season; three separate things key off it — the prior's
     recency weights, the possession recency weights, and the minutes the level
     is pinned against. Missing one leaves a plausible rating anchored to the
     wrong season. Adding a new season-dependent term? Thread `target` through it.
-21. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
+22. **Do not extend ESPN-based RAPM before ~2020 without new work.** The 2019
     ESPN reconstruction drops 72 of 204 games for lineup inconsistency — ESPN
     substitution data is unreliable that far back. 2023–2026 skips are 0–3 games.
 

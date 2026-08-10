@@ -4,7 +4,7 @@ The rest of the pipeline answers one question about one season: what is a player
 worth in 2026. This stage runs the *same* rating recipe over every earlier season
 so the site's league table can be read backwards — 2017 is as far as possessions
 go (`rapm.AVAILABLE_SEASONS` starts there; before it the stats archive has no
-lineups and ESPN substitutions are unreliable, AGENTS.md trap 21).
+lineups and ESPN substitutions are unreliable, AGENTS.md trap 22).
 
 What moves with the season and what does not
 --------------------------------------------
