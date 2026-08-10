@@ -1,464 +1,542 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>About · WNBA Contract Model</title>
-<meta name="description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
-<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
-<link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
-<link rel="canonical" href="https://mjwilson09.github.io/WNBA-Contract-Modeling/about.html">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="WNBA Contract Model">
-<meta property="og:url" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/about.html">
-<meta property="og:title" content="About · WNBA Contract Model">
-<meta property="og:description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
-<meta property="og:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="WNBA Contract Model — what is a WNBA player actually worth?">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="About · WNBA Contract Model">
-<meta name="twitter:description" content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
-<meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=fe8514fc">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>About · WNBA Contract Model</title>
+  <meta name="description"
+    content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#16171a" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#fbfbfa" media="(prefers-color-scheme: light)">
+  <link rel="canonical" href="https://mjwilson09.github.io/WNBA-Contract-Modeling/about.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="WNBA Contract Model">
+  <meta property="og:url" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/about.html">
+  <meta property="og:title" content="About · WNBA Contract Model">
+  <meta property="og:description"
+    content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
+  <meta property="og:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="WNBA Contract Model — what is a WNBA player actually worth?">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About · WNBA Contract Model">
+  <meta name="twitter:description"
+    content="How the model works: plus-minus, ridge regression toward a box-score prior, wins, dollars, and what it still gets wrong.">
+  <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
+  <link rel="stylesheet" href="assets/site.css?v=fe8514fc">
 </head>
+
 <body>
-<nav class="nav">
-  <div class="nav-in">
-    <a class="brand" href="./">WNBA Contract Model</a>
-    <a class="link" href="./">Model</a>
-    <a class="link" href="about.html" aria-current="page">About</a>
-    <span class="spacer"></span>
-    <a class="ext" href="https://github.com/MJWilson09/WNBA-Contract-Modeling">Source</a>
-    <button class="toggle" id="theme" aria-label="Toggle light and dark theme">theme</button>
-  </div>
-</nav>
+  <nav class="nav">
+    <div class="nav-in">
+      <a class="brand" href="./">WNBA Contract Model</a>
+      <a class="link" href="./">Model</a>
+      <a class="link" href="about.html" aria-current="page">About</a>
+      <span class="spacer"></span>
+      <a class="ext" href="https://github.com/MJWilson09/WNBA-Contract-Modeling">Source</a>
+      <button class="toggle" id="theme" aria-label="Toggle light and dark theme">theme</button>
+    </div>
+  </nav>
 
-<div class="wrap">
-<div class="prose">
+  <div class="wrap">
+    <div class="prose">
 
-<h2 id="author">About me</h2>
-<p class="kicker">Who built this</p>
-<p>
-  My name is <a href="https://mjwilson09.github.io/">MJ Wilson</a>. I am a high school senior in the Chicago suburbs.
-  I have been a basketball fan since I was a kid, and I have been interested in statistics for a long time.
-  I built this model to learn more about the WNBA and to explore how statistical modeling can be applied to sports.
-  I was inspired by the works of Stephen Noh and darko.app, and I wanted to create a model that could provide insights
-  into the WNBA that were not readily available elsewhere.
-</p>
+      <h2 id="author">About me</h2>
+      <p class="kicker">Who built this</p>
+      <p>
+        My name is <a href="https://mjwilson09.github.io/">MJ Wilson</a>. I am a high school senior in the Chicago
+        suburbs.
+        I have been a basketball fan since I was a kid, and I have been interested in statistics for a long time.
+        I built this model to learn more about the WNBA and to explore how statistical modeling can be applied to
+        sports.
+        I was inspired by the works of Stephen Noh and darko.app, and I wanted to create a model that could provide
+        insights
+        into the WNBA that were not readily available elsewhere.
+      </p>
 
-<h2 id="ai">AI Disclaimer</h2>
-<p>
-  This model and website was built with the help of AI tools, in particular Claude.
-  When I started this project, my intent was to use AI to help learn about modelling NBA contracts.
-  I soon discovered that this already existed, and I would be replicating existing work, such as https://darko.app.
-  So, after some research, I found that an equivalent model for the WNBA did not exist, and I decided to build one.
-  I used AI to help me understand the existing work, and to work interactively with me to build the WNBA model. 
-  I also used AI to help me write this website, since I have little experience with web development.
-  My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own thinking,
-  and use it in a closed loop to understand every step.
-</p>
+      <h2 id="ai">AI Disclaimer</h2>
+      <p>
+        This model and website was built with the help of AI tools, in particular Claude.
+        When I started this project, my intent was to use AI to help learn about modelling NBA contracts.
+        I soon discovered that this already existed, and I would be replicating existing work, such as
+        https://darko.app.
+        So, after some research, I found that an equivalent model for the WNBA did not exist, and I decided to build
+        one.
+        I used AI to help me understand the existing work, and to work interactively with me to build the WNBA model.
+        I also used AI to help me write this website, since I have little experience with web development.
+        My experience with AI was that it can be an incredibly useful tool if you don't use it to offload your own
+        thinking,
+        and use it in a closed loop to understand every step.
+      </p>
 
-<h2 id="model">How the model works</h2>
-<p class="kicker">The method, the arithmetic, and what it can't do</p>
+      <h2 id="model">How the model works</h2>
+      <p class="kicker">The method, the arithmetic, and what it can't do</p>
 
-<p>
-  The main question I wanted to answer was what a player is worth in dollars, to determine what a fair contract value should be.
-  That splits into three parts: impact -> wins -> dollar value. 
-  There is some prior work on this for the NBA, particularly the Wins and Dollar Value.
-  The NBA has more advanced tracking data available, leading to things like the DARKO model to measure player impact. 
-  The WNBA does not have this data available, so I had to build a model that could measure player impact using only the data that is available.
-</p>
+      <p>
+        The main question I wanted to answer was what a player is worth in dollars, to determine what a fair contract
+        value should be.
+        That splits into three parts: impact -> wins -> dollar value.
+        There is some prior work on this for the NBA, particularly the Wins and Dollar Value.
+        The NBA has more advanced tracking data available, leading to things like the DARKO model to measure player
+        impact.
+        The WNBA does not have this data available, so I had to build a model that could measure player impact using
+        only the data that is available.
+      </p>
 
-<h3>Plus-minus doesn't work</h3>
-<p>
-  The simplest measure of impact is plus-minus, the score differential while
-  she's on the floor. If her team outscores opponents by 8 in her 30 minutes,
-  she's +8.
-</p>
-<p>
-  The problem is that a bench player who only ever plays next to three
-  All-Stars will look excellent. A good player on a bad team will look awful.
-  Plus-minus measures the lineup, not the player. What I actually want is her
-  effect holding teammates and opponents constant, and holding things constant
-  is what regression is for.
-</p>
+      <h3>Plus-minus doesn't work</h3>
+      <p>
+        The simplest measure of impact is plus-minus, the score differential while
+        she's on the floor. If her team outscores opponents by 8 in her 30 minutes,
+        she's +8.
+      </p>
+      <p>
+        The problem is that a bench player who only ever plays next to three
+        All-Stars will look excellent. A good player on a bad team will look awful.
+        Plus-minus measures the lineup, not the player. What I actually want is her
+        effect holding teammates and opponents constant, and holding things constant
+        is what regression is for.
+      </p>
 
-<h3>One coefficient per player</h3>
-<p>
-  Each row of the data is a single possession: a team gets the ball, something
-  happens, the possession ends. There are about <strong>143,000</strong> of them
-  in the current fit.
-</p>
-<p>
-  The response is points scored on that possession, scaled to a per-100 rate
-  because that's the convention for basketball rates. The predictors are
-  indicators, one per player, coded <code>+1</code> on offense, <code>−1</code>
-  on defense, and <code>0</code> when she isn't playing.
-</p>
-<div class="formula">points = (sum of the 5 offensive players' ratings)
-       − (sum of the 5 defensive players' ratings) + baseline</div>
-<p>
-  A least-squares fit on that gives every player a coefficient: her effect on scoring
-  with the other nine on the floor already accounted for. This is Adjusted
-  Plus-Minus. Structurally it's a multiple regression with about 540 predictors.
-</p>
+      <h3>One coefficient per player</h3>
+      <p>
+        Each row of the data is a single possession: a team gets the ball, something
+        happens, the possession ends. There are about <strong>143,000</strong> of them
+        in the current fit.
+      </p>
+      <p>
+        The response is points scored on that possession, scaled to a per-100 rate
+        because that's the convention for basketball rates. The predictors are
+        indicators, one per player, coded <code>+1</code> on offense, <code>−1</code>
+        on defense, and <code>0</code> when she isn't playing.
+      </p>
+      <div class="formula">points = (sum of the 5 offensive players' ratings)
+        − (sum of the 5 defensive players' ratings) + baseline</div>
+      <p>
+        A least-squares fit on that gives every player a coefficient: her effect on scoring
+        with the other nine on the floor already accounted for. This is Adjusted
+        Plus-Minus. Structurally it's a multiple regression with about 540 predictors.
+      </p>
 
-<h3>Why OLS (Ordinary Least Squares) blows up</h3>
-<p>
-  Fit it with plain least squares and the output is garbage. Coefficients of +40
-  and −35 land on players who are obviously ordinary.
-</p>
-<p>
-  The cause is strong correlations between players: two players who are almost always on the floor
-  together produce nearly identical columns, and the regression has no way to
-  tell whose credit is whose. It resolves that by giving one a huge positive
-  coefficient and the other a huge negative one, which fits the training data
-  exactly as well as any other split. The WNBA has this worse than the NBA:
-  rosters run 11 or 12 deep instead of 15 and a season is 44 games instead of
-  82, so the same five players share the floor constantly.
-</p>
-<p>
-  The response is also brutally noisy. One possession returns 0, 2, or 3 points.
-  Predicting that from a lineup is close to estimating a coin's bias from a
-  single flip.
-</p>
+      <h3>Why OLS (Ordinary Least Squares) blows up</h3>
+      <p>
+        Fit it with plain least squares and the output is garbage. Coefficients of +40
+        and −35 land on players who are obviously ordinary.
+      </p>
+      <p>
+        The cause is strong correlations between players: two players who are almost always on the floor
+        together produce nearly identical columns, and the regression has no way to
+        tell whose credit is whose. It resolves that by giving one a huge positive
+        coefficient and the other a huge negative one, which fits the training data
+        exactly as well as any other split. The WNBA has this worse than the NBA:
+        rosters run 11 or 12 deep instead of 15 and a season is 44 games instead of
+        82, so the same five players share the floor constantly.
+      </p>
+      <p>
+        The response is also brutally noisy. One possession returns 0, 2, or 3 points.
+        Predicting that from a lineup is close to estimating a coin's bias from a
+        single flip.
+      </p>
 
-<h3>Ridge Regression</h3>
-<p>
-  Ridge fixes this by making large coefficients expensive. OLS minimizes the sum
-  of squared residuals; ridge minimizes that plus a penalty term.
-</p>
-<div class="formula">minimize:  (sum of squared residuals)  +  λ × (sum of squared coefficients)</div>
-<p>
-  λ sets the trade-off. Large λ crushes everything toward zero, small λ gives
-  back OLS and its garbage. It's the bias–variance trade-off: take on a little
-  bias to kill a lot of variance, and land closer to the truth on average.
-</p>
+      <h3>Ridge Regression</h3>
+      <p>
+        Ridge fixes this by making large coefficients expensive. OLS minimizes the sum
+        of squared residuals; ridge minimizes that plus a penalty term.
+      </p>
+      <div class="formula">minimize: (sum of squared residuals) + λ × (sum of squared coefficients)</div>
+      <p>
+        λ sets the trade-off. Large λ crushes everything toward zero, small λ gives
+        back OLS and its garbage. It's the bias–variance trade-off: take on a little
+        bias to kill a lot of variance, and land closer to the truth on average.
+      </p>
 
-<h3>Shrink toward the box score, not toward zero</h3>
-<p>
-  Plain ridge pulls every player toward zero, meaning league average. That
-  wastes information, because I already know something about each player from
-  her box score: points, rebounds, assists, steals, turnover rate, usage.
-</p>
-<p>
-  So I fit a box-score prior first, predicting each player's rating from
-  counting stats alone, and point the ridge penalty at that instead of at zero.
-</p>
-<div class="formula">minimize:  (sum of squared residuals)  +  λ × (sum of squared distances from the box-score prediction)</div>
-<p>
-  Now, a player with few possessions falls back on her box score rather than on
-  "average," and a player with thousands can pull away from it. That's the core
-  of the method, and it's sort of like Bayesian inference: the box score is the prior, the
-  possessions are the likelihood, and λ decides how much evidence it takes to
-  move you.
-</p>
-<div class="callout">
-  <p>
-    <strong>Accounting for Defense.</strong> Box scores can't see defense.
-    There's no counting stat for a shot that never got taken. Leonie Fiebich
-    grades <strong>−1.30</strong> from her box score and <strong>+3.41</strong>
-    once possessions are included, because teams simply score less when she's
-    out there.
-  </p>
-</div>
+      <h3>Shrink toward the box score, not toward zero</h3>
+      <p>
+        Plain ridge pulls every player toward zero, meaning league average. That
+        wastes information, because I already know something about each player from
+        her box score: points, rebounds, assists, steals, turnover rate, usage.
+      </p>
+      <p>
+        So I fit a box-score prior first, predicting each player's rating from
+        counting stats alone, and point the ridge penalty at that instead of at zero.
+      </p>
+      <div class="formula">minimize: (sum of squared residuals) + λ × (sum of squared distances from the box-score
+        prediction)</div>
+      <p>
+        Now, a player with few possessions falls back on her box score rather than on
+        "average," and a player with thousands can pull away from it. That's the core
+        of the method, and it's sort of like Bayesian inference: the box score is the prior, the
+        possessions are the likelihood, and λ decides how much evidence it takes to
+        move you.
+      </p>
+      <div class="callout">
+        <p>
+          <strong>Accounting for Defense.</strong> Box scores can't see defense.
+          There's no counting stat for a shot that never got taken. Leonie Fiebich
+          grades <strong>−1.30</strong> from her box score and <strong>+3.41</strong>
+          once possessions are included, because teams simply score less when she's
+          out there.
+        </p>
+      </div>
 
-<h3>Rating to wins</h3>
-<p>
-  The rating is in points per 100 possessions. Two constants turn it into wins,
-  and I estimated both from WNBA data instead of borrowing the NBA's.
-</p>
-<p>
-  For points per win, regress each team's season win percentage on its average
-  scoring margin. The slope works out to about <strong>31.8</strong> points of
-  margin per win. I left the intercept free as a sanity check and it came back
-  at <strong>0.5000</strong>, which is what it has to be if the fit is sound: a
-  team with zero point differential wins half its games.
-</p>
-<p>
-  Replacement level is the second constant. Value should be measured against a freely
-  available player rather than against average, and that baseline lands at
-  <strong>−2.98</strong> points per 100.
-</p>
-<div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
-<p>
-  The 1590 isn't a third constant I had to estimate. It falls out of the other
-  two. A rating is points per 100 possessions, so multiply it by the possessions
-  a player was on the floor for, divide by 100, and divide by points per win:
-</p>
-<div class="formula">WAR = (rating + 2.98) / 100 × possessions played / 31.77</div>
-<p>
-  Possessions played is just minutes × pace, and WNBA pace is 79.92 possessions
-  per 40 minutes, or 1.998 per minute. Substitute that in and rearrange, and
-  every constant collapses into one number:
-</p>
-<div class="formula">1590 = 100 × 31.77 / 1.998
+      <h3>Rating to wins</h3>
+      <p>
+        The rating is in points per 100 possessions. Two constants turn it into wins,
+        and I estimated both from WNBA data instead of borrowing the NBA's.
+      </p>
+      <p>
+        For points per win, regress each team's season win percentage on its average
+        scoring margin. The slope works out to about <strong>31.8</strong> points of
+        margin per win. I left the intercept free as a sanity check and it came back
+        at <strong>0.5000</strong>, which is what it has to be if the fit is sound: a
+        team with zero point differential wins half its games.
+      </p>
+      <p>
+        Replacement level is the second constant. Value should be measured against a freely
+        available player rather than against average, and that baseline lands at
+        <strong>−2.98</strong> points per 100.
+      </p>
+      <div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
+      <p>
+        The 1590 isn't a third constant I had to estimate. It falls out of the other
+        two. A rating is points per 100 possessions, so multiply it by the possessions
+        a player was on the floor for, divide by 100, and divide by points per win:
+      </p>
+      <div class="formula">WAR = (rating + 2.98) / 100 × possessions played / 31.77</div>
+      <p>
+        Possessions played is just minutes × pace, and WNBA pace is 79.92 possessions
+        per 40 minutes, or 1.998 per minute. Substitute that in and rearrange, and
+        every constant collapses into one number:
+      </p>
+      <div class="formula">1590 = 100 × 31.77 / 1.998
         = 100 × points per win / possessions per minute</div>
-<p>
-  1590 is larger than any WNBA player's season minutes; the busiest player in a
-  recent full season was Kelsey Plum at 1,525 in 2025. That is fine, because it is
-  a unit conversion rather than a share of a season, and a 44-game schedule just
-  means nobody reaches a full unit of it (the WNBA does not have their equivalent
-  of Wilt Chamberlain averaging more than 48 minutes per game yet!). Running the same
-  identity on NBA numbers, about 30 points per win and 100 possessions per 48
-  minutes, gives 1440, within about 2.5% of the 1475 that Stephen Noh's NBA
-  model uses. Neither number was fit to the other, so the agreement is a sign
-  the derivation is right.
-</p>
-<p>
-  Two players from the 2026 table make that concrete. A'ja Wilson is the best
-  player in the model. DeWanna Bonner is a useful veteran sitting almost exactly
-  at the league median rating, and the two play similar minutes, so almost all
-  of the gap between them comes from the rating rather than from playing time.
-</p>
-<table>
-  <thead><tr>
-    <th>Player</th><th class="num">Rating</th><th class="num">Minutes</th><th class="num">WAR</th>
-  </tr></thead>
-  <tbody>
-    <tr><td>A'ja Wilson</td><td class="num">+8.12</td><td class="num">1,280</td><td class="num">8.94</td></tr>
-    <tr><td>DeWanna Bonner</td><td class="num">−0.66</td><td class="num">1,179</td><td class="num">1.72</td></tr>
-  </tbody>
-</table>
-<div class="formula">Wilson:  (1280 / 1590) × (  8.12 + 2.98)  =  0.805 × 11.10  =  8.94
-Bonner:  (1179 / 1590) × ( −0.66 + 2.98)  =  0.742 ×  2.32  =  1.72</div>
-<p>
-  Bonner plays about 92% of Wilson's minutes and produces less than a fifth of
-  the wins. That is the whole point of measuring against replacement rather
-  than against zero. Bonner is a genuinely useful player, a bit below
-  league average by this rating, and she clears replacement level comfortably,
-  worth 1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100
-  above that same baseline, and the minutes multiply it.
-</p>
-<p>
-  It also shows how much minutes matter. Cut Wilson to Bonner's rating and hold
-  her minutes fixed and she would produce 1.87 wins, not 8.94. Nobody is
-  valuable in the abstract; they are valuable for as long as they are on the
-  court.
-</p>
+      <p>
+        1590 is larger than any WNBA player's season minutes; the busiest player in a
+        recent full season was Kelsey Plum at 1,525 in 2025. That is fine, because it is
+        a unit conversion rather than a share of a season, and a 44-game schedule just
+        means nobody reaches a full unit of it (the WNBA does not have their equivalent
+        of Wilt Chamberlain averaging more than 48 minutes per game yet!). Running the same
+        identity on NBA numbers, about 30 points per win and 100 possessions per 48
+        minutes, gives 1440, within about 2.5% of the 1475 that Stephen Noh's NBA
+        model uses. Neither number was fit to the other, so the agreement is a sign
+        the derivation is right.
+      </p>
+      <p>
+        For example, A'ja Wilson is the best
+        player in the model. DeWanna Bonner is a useful veteran sitting almost exactly
+        at the league median rating, and the two play similar minutes, so almost all
+        of the gap between them comes from the rating rather than from playing time.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th class="num">Rating</th>
+            <th class="num">Minutes</th>
+            <th class="num">WAR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A'ja Wilson</td>
+            <td class="num">+8.12</td>
+            <td class="num">1,280</td>
+            <td class="num">8.94</td>
+          </tr>
+          <tr>
+            <td>DeWanna Bonner</td>
+            <td class="num">−0.66</td>
+            <td class="num">1,179</td>
+            <td class="num">1.72</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="formula">Wilson: (1280 / 1590) × ( 8.12 + 2.98) = 0.805 × 11.10 = 8.94
+        Bonner: (1179 / 1590) × ( −0.66 + 2.98) = 0.742 × 2.32 = 1.72</div>
+      <p>
+        Bonner plays about 92% of Wilson's minutes and produces less than a fifth of
+        the wins. That is the whole point of measuring against replacement rather
+        than against zero. Bonner is a genuinely useful player, a bit below
+        league average by this rating, and she clears replacement level comfortably,
+        worth 1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100
+        above that same baseline, and the minutes multiply it.
+      </p>
+      <p>
+        It also shows how much minutes matter. Cut Wilson to Bonner's rating and hold
+        her minutes fixed and she would produce 1.87 wins, not 8.94. Nobody is
+        valuable in the abstract; they are valuable for as long as they are on the
+        court.
+      </p>
 
-<h3>Wins to dollars</h3>
-<p>
-  This is where the WNBA stops resembling the NBA, and where copying the NBA
-  approach would give the wrong answer. Under the 2026 CBA a team has a
-  <strong>$7.0M</strong> cap, has to carry 12 players, and can't pay anyone
-  below <strong>$270K</strong>. That means $3.24M is committed before anyone
-  makes a single decision. The money a team actually chooses how to spend is the
-  remaining <strong>$3.76M</strong>.
-</p>
-<p>
-  Dividing the league-wide discretionary pool by total wins above replacement
-  gives about <strong>$228K per win</strong>. Pricing off the full cap instead
-  gives $424K, which makes nearly every rotation player look like a bargain and
-  throws away the resolution you need in a league this compressed.
-</p>
-<div class="formula">value = $270,000 + WAR × $227,879</div>
-<p>
-  The CBA sets the maximum as a share of the cap rather than a fixed number: 17%
-  standard and 20% supermax, so <strong>$1.19M</strong> and
-  <strong>$1.4M</strong> in 2026. Against a $270K minimum that's a band of four
-  or five to one. The NBA's is roughly forty to one. <strong>17 of 164</strong>
-  players here are worth more than anyone is allowed to pay them, and that gap
-  is surplus the rules hand to their team.
-</p>
+      <h3>Wins to dollars</h3>
+      <p>
+        This is where the WNBA stops resembling the NBA, and where copying the NBA
+        approach would give the wrong answer. Under the 2026 CBA a team has a
+        <strong>$7.0M</strong> cap, has to carry 12 players, and can't pay anyone
+        below <strong>$270K</strong>. That means $3.24M is committed before anyone
+        makes a single decision. The money a team actually chooses how to spend is the
+        remaining <strong>$3.76M</strong>.
+      </p>
+      <p>
+        Dividing the league-wide discretionary pool by total wins above replacement
+        gives about <strong>$228K per win</strong>. Pricing off the full cap instead
+        gives $424K, which makes nearly every rotation player look like a bargain and
+        throws away the resolution you need in a league this compressed.
+      </p>
+      <div class="formula">value = $270,000 + WAR × $227,879</div>
+      <p>
+        The CBA sets the maximum as a share of the cap rather than a fixed number: 17%
+        standard and 20% supermax, so <strong>$1.19M</strong> and
+        <strong>$1.4M</strong> in 2026. Against a $270K minimum that's a band of four
+        or five to one. The NBA's is roughly forty to one. <strong>17 of 164</strong>
+        players here are worth more than anyone is allowed to pay them, and that gap
+        is surplus the rules hand to their team.
+      </p>
 
-<h3>Does it predict anything?</h3>
-<p>
-  One of the first things you learn building models is not to mix training and
-  testing data. A model is only predictive if it can predict data it has never
-  seen; score it on the data it was fit to and you are measuring overfitting. So
-  I fit on every season up to some year, then predicted the next season's games,
-  which the model has never seen. There were nine test seasons, scored on average
-  error in predicted game margin.
-</p>
-<table>
-  <thead><tr><th>Information used</th><th class="num">Avg error (points)</th></tr></thead>
-  <tbody>
-    <tr><td>No player information at all</td><td class="num">13.57</td></tr>
-    <tr><td>Box scores only</td><td class="num">12.84</td></tr>
-    <tr><td>Full model</td><td class="num">12.37</td></tr>
-  </tbody>
-</table>
-<p>
-  The gain holds in all nine seasons, so it's real. It's also small. Basketball
-  games are mostly noise, and no rating system is going to change that.
-</p>
+      <h3>Does it predict anything?</h3>
+      <p>
+        One of the first things you learn building models is not to mix training and
+        testing data. A model is only useful if it can predict data it has never
+        seen; score it on the data it was fit to and you are measuring overfitting. So
+        I fit on every season up to some year, then predicted the next season's games,
+        which the model has never seen. There were nine test seasons, scored on average
+        error in predicted game margin.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Information used</th>
+            <th class="num">Avg error (points)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>No player information at all</td>
+            <td class="num">13.57</td>
+          </tr>
+          <tr>
+            <td>Box scores only</td>
+            <td class="num">12.84</td>
+          </tr>
+          <tr>
+            <td>Full model</td>
+            <td class="num">12.37</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The gain holds in all nine seasons, so it's real. It's also small. Basketball
+        games are mostly noise, and no rating system is going to change that.
+      </p>
 
-<h3>How this compares to DARKO</h3>
-<p>
-  The best-known predictive rating in the NBA is
-  <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
-  WNBA doesn't have one, which is why I thought this would be interesting to
-  build. DARKO is the more sophisticated system and this isn't a reimplementation
-  of it, so what follows is what the two share and where they diverge.
-</p>
-<p>
-  Neither system treats a rating as a fresh measurement every season, and both
-  size the update by how much you already knew, so a new game moves an unknown
-  rookie a lot and a veteran with thousands of possessions barely at all. They
-  are also both tuned to predict rather than to describe, which is what I
-  actually wanted: the number that best summarizes what already happened is not
-  the number that best forecasts what happens next.
-</p>
-<p>
-  The structural difference is what gets tracked over time. DARKO runs a Kalman
-  filter, a running estimate that updates as evidence arrives, on each
-  box-score statistic separately, each with its own decay rate and its own aging
-  curve, then maps that projected stat line onto an impact number. I go the
-  other direction: estimate impact straight from possessions and use the box
-  score only as the thing ridge shrinks toward.
-</p>
-<table>
-  <thead><tr><th></th><th>DARKO</th><th>This model</th></tr></thead>
-  <tbody>
-    <tr><td>What is tracked over time</td><td>Each box-score stat separately</td><td>One impact rating per player</td></tr>
-    <tr><td>Time weighting</td><td>Kalman filter, exponential decay in days, rate tuned per stat</td><td>Exponential decay in seasons, one half-life</td></tr>
-    <tr><td>Update frequency</td><td>Daily</td><td>Re-fit as needed</td></tr>
-    <tr><td>How much a new game moves you</td><td>Varies by player and by stat</td><td>Varies by possession count, via one shared λ</td></tr>
-    <tr><td>Aging</td><td>A separate curve for every stat</td><td>One curve on the overall rating</td></tr>
-    <tr><td>Rookies</td><td>Common prior, then learns</td><td>Box prior; draft-slot priors built and tested</td></tr>
-    <tr><td>Source</td><td>Closed</td><td>Open</td></tr>
-  </tbody>
-</table>
-<p>
-  That has a real cost. Because DARKO models each statistic, it can tell you
-  where a player's improvement came from: better shooting, fewer turnovers, more
-  steals. Mine can't. It splits a rating into offense and defense and stops.
-</p>
-<p>
-  Rebuilding DARKO for the WNBA outright was never really on the table. The
-  model is closed, so it would be a reconstruction from a description rather
-  than a port, and more to the point the pieces that make it powerful answer
-  problems I don't have in the same form. Daily updating matters for in-season NBA decisions, but
-  contracts get signed in the offseason, so a rating that refreshes every
-  morning buys nothing. Per-stat filtering needs a lot of games per player to
-  estimate a decay rate for each statistic, and a WNBA season is 44 games.
-</p>
-<p>
-  What I took were the ideas: shrink toward a prior, weight recent evidence more
-  heavily, tune for prediction instead of description. Recency-weighted pooling
-  is roughly where a Kalman filter settles once it stops learning, and it beat
-  every simpler alternative on the forward test above. A per-stat filter is the
-  obvious next step if it ever turns out to be worth building.
-</p>
+      <h3>How this compares to DARKO</h3>
+      <p>
+        The best-known predictive rating in the NBA is
+        <a href="https://www.darko.app/">DARKO</a>, built by Kostya Medvedovsky. The
+        WNBA doesn't have one, which is why I thought this would be interesting to
+        build. DARKO is the more sophisticated system and this isn't a reimplementation
+        of it, so what follows is what the two share and where they diverge.
+      </p>
+      <p>
+        Neither system treats a rating as a fresh measurement every season, and both
+        size the update by how much you already knew, so a new game moves an unknown
+        rookie a lot and a veteran with thousands of possessions barely at all. They
+        are also both tuned to predict rather than to describe, which is what I
+        actually wanted: the number that best summarizes what already happened is not
+        the number that best forecasts what happens next.
+      </p>
+      <p>
+        The structural difference is what gets tracked over time. DARKO runs a Kalman
+        filter, a running estimate that updates as evidence arrives, on each
+        box-score statistic separately, each with its own decay rate and its own aging
+        curve, then maps that projected stat line onto an impact number. I go the
+        other direction: estimate impact straight from possessions and use the box
+        score only as the thing ridge shrinks toward.
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th></th>
+            <th>DARKO</th>
+            <th>This model</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>What is tracked over time</td>
+            <td>Each box-score stat separately</td>
+            <td>One impact rating per player</td>
+          </tr>
+          <tr>
+            <td>Time weighting</td>
+            <td>Kalman filter, exponential decay in days, rate tuned per stat</td>
+            <td>Exponential decay in seasons, one half-life</td>
+          </tr>
+          <tr>
+            <td>Update frequency</td>
+            <td>Daily</td>
+            <td>Re-fit as needed</td>
+          </tr>
+          <tr>
+            <td>How much a new game moves you</td>
+            <td>Varies by player and by stat</td>
+            <td>Varies by possession count, via one shared λ</td>
+          </tr>
+          <tr>
+            <td>Aging</td>
+            <td>A separate curve for every stat</td>
+            <td>One curve on the overall rating</td>
+          </tr>
+          <tr>
+            <td>Rookies</td>
+            <td>Common prior, then learns</td>
+            <td>Box prior; draft-slot priors built and tested</td>
+          </tr>
+          <tr>
+            <td>Source</td>
+            <td>Closed</td>
+            <td>Open</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        That has a real cost. Because DARKO models each statistic, it can tell you
+        where a player's improvement came from: better shooting, fewer turnovers, more
+        steals. Mine can't. It splits a rating into offense and defense and stops.
+      </p>
+      <p>
+        Rebuilding DARKO for the WNBA outright was never really on the table. The
+        model is closed, so it would be a reconstruction from a description rather
+        than a port, and more to the point the pieces that make it powerful answer
+        problems I don't have in the same form. Daily updating matters for in-season NBA decisions, but
+        contracts get signed in the offseason, so a rating that refreshes every
+        morning buys nothing. Per-stat filtering needs a lot of games per player to
+        estimate a decay rate for each statistic, and a WNBA season is 44 games.
+      </p>
+      <p>
+        What I took were the ideas: shrink toward a prior, weight recent evidence more
+        heavily, tune for prediction instead of description. Recency-weighted pooling
+        is roughly where a Kalman filter settles once it stops learning, and it beat
+        every simpler alternative on the forward test above. A per-stat filter is the
+        obvious next step if it ever turns out to be worth building.
+      </p>
 
-<h3>Current limitations</h3>
-<p>
-  These are the things most likely to make a number on this site wrong. Knowing
-  about them is not the same as having fixed them, so they are listed rather
-  than buried.
-</p>
-<ul>
-  <li>
-    The cap past 2026 is a projection. The CBA doesn't schedule it; it's a share
-    of league revenue, bounded to a 13% move in 2027 and 10% a year after that,
-    so every projected season carries that uncertainty. The 2026 figures are
-    contractual and exact, and available in a PDF from
-    <a href="https://www.wnbpa.com/thecba">wnbpa.com</a>.
-  </li>
-  <li>
-    Supermax eligibility here is an upper bound. Reaching 20% of the cap
-    requires re-signing with your prior team, among other conditions, and
-    nothing in my data records which team a free agent came from. I treat five
-    or more years of service as eligible, which overstates it.
-  </li>
-  <li>
-    Replacement level rests on a convention: that a team of freely available
-    players wins 25% of its games. Nobody fields that team, so the number can't
-    be measured. Plausible alternatives from 20% to 30% move every dollar figure
-    by roughly ±7%.
-  </li>
-  <li>
-    Defense is still only partly visible. Possession data recovers a lot of what
-    box scores miss, but defensive estimates remain the noisiest part of the
-    model.
-  </li>
-  <li>
-    The uncertainty bands are optimistic. The ± on each player's value assumes
-    the box-score prior is correct, so it measures how well the possessions pin
-    her down given that prior, not total uncertainty. It's also wide enough that
-    neighboring players in the table can't be reliably ranked against each other.
-  </li>
-  <li>
-    Only 2026 salaries are loaded, so surplus is computed against this season's
-    cap hit and players on multi-year deals aren't evaluated across the whole
-    contract.
-  </li>
-  <li>
-    Past seasons are priced in today's money. The league table goes back to 2017,
-    which is as far as possession data goes, and the ratings there fit with that season's data. The dollars
-    are not. I have one CBA, the 2026 one, so a 2019 value answers "what would
-    this be worth today", not what anyone was paid. Minutes are scaled to a
-    44-game season too, since the league played 34- and 22-game seasons in that
-    stretch. Those two choices are why the contract columns disappear when you
-    pick an earlier year.
-  </li>
-  <li>
-    2026 is unfinished. The season is partly played, so minutes are scaled up to
-    a full 44 games at each player's current rate and adjusted for games missed.
-    A late-season change in role won't show up.
-  </li>
-  <li>
-    Small samples stay unreliable. A player with a few hundred possessions is
-    mostly reporting her box-score prior back to you, and the rating admits this
-    only through its error band, which is easy to miss.
-  </li>
-</ul>
+      <h3>Current limitations</h3>
+      <p>
+        These are the things most likely to make a number on this site wrong, or at least have a larger error. 
+      </p>
+      <ul>
+        <li>
+          The cap past 2026 is a projection. The CBA doesn't schedule it; it's a share
+          of league revenue, bounded to a 13% move in 2027 and 10% a year after that,
+          so every projected season carries that uncertainty. The 2026 figures are
+          contractual and exact, and available in a PDF from
+          <a href="https://www.wnbpa.com/thecba">wnbpa.com</a>.
+        </li>
+        <li>
+          Supermax eligibility here is an upper bound. Reaching 20% of the cap
+          requires re-signing with your prior team, among other conditions, and
+          nothing in my data records which team a free agent came from. I treat five
+          or more years of service as eligible, which overstates it.
+        </li>
+        <li>
+          Replacement level rests on a convention: that a team of freely available
+          players wins 25% of its games. Nobody fields that team, so the number can't
+          be measured. Plausible alternatives from 20% to 30% move every dollar figure
+          by roughly ±7%.
+        </li>
+        <li>
+          Defense is still only partly visible. Possession data recovers a lot of what
+          box scores miss, but defensive estimates remain the noisiest part of the
+          model.
+        </li>
+        <li>
+          The uncertainty bands are optimistic. The ± on each player's value assumes
+          the box-score prior is correct, so it measures how well the possessions pin
+          her down given that prior, not total uncertainty. It's also wide enough that
+          neighboring players in the table can't be reliably ranked against each other.
+        </li>
+        <li>
+          Only 2026 salaries are loaded, so surplus is computed against this season's
+          cap hit and players on multi-year deals aren't evaluated across the whole
+          contract.
+        </li>
+        <li>
+          Past seasons are priced in today's money. The league table goes back to 2017,
+          which is as far as possession data goes, and the ratings there fit with that season's data. The dollars
+          are not. I have one CBA, the 2026 one, so a 2019 value answers "what would
+          this be worth today", not what anyone was paid. Minutes are scaled to a
+          44-game season too, since the league played 34- and 22-game seasons in that
+          stretch. Those two choices are why the contract columns disappear when you
+          pick an earlier year.
+        </li>
+        <li>
+          2026 is unfinished. The season is partly played, so minutes are scaled up to
+          a full 44 games at each player's current rate and adjusted for games missed.
+          A late-season change in role won't show up.
+        </li>
+        <li>
+          Small samples stay unreliable. A player with a few hundred possessions is
+          mostly reporting her box-score prior back to you, and the rating admits this
+          only through its error band, which is easy to miss.
+        </li>
+      </ul>
 
-<h2 id="thanks">Acknowledgments</h2>
-<p class="kicker">This is assembled from other people's work</p>
-<ul>
-  <li>
-    <a href="https://412sportsanalytics.wordpress.com/2022/08/18/a-detailed-guide-for-developing-player-ratings-for-wnba-and-other-leagues/">412
-    Sports Analytics</a> — the rating method used here, including the key idea of
-    shrinking toward a box-score prior rather than toward zero.
-  </li>
-  <li>
-    <a href="https://github.com/StephenNoh/nbasalarymodel">Stephen Noh's NBA salary
-    model</a> — the template for turning a rating into a contract valuation, and
-    for this site's shape.
-  </li>
-  <li>
-    Seth Partnow, <em>The Midrange Theory</em> — the rating-to-wins-to-dollars chain
-    in Chapter 7.
-  </li>
-  <li>
-    <a href="https://www.darko.app/">DARKO</a>, by Kostya Medvedovsky — the
-    reference point for what a predictive player-impact system looks like. The
-    WNBA has no DARKO, which is why this exists.
-  </li>
-  <li>
-    <a href="https://wehoop.sportsdataverse.org/">wehoop</a> and the
-    <a href="https://www.sportsdataverse.org/">SportsDataverse</a> — play-by-play,
-    box scores, rosters and lineup data. Without this the project isn't possible.
-  </li>
-  <li>
-    <a href="https://www.basketball-reference.com/wnba/">Basketball&#8209;Reference</a>
-    — advanced statistics and draft history.
-  </li>
-  <li>
-    <a href="https://herhoopstats.com/">Her Hoop Stats</a> — salary and contract data.
-  </li>
-</ul>
-<p style="margin-top:22px">
-  Mistakes in the model are mine, not theirs.
-</p>
+      <h2 id="thanks">Acknowledgments</h2>
+      <p class="kicker">This is assembled from other people's work</p>
+      <ul>
+        <li>
+          <a
+            href="https://412sportsanalytics.wordpress.com/2022/08/18/a-detailed-guide-for-developing-player-ratings-for-wnba-and-other-leagues/">412
+            Sports Analytics</a> — the rating method used here, including the key idea of
+          shrinking toward a box-score prior rather than toward zero.
+        </li>
+        <li>
+          <a href="https://github.com/StephenNoh/nbasalarymodel">Stephen Noh's NBA salary
+            model</a> — the template for turning a rating into a contract valuation, and
+          for this site's shape.
+        </li>
+        <li>
+          Seth Partnow, <em>The Midrange Theory</em> — the rating-to-wins-to-dollars chain
+          in Chapter 7.
+        </li>
+        <li>
+          <a href="https://www.darko.app/">DARKO</a>, by Kostya Medvedovsky — the
+          reference point for what a predictive player-impact system looks like. The
+          WNBA has no DARKO, which is why this exists.
+        </li>
+        <li>
+          <a href="https://wehoop.sportsdataverse.org/">wehoop</a> and the
+          <a href="https://www.sportsdataverse.org/">SportsDataverse</a> — play-by-play,
+          box scores, rosters and lineup data. Without this the project isn't possible.
+        </li>
+        <li>
+          <a href="https://www.basketball-reference.com/wnba/">Basketball&#8209;Reference</a>
+          — advanced statistics and draft history.
+        </li>
+        <li>
+          <a href="https://herhoopstats.com/">Her Hoop Stats</a> — salary and contract data.
+        </li>
+      </ul>
+      <p style="margin-top:22px">
+        Mistakes in the model are mine, not theirs.
+      </p>
 
-</div>
-</div>
+    </div>
+  </div>
 
-<script>
-document.getElementById("theme").onclick = () => {
-  const cur = document.documentElement.getAttribute("data-theme");
-  const dark = cur ? cur === "dark"
-    : matchMedia("(prefers-color-scheme: dark)").matches;
-  document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
-};
-</script>
+  <script>
+    document.getElementById("theme").onclick = () => {
+      const cur = document.documentElement.getAttribute("data-theme");
+      const dark = cur ? cur === "dark"
+        : matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", dark ? "light" : "dark");
+    };
+  </script>
 </body>
+
 </html>
