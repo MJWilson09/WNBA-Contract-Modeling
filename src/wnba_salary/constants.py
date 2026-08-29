@@ -45,7 +45,7 @@ from dataclasses import asdict, dataclass, field
 import numpy as np
 import pandas as pd
 
-from . import data
+from . import data, season
 
 # ---------------------------------------------------------------------------
 # CBA / league structure, 2026 season.
@@ -71,7 +71,7 @@ CBA_2026 = {
 # Seasons to exclude from pooled fits, with reasons.
 EXCLUDED_SEASONS = {
     2020: "COVID bubble, 22-game season",
-    2026: "season in progress as of this build",
+    season.current_season(): "season in progress as of this build",
 }
 
 
@@ -299,9 +299,38 @@ def minutes_profile(player_box: pd.DataFrame, season: int) -> dict:
 
 
 def build() -> dict:
-    seasons = range(2003, 2027)
+    target = season.current_season()
+    seasons = range(2003, target + 1)
     team_box = data.load("team_box", seasons)
     player_box = data.load("player_box", seasons)
+    schedule = data.load("schedule", [target])
+
+    # League structure moves with the configured target. Salary rules and the
+    # schedule length come from valuation's CBA helpers; team count comes from
+    # the full target schedule (not games played, which is incomplete on opening
+    # day) so expansion is discovered rather than guessed.
+    from . import valuation
+    scheduled = schedule[schedule["season_type"].eq(data.REGULAR_SEASON)]
+    home = scheduled[["home_id", "home_abbreviation"]].rename(
+        columns={"home_id": "team_id", "home_abbreviation": "abbr"})
+    away = scheduled[["away_id", "away_abbreviation"]].rename(
+        columns={"away_id": "team_id", "away_abbreviation": "abbr"})
+    target_teams = pd.concat([home, away], ignore_index=True)
+    target_teams = target_teams[
+        ~target_teams["abbr"].isin(data.NON_LEAGUE_TEAM_ABBREVIATIONS)]
+    if target_teams.empty:
+        raise RuntimeError(f"no regular-season teams in the {target} schedule")
+    sched = valuation.cba_schedule(target)
+    cba = dict(CBA_2026)
+    cba.update({
+        "season": target,
+        "n_teams": int(target_teams["team_id"].nunique()),
+        "games_per_team": valuation.games_in_season(target),
+        "salary_cap": sched["salary_cap"],
+        "max_salary": sched["supermax_salary"],
+        "min_salary": sched["min_salary"],
+    })
+    excluded = dict(EXCLUDED_SEASONS)
 
     team_seasons = team_season_totals(team_box)
     ppw = estimate_points_per_win(team_seasons)
@@ -309,21 +338,21 @@ def build() -> dict:
     baseline = derive_minutes_baseline(ppw.points_per_win, pace.poss_per_min)
 
     latest_complete = max(
-        s for s in player_box["season"].unique() if s not in EXCLUDED_SEASONS
+        s for s in player_box["season"].unique() if s not in excluded
     )
 
     rwp = 0.25
     sensitivity = {
         f"{r:.2f}": {
-            "replacement_level": derive_replacement_level(baseline, CBA_2026, r),
-            "dollars_per_win": derive_dollars_per_win(CBA_2026, r)["dollars_per_win"],
+            "replacement_level": derive_replacement_level(baseline, cba, r),
+            "dollars_per_win": derive_dollars_per_win(cba, r)["dollars_per_win"],
         }
         for r in (0.20, 0.25, 0.30)
     }
 
     return {
-        "cba": CBA_2026,
-        "excluded_seasons": {str(k): v for k, v in EXCLUDED_SEASONS.items()},
+        "cba": cba,
+        "excluded_seasons": {str(k): v for k, v in excluded.items()},
         "points_per_win": asdict(ppw),
         "pace": asdict(pace),
         "minutes_baseline": {
@@ -344,12 +373,12 @@ def build() -> dict:
             "sensitivity_range": [0.20, 0.30],
         },
         "replacement_level": {
-            "value": derive_replacement_level(baseline, CBA_2026, rwp),
+            "value": derive_replacement_level(baseline, cba, rwp),
             "units": "points per 100 possessions below average",
             "method": "derived from league WAR accounting identity; needs no ratings",
             "nba_reference": 3.0,
         },
-        "dollars_per_win": derive_dollars_per_win(CBA_2026, rwp),
+        "dollars_per_win": derive_dollars_per_win(cba, rwp),
         "sensitivity": sensitivity,
     }
 

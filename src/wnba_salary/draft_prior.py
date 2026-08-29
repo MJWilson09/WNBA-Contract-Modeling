@@ -45,9 +45,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from . import bbref, box_prior, data
+from . import bbref, box_prior, data, season
 
-DRAFT_SEASONS = range(2010, 2027)
+DRAFT_SEASONS = range(2010, season.current_season() + 1)
 MIN_FIT_ROOKIES = 40      # below this, fall back to the pooled rookie mean
 UNDRAFTED_PICK = 40.0     # slot assigned to undrafted free agents
 
@@ -142,7 +142,7 @@ def main() -> None:
     for pk in (1, 2, 3, 5, 8, 12, 20, 30, 36):
         o, d = predict(pk, coefs)
         print(f"{pk:>5}{o:>8.2f}{d:>8.2f}{o + d:>8.2f}")
-    print(f"\nreplacement level is -2.98; league average 0.00")
+    print("\nleague average is 0.00; replacement level comes from constants.json")
 
 
 if __name__ == "__main__":

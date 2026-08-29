@@ -59,6 +59,31 @@ def _flip_name(key: str) -> str:
     return f"{first.strip()} {last.strip()}"
 
 
+def parse_salary_html(html: str, salary_season: int) -> pd.DataFrame:
+    """Parse a salary page without caching it (also used by rollover checks)."""
+    soup = BeautifulSoup(html, "lxml")
+    table = soup.find("table")
+    if table is None or table.find("tbody") is None:
+        raise RuntimeError("no salary table found; page layout may have changed")
+
+    rows = []
+    for tr in table.find("tbody").find_all("tr"):
+        cells = tr.find_all(["td", "th"])
+        if len(cells) < 3:
+            continue
+        key = cells[0].get("sorttable_customkey") or cells[0].get_text(strip=True)
+        salary = _money(cells[1].get_text(strip=True))
+        if salary is None:
+            continue
+        rows.append({
+            "season": salary_season,
+            "player": _flip_name(key),
+            "salary": salary,
+            "signing": cells[2].get_text(strip=True),
+        })
+    return pd.DataFrame(rows)
+
+
 def fetch_salaries(salary_season: int, *, refresh: bool = False) -> pd.DataFrame:
     """League-wide salaries for one season."""
     global _last_request
@@ -79,28 +104,7 @@ def fetch_salaries(salary_season: int, *, refresh: bool = False) -> pd.DataFrame
     resp.raise_for_status()
     resp.encoding = "utf-8"
 
-    soup = BeautifulSoup(resp.text, "lxml")
-    table = soup.find("table")
-    if table is None:
-        raise RuntimeError("no salary table found; page layout may have changed")
-
-    rows = []
-    for tr in table.find("tbody").find_all("tr"):
-        cells = tr.find_all(["td", "th"])
-        if len(cells) < 3:
-            continue
-        key = cells[0].get("sorttable_customkey") or cells[0].get_text(strip=True)
-        salary = _money(cells[1].get_text(strip=True))
-        if salary is None:
-            continue
-        rows.append({
-            "season": salary_season,
-            "player": _flip_name(key),
-            "salary": salary,
-            "signing": cells[2].get_text(strip=True),
-        })
-
-    df = pd.DataFrame(rows)
+    df = parse_salary_html(resp.text, salary_season)
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(path, index=False)
     return df

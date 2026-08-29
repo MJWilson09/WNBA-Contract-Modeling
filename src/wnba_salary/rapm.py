@@ -148,9 +148,10 @@ def season_possessions(season: int) -> pd.DataFrame:
     """
     path = POSS_CACHE / f"poss_{season}.parquet"
     if path.exists():
-        return pd.read_parquet(path)
+        return data.exclude_exhibitions(pd.read_parquet(path), season).reset_index(drop=True)
     df = (build_possessions(fetch_stats_pbp(season)) if season in AVAILABLE_SEASONS
           else espn_lineups.reconstruct(season))
+    df = data.exclude_exhibitions(df, season).reset_index(drop=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(path, index=False)
     return df

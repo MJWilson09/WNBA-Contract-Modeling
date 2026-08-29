@@ -43,6 +43,7 @@ r=0.994 in 2022).
 
 from __future__ import annotations
 
+import json
 import os
 from concurrent.futures import ProcessPoolExecutor
 
@@ -57,7 +58,8 @@ FIRST_SEASON = 2017
 LAMBDA = 1500.0
 HALF_LIFE = 1.5
 LAMBDA_SWEEP = [1500.0, 6000.0, 24000.0]   # pooled candidate only
-REPLACEMENT = 2.98
+REPLACEMENT = json.loads(
+    (data.PROCESSED_DIR / "constants.json").read_text())["replacement_level"]["value"]
 
 # Forward-validation grid. Extend either axis if the optimum lands on an edge.
 LAMBDA_GRID = [1500, 3000, 6000, 12000, 24000]

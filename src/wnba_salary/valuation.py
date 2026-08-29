@@ -31,7 +31,7 @@ import numpy as np
 import pandas as pd
 import requests
 
-from . import box_prior, data, salaries
+from . import box_prior, data, salaries, season
 
 AGING_CURVE_URL = (
     "https://raw.githubusercontent.com/sportsdataverse/sportsdataverse-py/main/"
@@ -39,7 +39,7 @@ AGING_CURVE_URL = (
 )
 
 PROJECTION_YEARS = 3        # WNBA deals are mostly 1-3 years; 5 is extrapolation
-CURRENT_SEASON = 2026
+CURRENT_SEASON = season.current_season()
 MIN_MINUTES = 100      # fallback gate, for players with no RAPM rating
 
 # Determinacy gate for rated players. Calibrated to the worst rating_se already

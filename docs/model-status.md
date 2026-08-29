@@ -10,21 +10,21 @@ instructions and tolerances live in [`../AGENTS.md`](../AGENTS.md).
 
 ## Structural constants and box prior
 
-- Points per win: **31.77**
-- Pace: **79.92 possessions per 40 minutes**
-- Minutes baseline: **1589.90**
-- Replacement level: **−2.98 points per 100**
+- Points per win: **31.10**
+- Pace: **79.84 possessions per 40 minutes**
+- Minutes baseline: **1557.94**
+- Replacement level: **−2.92 points per 100**
 - Dollars per win: **$227,879**
 - Box-prior offense OOS correlation/RMSE: **0.941 / 0.82**
 - Box-prior defense OOS correlation/RMSE: **0.698 / 0.80**
-- Shrinkage k, offense/defense: **75 / 225**
+- Shrinkage k, offense/defense: **75 / 200**
 
 ## Ratings
 
 | Configuration | Possessions | Players | λ | Half-life | Pin offset |
 |---|---:|---:|---:|---:|---:|
-| Descriptive | 145,595 | 270 | 1,500 | 1.50 | -0.157 |
-| Forecast | 145,595 | 270 | 6,000 | 0.75 | +0.148 |
+| Descriptive | 145,033 | 270 | 1,500 | 1.50 | -0.164 |
+| Forecast | 145,033 | 270 | 6,000 | 0.75 | +0.141 |
 
 Both configurations use the same possession and player universe.
 
@@ -32,8 +32,8 @@ Both configurations use the same possession and player universe.
 
 - Table players: **187**
 - Salary matches: **183**
-- Summed WAR: **248.46** (league identity: **247.50**)
-- Summed clipped market value: **$107,178,528**
+- Summed WAR: **247.64** (league identity: **247.50**)
+- Summed clipped market value: **$106,934,102**
 - Players above their applicable CBA maximum: **17**
 
 ## History

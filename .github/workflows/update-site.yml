@@ -91,7 +91,7 @@ jobs:
         if: inputs.force == true || steps.freshness.outputs.needs_update == 'true'
         shell: bash
         run: |
-          git add data/processed docs/players.js docs/model-status.md
+          git add model_config.json data/processed docs/players.js docs/model-status.md
           if git diff --cached --quiet; then
             echo "The rebuild produced no tracked changes."
             exit 0

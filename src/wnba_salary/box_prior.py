@@ -41,10 +41,10 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 
-from . import bbref, data, rates
+from . import bbref, data, rates, season
 
-NBA_TRAIN_SEASONS = range(2005, 2026)
-WNBA_SEASONS = range(2010, 2027)
+NBA_TRAIN_SEASONS = range(2005, season.current_season())
+WNBA_SEASONS = range(2010, season.current_season() + 1)
 
 NBA_GAME_MINUTES = 48
 WNBA_GAME_MINUTES = 40

@@ -45,6 +45,13 @@ figures from weeks-old games. The script forces the current season's inputs to
 refetch, drops the caches derived from them, and runs stages 1–6 (~45s warm).
 `--check` reports staleness without touching anything; it exits 1 when stale.
 
+The production year lives in `model_config.json`; do not add another hard-coded
+current-season constant. `scripts/update.py` performs a guarded one-year
+rollover after the first complete new-season game is available across every
+required feed. `--check --season YYYY` tests the guard without changing the
+configuration. A successful normal rollover rewrites the tracked config and
+restarts the updater so every imported module sees the new year.
+
 Note it prints two lags. Ours (cache vs the wehoop mirror) is fixable; the
 mirror's own lag behind live results, currently ~8 days, is not.
 
@@ -107,9 +114,9 @@ into this file. If a change violates an expectation, it is a regression until
 proven otherwise.
 
 **constants.json**
-- `points_per_win` 31.77, **intercept 0.5000** (R²=0.778, n=311) — the intercept
+- `points_per_win` 31.10, **intercept 0.5000** (R²=0.898, n=275) — the intercept
   is a free parameter left free precisely so it can be checked. It must fit ~0.5.
-- `pace` 79.92 poss/40min · `minutes_baseline` 1590 · `replacement_level` −2.98
+- `pace` 79.84 poss/40min · `minutes_baseline` 1558 · `replacement_level` −2.92
 - `dollars_per_win` $227,879 (discretionary pool, **not** full cap — full cap
   gives $424,242 and is wrong)
 
@@ -281,12 +288,12 @@ produce believable wrong answers rather than errors.
 
 Do not "fix" these:
 
-- **`minutes_baseline` (1590) exceeds the busiest player's season minutes.** It
+- **`minutes_baseline` (1558) exceeds the busiest player's season minutes.** It
   converts minutes to wins-per-unit-rating; it is not a share of a season.
 - **Three players have negative unconstrained `value`** (Kiah Stokes, Zia Cooke,
   Diamond Miller). They are far below replacement; `market_value` clamps them to
   the $270K minimum. Below-replacement minutes cost wins.
-- **The offense/defense replacement split is lopsided** (−2.80 / −0.18). That is
+- **The offense/defense replacement split is lopsided** (−2.74 / −0.18). That is
   the box score's inability to resolve defence, not a claim about basketball.
 - **Box prior OBPM r=0.941 is not a triumph.** BPM is itself a linear function of
   box stats, so fitting box stats to BPM largely recovers its own formula. The

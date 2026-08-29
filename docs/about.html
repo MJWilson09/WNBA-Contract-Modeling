@@ -198,24 +198,24 @@
       <p>
         Replacement level is the second constant. Value should be measured against a freely
         available player rather than against average, and that baseline lands at
-        <strong>−2.98</strong> points per 100.
+        <strong>−2.92</strong> points per 100.
       </p>
-      <div class="formula">WAR = (minutes / 1590) × (rating + 2.98)</div>
+      <div class="formula">WAR = (minutes / 1558) × (rating + 2.92)</div>
       <p>
-        The 1590 isn't a third constant I had to estimate. It falls out of the other
+        The 1558 isn't a third constant I had to estimate. It falls out of the other
         two. A rating is points per 100 possessions, so multiply it by the possessions
         a player was on the floor for, divide by 100, and divide by points per win:
       </p>
-      <div class="formula">WAR = (rating + 2.98) / 100 × possessions played / 31.77</div>
+      <div class="formula">WAR = (rating + 2.92) / 100 × possessions played / 31.10</div>
       <p>
-        Possessions played is just minutes × pace, and WNBA pace is 79.92 possessions
-        per 40 minutes, or 1.998 per minute. Substitute that in and rearrange, and
+        Possessions played is just minutes × pace, and WNBA pace is 79.84 possessions
+        per 40 minutes, or 1.996 per minute. Substitute that in and rearrange, and
         every constant collapses into one number:
       </p>
-      <div class="formula">1590 = 100 × 31.77 / 1.998
+      <div class="formula">1558 = 100 × 31.10 / 1.996
         = 100 × points per win / possessions per minute</div>
       <p>
-        1590 is larger than any WNBA player's season minutes; the busiest player in a
+        1558 is larger than any WNBA player's season minutes; the busiest player in a
         recent full season was Kelsey Plum at 1,525 in 2025. That is fine, because it is
         a unit conversion rather than a share of a season, and a 44-game schedule just
         means nobody reaches a full unit of it (the WNBA does not have their equivalent
@@ -245,29 +245,29 @@
             <td>A'ja Wilson</td>
             <td class="num">+8.12</td>
             <td class="num">1,280</td>
-            <td class="num">8.94</td>
+            <td class="num">9.07</td>
           </tr>
           <tr>
             <td>DeWanna Bonner</td>
             <td class="num">−0.66</td>
             <td class="num">1,179</td>
-            <td class="num">1.72</td>
+            <td class="num">1.71</td>
           </tr>
         </tbody>
       </table>
-      <div class="formula">Wilson: (1280 / 1590) × ( 8.12 + 2.98) = 0.805 × 11.10 = 8.94
-        Bonner: (1179 / 1590) × ( −0.66 + 2.98) = 0.742 × 2.32 = 1.72</div>
+      <div class="formula">Wilson: (1280 / 1558) × ( 8.12 + 2.92) = 0.822 × 11.04 = 9.07
+        Bonner: (1179 / 1558) × ( −0.66 + 2.92) = 0.757 × 2.26 = 1.71</div>
       <p>
         Bonner plays about 92% of Wilson's minutes and produces less than a fifth of
         the wins. That is the whole point of measuring against replacement rather
         than against zero. Bonner is a genuinely useful player, a bit below
         league average by this rating, and she clears replacement level comfortably,
-        worth 1.72 wins a team would not otherwise have. Wilson is 11.1 points per 100
+        worth 1.71 wins a team would not otherwise have. Wilson is 11.04 points per 100
         above that same baseline, and the minutes multiply it.
       </p>
       <p>
         It also shows how much minutes matter. Cut Wilson to Bonner's rating and hold
-        her minutes fixed and she would produce 1.87 wins, not 8.94. Nobody is
+        her minutes fixed and she would produce 1.86 wins, not 9.07. Nobody is
         valuable in the abstract; they are valuable for as long as they are on the
         court.
       </p>

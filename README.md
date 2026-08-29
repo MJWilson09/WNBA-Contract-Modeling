@@ -79,6 +79,31 @@ new games, it rebuilds and validates the model, commits the tracked artifacts
 and generated site data to `main`, and lets GitHub Pages publish from `/docs`.
 The workflow can also be run manually, with an optional forced rebuild.
 
+`model_config.json` is the single source of truth for the production season.
+Once the calendar reaches the following year, the updater also probes that
+season on every run. It advances the configuration by exactly one year only
+after a completed regular-season game is present in the schedule, team box,
+player box, and play-by-play feeds, player metadata and two valid starting fives
+are available, and the salary and both Basketball-Reference tables are
+populated. The configuration change is committed with the rebuilt artifacts,
+so later Actions runs stay on the new season. To test the guard manually:
+
+```bash
+./.venv/bin/python scripts/update.py --check --season 2027
+```
+
+The rating window moves with that configuration. For example, the first 2027
+build pools 2024–2027; returning players retain their recency-weighted history
+while new players remain subject to the existing possession/uncertainty gates.
+All-Star games are excluded by event-team identity across schedule, box-score,
+play-by-play, and cached-possession paths; ESPN classifies them as regular season,
+so filtering on `season_type` alone is insufficient.
+
+Team count is discovered from the complete schedule during rollover rather than
+hard-coded. The announced expansion calendar keeps 15 teams in 2027, then adds
+Cleveland in 2028, Detroit in 2029, and Philadelphia in 2030; schedule discovery
+lets those additions flow into league minutes, WAR, and dollar accounting.
+
 Run the stages individually only when changing the model itself.
 
 Run in that order; each stage reads the previous stage's output from
@@ -129,10 +154,10 @@ silent failures that produce believable wrong numbers.
 
 | Constant | Value | How |
 |---|---|---|
-| `points_per_win` | 31.77 | regression, `win_pct ~ MOV`, intercept fits 0.5000 |
-| `pace` | 79.92 poss/40min | box score, OT-adjusted via player minutes |
-| `minutes_baseline` | 1590 | **derived**: `100 × ppw / poss_per_min` |
-| `replacement_level` | −2.98 pts/100 | **derived** from league WAR identity |
+| `points_per_win` | 31.10 | regression, `win_pct ~ MOV`, intercept fits 0.5000 |
+| `pace` | 79.84 poss/40min | box score, OT-adjusted via player minutes |
+| `minutes_baseline` | 1558 | **derived**: `100 × ppw / poss_per_min` |
+| `replacement_level` | −2.92 pts/100 | **derived** from league WAR identity |
 | `dollars_per_win` | $227,879 | discretionary cap pool |
 
 Two of these are identities rather than fits.
@@ -144,7 +169,7 @@ constant comes from.
 
 `replacement_level` follows from requiring summed player WAR to equal league wins
 above replacement, so `R = games × (1 − repl_win_pct) × B / total_team_minutes`.
-It needs no ratings, and it lands at −2.98, essentially DARKO's NBA −3.00 but
+It needs no ratings, and it lands at −2.92, close to DARKO's NBA −3.00 but
 derived from WNBA structure rather than borrowed.
 
 `replacement_win_pct` (0.25) is an assumption rather than an estimate, since
@@ -177,7 +202,7 @@ constant estimated (season *t* to *t+1*) rather than assumed.
 ## Salary layer
 
 ```
-WAR   = (minutes / 1590) × (rating + 2.98)
+WAR   = (minutes / 1558) × (rating + 2.92)
 value = min_salary + WAR × dollars_per_win
 ```
 
@@ -599,7 +624,7 @@ past season is selected.
   prior inherits BPM's blind spots wholesale and adds nothing beyond it; the
   actual edge arrives in Stage B.
 - Defense is weakly identified. DBPM r=0.698, because the box cannot see off-ball
-  defense, and the offense/defense replacement split (−2.80/−0.18) mostly
+  defense, and the offense/defense replacement split (−2.74/−0.18) mostly
   reflects that compression rather than a basketball fact.
 - `Big` is noisier for the WNBA, since the league lists only G/F/C, so `F`
   conflates what the NBA splits into SF and PF.

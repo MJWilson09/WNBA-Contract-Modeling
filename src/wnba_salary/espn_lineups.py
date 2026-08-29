@@ -104,6 +104,7 @@ def reconstruct(season: int, *, season_type: int = 2) -> pd.DataFrame:
     """Possession-level rows with on-court lineups, matching rapm's schema."""
     pbp = data.fetch_season("pbp", season)
     pbp = pbp[pbp["season_type"] == season_type].copy()
+    pbp = data.exclude_exhibitions(pbp, season).copy()
     pbp["game_id"] = pbp["game_id"].astype("int64")
 
     rosters = load_rosters(season)

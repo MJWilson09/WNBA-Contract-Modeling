@@ -31,6 +31,16 @@ DATASETS: dict[str, tuple[str, str]] = {
 REGULAR_SEASON = 2
 POSTSEASON = 3
 
+# ESPN labels the All-Star exhibition as a regular-season game. Filtering only
+# on season_type therefore contaminates box priors, minutes, pace, and RAPM.
+# These are event teams, never league clubs.
+NON_LEAGUE_TEAM_ABBREVIATIONS = {
+    "EAST", "WEST",             # 2017 conference format
+    "DEL", "PAR", "WIL", "STE",  # captain-drafted teams, 2018–23
+    "ALL", "USA", "WNBASTARS",    # WNBA vs USA, 2021/24
+    "CLA", "COL", "SPO", "COOP", # captain-drafted teams, 2025–26
+}
+
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
@@ -66,6 +76,42 @@ def fetch_season(dataset: str, season: int, *, refresh: bool = False) -> pd.Data
     return df
 
 
+def exhibition_game_ids(season: int) -> set[str]:
+    """All-Star/event game IDs, derived from team identities in the feeds."""
+    teams = fetch_season("team_box", season)
+    if teams is not None and not teams.empty:
+        mask = (
+            teams["team_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+            | teams["opponent_team_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+        )
+        return set(teams.loc[mask, "game_id"].astype(str))
+
+    schedule = fetch_season("schedule", season)
+    if schedule is None or schedule.empty:
+        return set()
+    mask = (
+        schedule["home_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+        | schedule["away_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+    )
+    return set(schedule.loc[mask, "game_id"].astype(str))
+
+
+def exclude_exhibitions(df: pd.DataFrame, season: int) -> pd.DataFrame:
+    """Remove event-team games even when ESPN calls them regular season."""
+    if df.empty:
+        return df
+    if {"home_abbreviation", "away_abbreviation"}.issubset(df.columns):
+        mask = (
+            df["home_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+            | df["away_abbreviation"].isin(NON_LEAGUE_TEAM_ABBREVIATIONS)
+        )
+        return df[~mask]
+    if "game_id" not in df.columns:
+        return df
+    excluded = exhibition_game_ids(season)
+    return df[~df["game_id"].astype(str).isin(excluded)] if excluded else df
+
+
 def load(
     dataset: str,
     seasons: range | list[int],
@@ -85,6 +131,7 @@ def load(
             continue
         if season_type is not None and "season_type" in df.columns:
             df = df[df["season_type"] == season_type]
+        df = exclude_exhibitions(df, season)
         if not df.empty:
             frames.append(df)
 

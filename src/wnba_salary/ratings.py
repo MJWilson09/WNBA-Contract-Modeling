@@ -32,14 +32,12 @@ import json
 import numpy as np
 import pandas as pd
 
-from . import box_prior, data, rapm, rapm_validation
+from . import box_prior, data, rapm, rapm_validation, season
 
-CURRENT_SEASONS = [2023, 2024, 2025, 2026]
-TARGET_SEASON = 2026
+TARGET_SEASON = season.current_season()
 
 # The pooled window is the target season plus the three before it. `history.py`
-# slides the same window back over earlier seasons; `CURRENT_SEASONS` is just
-# `pooled_window(2026)` written out.
+# slides the same window back over earlier seasons.
 WINDOW = 4
 FIRST_POSS_SEASON = 2017        # earliest season with possession-level data
 
