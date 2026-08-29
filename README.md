@@ -73,6 +73,12 @@ exiting 1 when an update is due. This exists because every fetcher caches to
 disk and never refetches on its own, so a plain re-run silently reproduces
 figures built from weeks-old games.
 
+During the season, `.github/workflows/update-site.yml` runs this check every
+morning at 6:00 a.m. Central (May through October). When the upstream mirror has
+new games, it rebuilds and validates the model, commits the tracked artifacts
+and generated site data to `main`, and lets GitHub Pages publish from `/docs`.
+The workflow can also be run manually, with an optional forced rebuild.
+
 Run the stages individually only when changing the model itself.
 
 Run in that order; each stage reads the previous stage's output from

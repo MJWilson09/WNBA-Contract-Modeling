@@ -1,0 +1,103 @@
+name: Update in-season data
+
+on:
+  schedule:
+    # 11:00 UTC is 6:00 a.m. Central during the WNBA season (CDT).
+    - cron: "0 11 * 5-10 *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: Rebuild even when the mirror has no newer games
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-in-season-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Identify cache week
+        id: cache-week
+        shell: bash
+        run: echo "week=$(date -u +%G-%V)" >> "$GITHUB_OUTPUT"
+
+      - name: Restore Python environment
+        id: venv-cache
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: ${{ runner.os }}-py314-venv-${{ hashFiles('requirements.txt') }}
+
+      - name: Create Python environment
+        if: steps.venv-cache.outputs.cache-hit != 'true'
+        run: |
+          python -m venv .venv
+          ./.venv/bin/python -m pip install --upgrade pip
+          ./.venv/bin/python -m pip install -r requirements.txt
+
+      - name: Identify target season
+        id: model
+        run: echo "season=$(./.venv/bin/python -c 'from src.wnba_salary.valuation import CURRENT_SEASON; print(CURRENT_SEASON)')" >> "$GITHUB_OUTPUT"
+
+      - name: Restore source-data cache
+        uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: ${{ runner.os }}-wnba-raw-${{ steps.cache-week.outputs.week }}
+          restore-keys: |
+            ${{ runner.os }}-wnba-raw-
+
+      - name: Check for newer games
+        id: freshness
+        if: inputs.force != true
+        shell: bash
+        run: |
+          season="${{ steps.model.outputs.season }}"
+          if [[ ! -f "data/raw/player_box/player_box_${season}.parquet" ]]; then
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+          elif ./.venv/bin/python scripts/update.py --check; then
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Refresh model and site
+        if: inputs.force == true || steps.freshness.outputs.needs_update == 'true'
+        run: ./.venv/bin/python scripts/update.py
+
+      - name: Validate generated artifacts
+        if: inputs.force == true || steps.freshness.outputs.needs_update == 'true'
+        run: ./.venv/bin/python scripts/check_generated.py
+
+      - name: Commit refreshed data
+        if: inputs.force == true || steps.freshness.outputs.needs_update == 'true'
+        shell: bash
+        run: |
+          git add data/processed docs/players.js docs/model-status.md
+          if git diff --cached --quiet; then
+            echo "The rebuild produced no tracked changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          data_date=$(./.venv/bin/python -c 'import json; print(json.load(open("data/processed/model_snapshot.json"))["data_through"])')
+          git commit -m "Update WNBA data through ${data_date}"
+          git push origin HEAD:main
