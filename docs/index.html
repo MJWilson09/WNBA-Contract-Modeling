@@ -24,7 +24,7 @@
 <meta name="twitter:title" content="WNBA Contract Model">
 <meta name="twitter:description" content="What is a WNBA player actually worth? Possession-level impact ratings converted into contract value against the 2026 CBA.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=fe8514fc">
+<link rel="stylesheet" href="assets/site.css?v=b8ff2722">
 </head>
 <body>
 <nav class="nav">
@@ -68,6 +68,7 @@
     <button id="cols" class="colbtn" aria-expanded="false">all columns</button>
   </div>
 </div>
+<p class="table-updated" id="table-updated"></p>
 <div class="scroll">
   <table id="league">
     <thead><tr>
@@ -481,6 +482,11 @@ function renderTable() {
 }
 
 const seasonSel = document.getElementById("season");
+const updatedDate = new Date(`${MODEL.generated}T00:00:00`);
+document.getElementById("table-updated").textContent =
+  `Last updated on ${updatedDate.toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric", timeZone: "UTC"
+  })}.`;
 seasonSel.innerHTML = TABLE_SEASONS.map(s =>
   `<option value="${s}">${s}${s === CUR ? " · current" : ""}</option>`).join("");
 seasonSel.value = String(CUR);

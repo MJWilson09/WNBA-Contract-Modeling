@@ -215,6 +215,8 @@ td.bar { background-image:
 /* S1 — section head with the season picker and the column toggle */
 .sec-head { display: flex; align-items: baseline; justify-content: space-between;
   gap: 12px; flex-wrap: wrap; }
+.table-updated { margin: -8px 0 10px; color: var(--ink-3);
+  font-size: var(--fs-xs); }
 .sec-tools { display: flex; align-items: center; gap: 8px; }
 .picklab { font-size: var(--fs-micro); text-transform: uppercase;
   letter-spacing: 0.07em; color: var(--ink-3); font-weight: 600; }
