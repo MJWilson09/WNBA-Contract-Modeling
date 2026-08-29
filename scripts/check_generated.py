@@ -12,7 +12,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.wnba_salary import export_web  # noqa: E402
+from src.wnba_salary import export_web, value_history  # noqa: E402
 
 
 def main() -> None:
@@ -56,6 +56,22 @@ def main() -> None:
                f"player_box_{desc['target_season']}.parquet")
     if raw_box.exists() and export_web.raw_data_through() != export_web.data_through():
         errors.append("model snapshot date does not match the cached current-season input")
+
+    snapshots = value_history.load(desc["target_season"])
+    if snapshots.empty:
+        errors.append("value history database has no current-season snapshots")
+    else:
+        latest_date = snapshots["as_of"].max()
+        if latest_date != export_web.data_through():
+            errors.append("latest value-history date does not match model snapshot")
+        latest = snapshots[snapshots["as_of"].eq(latest_date)]
+        values_check = values[["athlete_id", "value"]].merge(
+            latest[["athlete_id", "value"]], on="athlete_id",
+            suffixes=("_valuation", "_history"), validate="one_to_one")
+        if len(values_check) != len(values):
+            errors.append("latest value history and valuation player sets differ")
+        elif (values_check["value_valuation"] - values_check["value_history"]).abs().max() > 1e-6:
+            errors.append("latest value history and valuation values differ")
 
     if stale or errors:
         if errors:

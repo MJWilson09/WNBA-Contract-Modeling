@@ -165,6 +165,20 @@ h2 { font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: 0.09
 .cell .n { font-size: var(--fs-micro); color: var(--ink-3); margin-top: 3px; }
 .pos { color: var(--pos); } .neg { color: var(--neg); } .capped { color: var(--cap); }
 
+.value-trends { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  margin-top: 12px; background: var(--line); gap: 1px; }
+.trend-head { grid-column: 1 / -1; background: var(--panel); padding: 9px 14px 7px;
+  font-size: var(--fs-micro); text-transform: uppercase; letter-spacing: .07em;
+  color: var(--ink-3); font-weight: 600; }
+.trend-item { background: var(--panel); padding: 11px 14px; }
+.trend-item .k { color: var(--ink-3); font-size: var(--fs-micro); }
+.trend-item .v { font-family: var(--mono); font-size: var(--fs-md); margin-top: 3px;
+  font-variant-numeric: tabular-nums; }
+.trend-item .n, .trend-note { color: var(--ink-3); font-size: var(--fs-micro); margin-top: 3px; }
+.trend-note { grid-column: 1 / -1; background: var(--panel); margin-top: 0;
+  padding: 7px 14px 9px; }
+
 /* max bar */
 .bar { margin-top: 18px; }
 .bar-track { position: relative; height: 26px; background: var(--line-soft);
@@ -340,6 +354,7 @@ td.bar { background-image:
   .prose p, .prose li { font-size: 16.5px; }
   .prose h2 { font-size: 21px; margin-top: 42px; }
   .grid { grid-template-columns: repeat(auto-fit, minmax(104px, 1fr)); }
+  .value-trends { grid-template-columns: 1fr; }
   .card { padding: 16px; }
   .controls { gap: 14px; }
   th, td { padding: 8px 10px; }

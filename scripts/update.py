@@ -62,6 +62,7 @@ STAGES = [
     ("box_prior",  "src.wnba_salary.box_prior",  "transfer-learned box prior"),
     ("ratings",    "src.wnba_salary.ratings",    "RAPM, descriptive + forecast"),
     ("valuation",  "src.wnba_salary.valuation",  "ratings -> dollars"),
+    ("value_history", "src.wnba_salary.value_history", "daily value snapshot"),
     ("history",    "src.wnba_salary.history",    "past seasons for the picker (slow)"),
     ("export_web", "src.wnba_salary.export_web", "docs/players.js"),
 ]

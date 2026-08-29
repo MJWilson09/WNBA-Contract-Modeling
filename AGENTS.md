@@ -30,11 +30,12 @@ Run in order. Each stage reads the previous stage's output from `data/processed/
 | 2 | `src.wnba_salary.box_prior` | BBRef, box scores | `box_prior.parquet`, `box_prior_fit.json` |
 | 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings{,_forecast}.parquet` + `_meta.json` |
 | 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings{,_forecast}.parquet`, HHS | `valuation.parquet` |
-| 5 | `src.wnba_salary.history` | `constants.json`, `box_prior.parquet`, poss cache | `history.parquet` + `_meta.json` |
-| 6 | `src.wnba_salary.export_web` | `valuation.parquet`, `history.parquet`, metadata | `docs/players.js`, `docs/model-status.md`, `model_snapshot.json` |
+| 5 | `src.wnba_salary.value_history` | `valuation.parquet` | `value_history.sqlite` |
+| 6 | `src.wnba_salary.history` | `constants.json`, `box_prior.parquet`, poss cache | `history.parquet` + `_meta.json` |
+| 7 | `src.wnba_salary.export_web` | `valuation.parquet`, `history.parquet`, value history, metadata | `docs/players.js`, `docs/model-status.md`, `model_snapshot.json` |
 
 Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
-~3 min. Stage 5 re-runs stage 3's recipe for ten target seasons on 4 workers
+~3 min. Stage 6 re-runs stage 3's recipe for ten target seasons on 4 workers
 (~6 min); it reads stage 4's output only for its self-check, so the two can run
 in either order. All are fully cached afterwards.
 
@@ -42,7 +43,7 @@ in either order. All are fully cached afterwards.
 fetcher caches to disk and never refetches, which is right for finished seasons
 and silently wrong for the one in progress — a full re-run happily reproduces
 figures from weeks-old games. The script forces the current season's inputs to
-refetch, drops the caches derived from them, and runs stages 1–6 (~45s warm).
+refetch, drops the caches derived from them, and runs stages 1–7 (~45s warm).
 `--check` reports staleness without touching anything; it exits 1 when stale.
 
 The production year lives in `model_config.json`; do not add another hard-coded

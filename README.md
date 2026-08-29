@@ -79,6 +79,13 @@ new games, it rebuilds and validates the model, commits the tracked artifacts
 and generated site data to `main`, and lets GitHub Pages publish from `/docs`.
 The workflow can also be run manually, with an optional forced rebuild.
 
+Each successful rebuild also upserts one player-value snapshot into
+`data/processed/value_history.sqlite`, keyed by season, data date, and player.
+The generated site uses those snapshots to show value changes in the player
+panel over roughly the last 10 team games and since the team's opening game.
+The main table stays unchanged. Comparisons are shown only when a suitable
+saved baseline exists, so an older snapshot is never mislabeled as 10 games.
+
 `model_config.json` is the single source of truth for the production season.
 Once the calendar reaches the following year, the updater also probes that
 season on every run. It advances the configuration by exactly one year only
@@ -148,6 +155,7 @@ silent failures that produce believable wrong numbers.
   measuring stick for any predictive claim. `--sweep` runs the (λ, HL) grid.
 - `src/wnba_salary/salaries.py` — contracts from Her Hoop Stats.
 - `src/wnba_salary/valuation.py` — ratings + constants to dollars, aging, projections.
+- `src/wnba_salary/value_history.py` — idempotent daily player-value snapshots in SQLite.
 - `src/wnba_salary/export_web.py` — emits `docs/players.js` for the site.
 
 ## Constants (2026)

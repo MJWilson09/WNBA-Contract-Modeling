@@ -24,7 +24,7 @@
 <meta name="twitter:title" content="WNBA Contract Model">
 <meta name="twitter:description" content="What is a WNBA player actually worth? Possession-level impact ratings converted into contract value against the 2026 CBA.">
 <meta name="twitter:image" content="https://mjwilson09.github.io/WNBA-Contract-Modeling/assets/og-card.png">
-<link rel="stylesheet" href="assets/site.css?v=b8ff2722">
+<link rel="stylesheet" href="assets/site.css?v=a91a2968">
 </head>
 <body>
 <nav class="nav">
@@ -168,6 +168,8 @@ const money = v => v == null ? "—" :
   "$" + Math.round(v).toLocaleString("en-US");
 const moneyK = v => v == null ? "—" :
   (v < 0 ? "−" : "") + "$" + Math.abs(Math.round(v / 1000)) + "k";
+const moneyDelta = v => v == null ? "—" :
+  (v >= 0 ? "+" : "−") + "$" + Math.abs(Math.round(v)).toLocaleString("en-US");
 const sgn = v => v == null ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(2);
 const cls = v => v == null ? "" : v >= 0 ? "pos" : "neg";
 
@@ -303,6 +305,8 @@ function paint(card, p, d) {
       <td class="num">${money(r.value)}</td>
       <td class="num ${r.value > MODEL.schedule[String(r.season)].max_salary ? "capped" : ""}">${money(r.marketValue)}</td>
     </tr>`).join("");
+  const t10 = p.valueTrend?.last10;
+  const tSeason = p.valueTrend?.season;
 
   body.innerHTML = `
     <div class="grid">
@@ -327,6 +331,21 @@ function paint(card, p, d) {
       <div class="cell"><div class="k">Surplus</div>
         <div class="v ${cls(d.surplus)}">${d.surplus == null ? "—" : money(d.surplus)}</div>
         <div class="n">vs ${money(p.salary)}</div></div>
+    </div>
+
+    <div class="value-trends">
+      <div class="trend-head">Model value change</div>
+      <div class="trend-item">
+        <div class="k">${t10 ? `Last ${t10.games} team games` : "Last 10 team games"}</div>
+        <div class="v ${t10 ? cls(t10.delta) : ""}">${t10 ? moneyDelta(t10.delta) : "—"}</div>
+        <div class="n">${t10 ? `since ${t10.from}` : "No 10-game baseline yet"}</div>
+      </div>
+      <div class="trend-item">
+        <div class="k">Since season start</div>
+        <div class="v ${tSeason ? cls(tSeason.delta) : ""}">${tSeason ? moneyDelta(tSeason.delta) : "—"}</div>
+        <div class="n">${tSeason ? `since ${tSeason.from}` : "Not rated at opening baseline"}</div>
+      </div>
+      <div class="trend-note">Saved model defaults; sliders do not alter history.</div>
     </div>
 
     <div class="bar">

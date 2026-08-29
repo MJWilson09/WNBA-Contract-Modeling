@@ -24,7 +24,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from . import data, history, valuation
+from . import data, history, valuation, value_history
 from .history import team_lookup
 
 WEB_DIR = data.PROJECT_ROOT / "docs"
@@ -66,8 +66,10 @@ def build_payload() -> dict:
             "dollars_per_win": valuation.dollars_per_win(consts, season),
         }
 
+    trends = player_value_trends(df)
     players = []
     for r in df.sort_values("value", ascending=False).itertuples():
+        trend = trends.get(int(r.athlete_id), {})
         players.append({
             "id": int(r.athlete_id),
             "name": r.athlete_display_name,
@@ -89,6 +91,7 @@ def build_payload() -> dict:
             "signing": r.signing if isinstance(r.signing, str) else "—",
             "exp": None if pd.isna(r.experience_years) else int(r.experience_years),
             "supermax": bool(r.supermax_eligible),
+            "valueTrend": trend,
         })
 
     hist_rows, hist_meta = history_payload()
@@ -115,6 +118,48 @@ def build_payload() -> dict:
         "history": hist_rows,
         "historyMeta": hist_meta,
     }
+
+
+def player_value_trends(current: pd.DataFrame) -> dict[int, dict]:
+    """Value deltas for cards, based on persisted full-model snapshots."""
+    snapshots = value_history.load(valuation.CURRENT_SEASON)
+    if snapshots.empty:
+        return {}
+    start_date = snapshots["as_of"].min()
+    current_date = data_through()
+    older = snapshots[snapshots["as_of"] < current_date]
+    out: dict[int, dict] = {}
+
+    for row in current.itertuples():
+        athlete_id = int(row.athlete_id)
+        player_history = older[older["athlete_id"].eq(athlete_id)].copy()
+        trend: dict[str, dict | None] = {"last10": None, "season": None}
+
+        if not player_history.empty and not pd.isna(row.team_games):
+            player_history["game_gap"] = (
+                int(row.team_games) - player_history["team_games"])
+            # A daily snapshot may skip several no-game days, so use the closest
+            # stored point in a narrow 10–14 game band. Never fall all the way
+            # back to opening day and call a 35-game span "last 10".
+            eligible = player_history[player_history["game_gap"].between(10, 14)]
+            if not eligible.empty:
+                baseline = eligible.sort_values(
+                    ["game_gap", "as_of"], ascending=[True, False]).iloc[0]
+                trend["last10"] = {
+                    "delta": round(float(row.value - baseline["value"])),
+                    "from": baseline["as_of"],
+                    "games": int(baseline["game_gap"]),
+                }
+
+        opening = player_history[player_history["as_of"].eq(start_date)]
+        if not opening.empty:
+            baseline = opening.iloc[0]
+            trend["season"] = {
+                "delta": round(float(row.value - baseline["value"])),
+                "from": start_date,
+            }
+        out[athlete_id] = trend
+    return out
 
 
 def data_through() -> str:
