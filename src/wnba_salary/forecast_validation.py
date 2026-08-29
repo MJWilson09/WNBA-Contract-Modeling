@@ -59,7 +59,7 @@ HALF_LIFE = 1.5
 LAMBDA_SWEEP = [1500.0, 6000.0, 24000.0]   # pooled candidate only
 REPLACEMENT = 2.98
 
-# Task 1 grid (PLAN.md). Extend either axis if the optimum lands on an edge.
+# Forward-validation grid. Extend either axis if the optimum lands on an edge.
 LAMBDA_GRID = [1500, 3000, 6000, 12000, 24000]
 HALF_LIFE_GRID = [0.25, 0.5, 0.75, 1.5, 3.0]
 

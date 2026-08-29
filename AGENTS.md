@@ -31,7 +31,7 @@ Run in order. Each stage reads the previous stage's output from `data/processed/
 | 3 | `src.wnba_salary.ratings` | `constants.json`, `box_prior_fit.json`, ESPN pbp | `ratings{,_forecast}.parquet` + `_meta.json` |
 | 4 | `src.wnba_salary.valuation` | `constants.json`, `box_prior.parquet`, `ratings{,_forecast}.parquet`, HHS | `valuation.parquet` |
 | 5 | `src.wnba_salary.history` | `constants.json`, `box_prior.parquet`, poss cache | `history.parquet` + `_meta.json` |
-| 6 | `src.wnba_salary.export_web` | `valuation.parquet`, `history.parquet`, `constants.json` | `docs/players.js` |
+| 6 | `src.wnba_salary.export_web` | `valuation.parquet`, `history.parquet`, metadata | `docs/players.js`, `docs/model-status.md`, `model_snapshot.json` |
 
 Stage 2 is the slow one (~4 min cold: ~60 BBRef requests at 3.5s). Stage 3 is
 ~3 min. Stage 5 re-runs stage 3's recipe for ten target seasons on 4 workers
@@ -56,7 +56,7 @@ production path.
   scored *within* season. Re-run only if you change the prior or the solver.
 - `forecast_validation.py` — **forward** validation: fit on seasons < T, predict
   season T's game margins. ~75s on 4 workers. This is the measuring stick for
-  any change claiming predictive improvement; see `PLAN.md`.
+  any change claiming predictive improvement; see `ROADMAP.md`.
 
 ## 3. Data
 
@@ -101,8 +101,10 @@ complete source for current seasons.
 
 ## 4. Invariants
 
-These are verified numbers. If a change moves one materially, that is a
-regression until proven otherwise.
+These are stable expectations and tolerances. Current observed values are
+generated from the artifacts into `docs/model-status.md`; do not copy them back
+into this file. If a change violates an expectation, it is a regression until
+proven otherwise.
 
 **constants.json**
 - `points_per_win` 31.77, **intercept 0.5000** (R²=0.778, n=311) — the intercept
@@ -112,40 +114,34 @@ regression until proven otherwise.
   gives $424,242 and is wrong)
 
 **box_prior_fit.json**
-- OBPM r=0.941 / RMSE 0.82 · DBPM r=0.698 / RMSE 0.80
-- shrinkage k: offense 75, defense 200
-- replacement split: off −2.80, def −0.18 (empirical sum −3.74 vs derived −2.98)
+- offense must remain substantially better identified than defense; current OOS
+  fit metrics and shrinkage constants are emitted in `docs/model-status.md`
+- offense and defense replacement targets must sum to the derived total
 
 **ratings_meta.json** (descriptive) / **ratings_forecast_meta.json** (forecast)
-- descriptive: λ=1500, HL=1.5, pin offset −0.131, rating sd 3.11
-- forecast: λ=6000, HL=0.75, pin offset +0.163, rating sd 2.46
-- both: 143,272 possessions, 270 players, minutes-weighted mean **0.000**,
-  summed WAR pinned to the same 153.2 target
+- descriptive config stays λ=1500 / HL=1.5; forecast stays λ=6000 / HL=0.75
+- both must use identical possession and player universes, have a
+  minutes-weighted mean within rounding of **0.000**, and pin to the same WAR target
 - the two correlate 0.945; forecast feeds projection years only, descriptive
   feeds current-season value
-- `rating_se` (ridge posterior): descriptive median **3.49**, forecast **2.04**.
-  Spearman vs `1/sqrt(poss)` = **0.954**. Split-half calibration ratio 0.67–0.73,
-  i.e. ~40% conservative
+- posterior SE must rank precision sensibly (historical validation: Spearman
+  0.954 vs `1/sqrt(poss)`) and remain conservatively calibrated in split halves
 
 **valuation.parquet**
-- 187 players, 183 matched to a salary
-- **summed WAR 248.5** vs league-wide 247.5 — nothing is fitted to this, so it is
-  a real end-to-end check
-- 17 above their applicable max · rating sd 3.03
-- summed market value $107.2M against a $105M cap. It exceeds the cap because it
-  sums *clipped* values and ~20 barely-played players each floor at the ~$270K
-  minimum; do not quote it as a validation the way summed WAR can be.
+- summed WAR must land within ~1% of the league-wide identity — nothing is fitted
+  to this, so it is a real end-to-end check
+- summed market value may exceed the cap because it sums *clipped* values and
+  barely-played players floor at the minimum; do not use it as a validation
 
-**history.parquet** (2017–2026, 1,507 player-seasons)
+**history.parquet**
 - the 2026 slice is produced by a different code path than `valuation.py` and
   must agree with it **exactly** — `max |Δrating| 0.0000, max |Δvalue| $0`.
   `history.main()` prints this; treat any drift as a regression
 - the summed-WAR identity holds in *every* season, not just 2026: Σ WAR lands
   within ~1% of `n_teams × 44 / 2 × 0.75` (198.0 for the 12-team seasons, 214.5
   in 2025, 247.5 in 2026). Again nothing is fitted to it
-- pin offsets stay small (−0.54 … +0.17) · rating sd 2.98–3.60 · median
-  `rating_se` 3.42 (2017, one pooled season) falling to 2.97
-- per-season table counts: 136/150/143/140/145/154/148/142/162/187
+- pin offsets must stay small; rating dispersion and uncertainty should remain
+  in historically plausible ranges recorded by the generated status/artifacts
 - λ and half-life are **not** re-tuned per season; they were tuned on 2017–2022
   holdouts, so re-tuning per season would be fitting the tuning set
 
@@ -313,37 +309,12 @@ Do not "fix" these:
   draft slots as the box prior's shrinkage target was tried and made the harness
   worse — see README.
 
-## 7. Open work
+## 7. Work state
 
-This is the **standing backlog**: everything genuinely unstarted, ordered by
-value. Items leave this list only when they are done.
-
-`PLAN.md` holds the **current tranche** — the batch being worked now, with
-acceptance criteria — and is rewritten each time one completes. Check it first to
-see what is in flight, and do not duplicate items between the two files. The
-forecast tranche (forward-tuned config, draft priors, uncertainty bands) finished;
-its results live in README §"Forward validation" and §4 above, and the commit
-history is the record of what was done.
-
-Nothing here blocks the pipeline, which runs end to end with all invariants
-holding. Settled decisions and things-not-to-redo live in §5 and §6, not here.
-
-1. **Align the ESPN garbage-time rule.** It flags 2.4% against the archive's
-   5.9%. Demonstrably harmless to ratings (r=0.994) but the cleanest remaining
-   discrepancy. Tune `espn_lineups.GARBAGE_*` against the oracle.
-2. **Re-estimate shrinkage constants per split** in `rapm_validation`. They are
-   currently reused from the full-sample fit — small residual leakage, disclosed.
-3. **`replacement_win_pct` (0.25) is a convention, not an estimate.** Nobody
-   fields a replacement team. Sensitivity is reported across 0.20–0.30; treat any
-   dollar figure as carrying that band.
-4. **Multi-year contract detail.** Only 2026 salaries are loaded. Future contract
-   years would need Spotrac or HHS team pages (Spotrac is client-rendered and
-   returns no table to a plain fetch).
-5. **Historical salaries and CBA schedules.** `history.parquet` now carries
-   ratings back to 2017, but every season is priced in 2026 dollars because the
-   2026 CBA is the only one loaded. Past caps/maxima/minima plus HHS salary
-   seasons would turn the site's past-season view from "worth this much today"
-   into a real surplus history — the single biggest thing that view is missing.
+`ROADMAP.md` is the single source of truth for active work, backlog, completed
+tranches, and non-goals. Do not duplicate planning items here. Current generated
+counts and results live in `docs/model-status.md`; this file retains only
+operational invariants, tolerances, and failure modes.
 
 ---
 

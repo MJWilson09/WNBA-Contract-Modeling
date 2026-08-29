@@ -40,7 +40,7 @@ current season already uses, so 2026 is unchanged and earlier seasons become
 comparable to it. The consequence, stated plainly: summed WAR in a historical
 season will not equal that season's actual league wins.
 
-Salaries are 2026-only (AGENTS.md §7 item 4), so `salary`, `surplus` and
+Salaries are current-season only (ROADMAP.md backlog), so `salary`, `surplus` and
 `signing` are null for every earlier season rather than guessed at.
 """
 

@@ -22,6 +22,11 @@ shrinks RAPM toward the prior rather than toward zero.
 
 ## Status
 
+The pipeline is complete. For current player counts, possession counts, model
+parameters, valuation totals, historical coverage, and the data-through date,
+see the generated [current model status](docs/model-status.md). Work state and
+backlog live only in [ROADMAP.md](ROADMAP.md).
+
 | Stage | What | State |
 |---|---|---|
 | A1 | League-structural constants | **done** |
@@ -233,19 +238,11 @@ by `history.py` too, so the season picker and the current season cannot diverge.
 
 ### Aggregate validation
 
-| | model | expected |
-|---|---|---|
-| summed WAR | 248.5 | 247.5 league-wide |
-
-Nothing is fitted to that target, so it is a genuine out-of-sample check on the
-whole chain. Ratings come from `ratings.parquet` (RAPM) where available and fall
-back to the box prior otherwise; `rating_source` records which applied. For 2026
-all 187 qualified players have RAPM coverage.
-
-Summed *market value* is deliberately absent from that table. It is $107.2M
-against a $105M cap, over rather than under, because it sums values already
-clipped to the CBA band and the ~20 barely-played players the certainty gate
-admits each floor at the minimum. It is not a validation the way summed WAR is.
+Summed WAR must land within approximately 1% of the league-wide accounting
+identity. Nothing is fitted to that target, so this is a genuine end-to-end
+check. The generated [current model status](docs/model-status.md) reports the
+latest observed and expected values. Summed *market value* is not a validation:
+it adds values already clipped to the CBA band, including minimum-salary floors.
 
 ## Stage B: possession RAPM
 
@@ -357,11 +354,12 @@ player coefficients. Per-player possession counts and lineup composition are wha
 actually depends on, and those agree at 0.9984. Possession-count parity was the
 wrong thing to chase.
 
-### Current ratings (2023-2026, ESPN)
+### Current ratings (ESPN)
 
-151,517 possessions over 973 games, 265 obs/param, recency-weighted with a
-1.5-season half-life. λ=**1,500** by within-season chronological holdout, a
-genuine interior optimum (worse at both 1,000 and 2,000, and much worse at 100).
+Production pools four seasons of ESPN possessions with a 1.5-season half-life.
+Current possession and player counts are generated in
+[the model status](docs/model-status.md). λ=**1,500** comes from a within-season
+chronological holdout with a genuine interior optimum.
 
 Game RMSE 9.3336 against 9.7103 for prior-only, a 3.9% gain. Rating sd rises to
 3.11 from the prior's 2.24, correlation with the prior falls to 0.872.
@@ -464,8 +462,8 @@ Stewart 6.05 down to 4.13), which is the point: extrapolating a
 descriptively-tuned rating three years forward over-trusts one season of
 possessions.
 
-Current-season outputs are unchanged by this split (summed WAR 248.5, 17 above
-the applicable max), because the descriptive path was not touched.
+Current-season outputs were unchanged when this split was introduced because
+the descriptive path was not touched.
 
 ### Rookie draft priors
 
@@ -563,21 +561,11 @@ only looks season-dependent: expanding the identity, team count and games cancel
 setting the minutes-weighted mean rating to zero, which needs only that season's
 minutes and no CBA figures at all.
 
-| Season | Pooled | Possessions | Players | Pin offset | Rating sd | Median SE | Σ WAR | Identity |
-|---|---|---|---|---|---|---|---|---|
-| 2017 | 1 | 28,961 | 131 | +0.023 | 3.33 | 3.42 | 197.2 | 198.0 |
-| 2018 | 2 | 59,600 | 139 | −0.235 | 3.45 | 3.24 | 198.3 | 198.0 |
-| 2019 | 3 | 89,120 | 134 | −0.081 | 3.03 | 3.10 | 196.4 | 198.0 |
-| 2020 | 4 | 109,077 | 125 | +0.171 | 2.98 | 3.15 | 197.9 | 198.0 |
-| 2021 | 4 | 107,262 | 133 | −0.073 | 3.18 | 3.08 | 198.0 | 198.0 |
-| 2022 | 4 | 109,406 | 138 | −0.359 | 3.27 | 3.04 | 198.6 | 198.0 |
-| 2023 | 4 | 115,531 | 132 | −0.403 | 3.58 | 3.03 | 198.0 | 198.0 |
-| 2024 | 4 | 133,001 | 136 | −0.538 | 3.60 | 2.97 | 200.1 | 198.0 |
-| 2025 | 4 | 145,689 | 155 | −0.308 | 3.42 | 2.97 | 215.1 | 214.5 |
-| 2026 | 4 | 145,595 | 187 | −0.157 | 3.13 | 3.18 | 248.5 | 247.5 |
-
-The last two columns are the end-to-end check, and nothing is fitted to make them
-agree: summed WAR over the rated players lands within ~1% of
+Current coverage and row counts are reported in the generated
+[model status](docs/model-status.md); per-season diagnostics remain in
+`data/processed/history_meta.json`, their machine-readable source of truth.
+The summed-WAR end-to-end check is not fitted: summed WAR over rated players
+lands within ~1% of
 `n_teams × 44 / 2 × (1 − 0.25)` in every season, and the step changes track
 expansion (12 teams, then 13 in 2025 and 15 in 2026). The 2026 row is produced
 twice, by `history.py` and by `valuation.py`, and agrees to $0.
@@ -615,9 +603,8 @@ past season is selected.
 - Supermax eligibility here is an upper bound. Whether a free agent is re-signing
   with her *prior* team decides whether she can reach 20%, and no data here
   records it, so five-plus years of service is treated as eligible.
-- Rating dispersion, now resolved: with RAPM wired in, rating sd is 3.13 (was
-  2.10 on the box prior) and 17 of 187 players price above their applicable
-  maximum (was 6).
+- Rating dispersion is resolved by RAPM rather than the compressed box prior;
+  current dispersion and capped-player counts are generated from the artifacts.
 - Defensive valuation, largely resolved: Alanna Smith moved from −3.41 to −0.03
   and Leonie Fiebich from −1.30 to +3.41. Remaining large negatives on known
   defenders should still be treated with suspicion, but they are no longer
@@ -635,15 +622,17 @@ Static, no build step, published with **GitHub Pages** from `main` / `/docs`
 docs/
   index.html        the model: search, player cards, sortable league table
   about.html        author bio, how the model works, acknowledgments
-  players.js        generated; the only file export_web.py writes
+  players.js        generated model data for the site
+  model-status.md   generated canonical snapshot of volatile results
   assets/site.css   shared stylesheet (loaded as ?v=<hash>; see stamp script)
   assets/fonts/     self-hosted Inter + Source Serif 4 (latin subsets)
   assets/           icon.svg, favicon-32.png, apple-touch-icon.png, og-card.png
   .nojekyll         serve files verbatim, no Jekyll processing
 ```
 
-Only `players.js` is generated; the HTML and CSS are hand-written and safe to
-edit directly. Icons and the link-preview card are generated too, but only when
+`players.js` and `model-status.md` are generated together; the HTML and CSS are
+hand-written and safe to edit directly. Icons and the link-preview card are
+generated too, but only when
 the branding changes:
 
 ```bash
@@ -654,6 +643,7 @@ Regenerate the data after a model change:
 
 ```bash
 ./.venv/bin/python -m src.wnba_salary.export_web
+./.venv/bin/python scripts/check_generated.py
 ```
 
 The page recomputes value client-side from embedded constants rather than

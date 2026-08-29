@@ -506,8 +506,8 @@ function renderFoot() {
   const s26 = MODEL.schedule[String(CUR)];
   const consts =
     `B = ${Math.round(C.minutes_baseline)}, R = ${C.replacement_level.toFixed(2)} pts/100, ` +
-    `$/win = ${money(s26.dollars_per_win)}. Generated ${MODEL.generated}.`;
-  const head = `${rows.length} players with ≥100 minutes in ${tableSeason}. `;
+    `$/win = ${money(s26.dollars_per_win)}. Data through ${MODEL.generated}.`;
+  const head = `${rows.length} players included in ${tableSeason}. `;
 
   let body;
   if (tableSeason === CUR) {

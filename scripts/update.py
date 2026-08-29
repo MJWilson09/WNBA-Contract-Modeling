@@ -181,7 +181,7 @@ def main() -> None:
     total = sum(run_stage(mod, name) for name, mod, _ in stages)
     print(f"\ndone in {total/60:.1f} min")
     print(f"data through {after.strftime('%Y-%m-%d') if after is not None else 'unknown'}"
-          f" — commit data/processed/ and docs/players.js to publish")
+          " — commit data/processed/ and generated docs to publish")
 
 
 if __name__ == "__main__":
