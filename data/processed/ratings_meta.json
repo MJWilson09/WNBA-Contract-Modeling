@@ -9,11 +9,11 @@
   ],
   "target_season": 2026,
   "pin": {
-    "offset": -0.16358702604376418,
-    "minutes_share": 0.6611287878787879,
-    "target_war": 163.629375,
-    "rated_minutes": 87269.0
+    "offset": -0.26460914511720324,
+    "minutes_share": 0.8961969696969697,
+    "target_war": 221.80875,
+    "rated_minutes": 118298.0
   },
-  "n_players": 270,
-  "n_poss": 145033
+  "n_players": 278,
+  "n_poss": 157338
 }
