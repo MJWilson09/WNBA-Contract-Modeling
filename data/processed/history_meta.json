@@ -8,13 +8,13 @@
       "n_poss": 28961,
       "n_players_fit": 136,
       "prior_matched": 135,
-      "pin_offset": 0.02466532805581645,
+      "pin_offset": 0.024272134332456563,
       "minutes_share": 0.6171818181818182,
       "n_table": 136,
       "n_rapm": 135,
-      "rating_sd": 3.291907587942461,
-      "rating_se_median": 3.4262377367561196,
-      "summed_war": 197.3321877055686
+      "rating_sd": 3.2918453435489146,
+      "rating_se_median": 3.426237777441466,
+      "summed_war": 197.33230027239597
     },
     {
       "season": 2018,
@@ -25,13 +25,13 @@
       "n_poss": 59600,
       "n_players_fit": 176,
       "prior_matched": 175,
-      "pin_offset": -0.2307960054739011,
+      "pin_offset": -0.23119903692029986,
       "minutes_share": 0.6168636363636364,
       "n_table": 150,
       "n_rapm": 150,
-      "rating_sd": 3.4423324052176083,
-      "rating_se_median": 3.269444323250352,
-      "summed_war": 198.24513764791678
+      "rating_sd": 3.4422833421735923,
+      "rating_se_median": 3.2694443568667317,
+      "summed_war": 198.24515146352326
     },
     {
       "season": 2019,
@@ -43,13 +43,13 @@
       "n_poss": 89120,
       "n_players_fit": 198,
       "prior_matched": 196,
-      "pin_offset": -0.0769492748325491,
+      "pin_offset": -0.07735170235672317,
       "minutes_share": 0.6133787878787879,
       "n_table": 143,
       "n_rapm": 142,
-      "rating_sd": 3.048034080444551,
-      "rating_se_median": 3.104662023608851,
-      "summed_war": 196.85370607242854
+      "rating_sd": 3.0479953482943234,
+      "rating_se_median": 3.104662062032349,
+      "summed_war": 196.8539010989058
     },
     {
       "season": 2020,
@@ -62,13 +62,13 @@
       "n_poss": 109077,
       "n_players_fit": 227,
       "prior_matched": 225,
-      "pin_offset": 0.16191194017079624,
+      "pin_offset": 0.16146531256651286,
       "minutes_share": 0.40021969696969695,
       "n_table": 140,
       "n_rapm": 140,
-      "rating_sd": 2.9570706734611925,
-      "rating_se_median": 3.1931194815532082,
-      "summed_war": 198.31425977963812
+      "rating_sd": 2.9570374139534854,
+      "rating_se_median": 3.193119502705395,
+      "summed_war": 198.31428679558255
     },
     {
       "season": 2021,
@@ -81,13 +81,13 @@
       "n_poss": 107262,
       "n_players_fit": 216,
       "prior_matched": 215,
-      "pin_offset": -0.0656517842782125,
+      "pin_offset": -0.06607554194868959,
       "minutes_share": 0.5867424242424243,
       "n_table": 145,
       "n_rapm": 144,
-      "rating_sd": 3.2105856112746296,
-      "rating_se_median": 3.110686967548799,
-      "summed_war": 198.06405478917335
+      "rating_sd": 3.2105433381768296,
+      "rating_se_median": 3.110686980735687,
+      "summed_war": 198.0641354104667
     },
     {
       "season": 2022,
@@ -100,13 +100,13 @@
       "n_poss": 109406,
       "n_players_fit": 222,
       "prior_matched": 221,
-      "pin_offset": -0.3536076095704499,
+      "pin_offset": -0.3540160450847294,
       "minutes_share": 0.6570833333333334,
       "n_table": 154,
       "n_rapm": 153,
-      "rating_sd": 3.3043881793063563,
-      "rating_se_median": 3.0696572758902922,
-      "summed_war": 197.81519552116922
+      "rating_sd": 3.3043342898964347,
+      "rating_se_median": 3.0696573081448166,
+      "summed_war": 197.815385608398
     },
     {
       "season": 2023,
@@ -119,13 +119,13 @@
       "n_poss": 115350,
       "n_players_fit": 225,
       "prior_matched": 224,
-      "pin_offset": -0.39746065753355087,
+      "pin_offset": -0.39784720456494016,
       "minutes_share": 0.7316666666666667,
       "n_table": 148,
       "n_rapm": 148,
-      "rating_sd": 3.5468953425096434,
-      "rating_se_median": 3.086758296904155,
-      "summed_war": 197.4761273391012
+      "rating_sd": 3.5468350329180796,
+      "rating_se_median": 3.0867583505106637,
+      "summed_war": 197.4761493271022
     },
     {
       "season": 2024,
@@ -138,13 +138,13 @@
       "n_poss": 132657,
       "n_players_fit": 234,
       "prior_matched": 233,
-      "pin_offset": -0.5264862768070926,
+      "pin_offset": -0.526858573149406,
       "minutes_share": 0.7329924242424243,
       "n_table": 142,
       "n_rapm": 142,
-      "rating_sd": 3.5939686378193767,
-      "rating_se_median": 3.0154095067451308,
-      "summed_war": 198.88593399773634
+      "rating_sd": 3.5939215314190243,
+      "rating_se_median": 3.015409555045384,
+      "summed_war": 198.885926134377
     },
     {
       "season": 2025,
@@ -157,13 +157,13 @@
       "n_poss": 145345,
       "n_players_fit": 244,
       "prior_matched": 243,
-      "pin_offset": -0.3061005551716449,
+      "pin_offset": -0.3064682040899065,
       "minutes_share": 0.8691666666666666,
       "n_table": 162,
       "n_rapm": 162,
-      "rating_sd": 3.456680503960387,
-      "rating_se_median": 3.0104872057805343,
-      "summed_war": 214.52534099931717
+      "rating_sd": 3.4566431655182175,
+      "rating_se_median": 3.0104872680987746,
+      "summed_war": 214.525313438822
     },
     {
       "season": 2026,
@@ -173,16 +173,16 @@
         2025,
         2026
       ],
-      "n_poss": 160781,
+      "n_poss": 161310,
       "n_players_fit": 282,
       "prior_matched": 282,
-      "pin_offset": -0.2927484779665428,
-      "minutes_share": 0.9682272727272727,
+      "pin_offset": -0.28721200960155224,
+      "minutes_share": 0.9832272727272727,
       "n_table": 200,
       "n_rapm": 200,
-      "rating_sd": 3.2836322093990336,
-      "rating_se_median": 3.075902378159551,
-      "summed_war": 248.0470525212442
+      "rating_sd": 3.2705846883530088,
+      "rating_se_median": 3.070073871907385,
+      "summed_war": 248.16334985678998
     }
   ],
   "pricing_season": 2026,

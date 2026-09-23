@@ -15,10 +15,10 @@
     "2026": "season in progress as of this build"
   },
   "points_per_win": {
-    "points_per_win": 31.097961664680927,
-    "ci_low": 29.82423257699011,
-    "ci_high": 32.443968140115786,
-    "slope_winpct_per_mov": 0.032156448412364466,
+    "points_per_win": 31.097961664680913,
+    "ci_low": 29.824232576990116,
+    "ci_high": 32.44396814011579,
+    "slope_winpct_per_mov": 0.03215644841236448,
     "intercept": 0.4999668619123246,
     "r_squared": 0.8980648367143161,
     "n_team_seasons": 275,
@@ -76,11 +76,11 @@
       "2023": 82.22105881722453,
       "2024": 81.8032009243102,
       "2025": 80.64271491764782,
-      "2026": 82.61503923968799
+      "2026": 82.5906192444601
     }
   },
   "minutes_baseline": {
-    "value": 1557.9416428191528,
+    "value": 1557.9416428191519,
     "method": "derived: 100 * points_per_win / poss_per_min",
     "nba_reference": 1475,
     "note": "Exceeds the busiest player's season minutes. That is expected, not a bug: B converts minutes to wins-per-unit-rating, it is not a share-of-season. The WNBA's 44-game season simply means nobody accumulates a full unit."
@@ -103,7 +103,7 @@
     ]
   },
   "replacement_level": {
-    "value": 2.9211405802859116,
+    "value": 2.92114058028591,
     "units": "points per 100 possessions below average",
     "method": "derived from league WAR accounting identity; needs no ratings",
     "nba_reference": 3.0
@@ -118,15 +118,15 @@
   },
   "sensitivity": {
     "0.20": {
-      "replacement_level": 3.1158832856383056,
+      "replacement_level": 3.115883285638304,
       "dollars_per_win": 213636.36363636365
     },
     "0.25": {
-      "replacement_level": 2.9211405802859116,
+      "replacement_level": 2.92114058028591,
       "dollars_per_win": 227878.78787878787
     },
     "0.30": {
-      "replacement_level": 2.726397874933517,
+      "replacement_level": 2.7263978749335154,
       "dollars_per_win": 244155.84415584418
     }
   }
